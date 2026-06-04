@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { BarChart2, CheckCircle2, TrendingUp, Users } from 'lucide-react'
 import api from '@/lib/api'
+import { SkeletonReport } from '@/components/Skeleton'
 
 interface ReportSummary {
   cycleId: string
@@ -62,7 +63,9 @@ export default function ReportsPage() {
       </div>
 
       {isLoading ? (
-        <div className="kbt-card"><div className="kbt-empty-panel">Loading reports...</div></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <SkeletonReport /><SkeletonReport />
+        </div>
       ) : !data?.length ? (
         <div className="kbt-card">
           <div className="kbt-empty-panel">

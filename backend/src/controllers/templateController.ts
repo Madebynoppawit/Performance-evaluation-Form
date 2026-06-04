@@ -1,6 +1,32 @@
 import { Response, NextFunction } from 'express'
+import { z } from 'zod'
 import { AuthRequest } from '../middleware/auth'
 import * as templateService from '../services/templateService'
+
+const EvalType    = z.enum(['SELF', 'MANAGER', 'PEER', 'SUBORDINATE'])
+const SectionType = z.enum(['COMPETENCY', 'ATTENDANCE', 'GOAL_SETTING', 'SALARY_SUMMARY', 'COMMENT', 'ACKNOWLEDGEMENT'])
+const QuestionType = z.enum(['RATING', 'TEXT', 'YES_NO'])
+
+const createTemplateSchema = z.object({
+  name:        z.string().min(1, 'Name is required').max(120),
+  type:        EvalType,
+  description: z.string().max(500).optional(),
+})
+
+const sectionSchema = z.object({
+  type:        SectionType,
+  title:       z.string().min(1).max(120),
+  weight:      z.number().min(0).max(100),
+  order:       z.number().int().min(0),
+  description: z.string().max(500).optional(),
+})
+
+const questionSchema = z.object({
+  text:     z.string().min(1).max(500),
+  type:     QuestionType,
+  order:    z.number().int().min(0),
+  required: z.boolean().optional(),
+})
 
 export async function list(_req: AuthRequest, res: Response, next: NextFunction) {
   try {
@@ -20,10 +46,9 @@ export async function getOne(req: AuthRequest, res: Response, next: NextFunction
 
 export async function create(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    res.status(201).json(await templateService.createTemplate(req.body))
-  } catch (err) {
-    next(err)
-  }
+    const body = createTemplateSchema.parse(req.body)
+    res.status(201).json(await templateService.createTemplate(body))
+  } catch (err) { next(err) }
 }
 
 export async function update(req: AuthRequest, res: Response, next: NextFunction) {
@@ -45,16 +70,14 @@ export async function remove(req: AuthRequest, res: Response, next: NextFunction
 
 export async function addSection(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    res.status(201).json(await templateService.addSection(req.params.id, req.body))
-  } catch (err) {
-    next(err)
-  }
+    const body = sectionSchema.parse(req.body)
+    res.status(201).json(await templateService.addSection(req.params.id, body))
+  } catch (err) { next(err) }
 }
 
 export async function addQuestion(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    res.status(201).json(await templateService.addQuestion(req.params.sectionId, req.body))
-  } catch (err) {
-    next(err)
-  }
+    const body = questionSchema.parse(req.body)
+    res.status(201).json(await templateService.addQuestion(req.params.sectionId, body))
+  } catch (err) { next(err) }
 }

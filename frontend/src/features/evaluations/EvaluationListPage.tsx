@@ -5,6 +5,7 @@ import { useState } from 'react'
 import api from '@/lib/api'
 import type { Evaluation } from '@/types'
 import { formatDate, getTypeLabel } from '@/lib/utils'
+import { SkeletonMetricCard, SkeletonTableRows } from '@/components/Skeleton'
 
 const STATUS: Record<string, { cls: string; label: string }> = {
   DRAFT: { cls: 'kbt-badge-neutral', label: 'Draft' },
@@ -51,15 +52,18 @@ export default function EvaluationListPage() {
       </div>
 
       <div className="kbt-metric-grid kbt-metric-grid-3">
-        {metricItems.map(({ label, value, icon, color, mono }) => (
-          <div key={label} className="kbt-metric">
-            <div className="kbt-metric-head">
-              <span>{label}</span>
-              <div className="kbt-metric-icon">{icon}</div>
+        {isLoading
+          ? [0, 1, 2].map(i => <SkeletonMetricCard key={i} />)
+          : metricItems.map(({ label, value, icon, color, mono }) => (
+            <div key={label} className="kbt-metric kbt-animate-up">
+              <div className="kbt-metric-head">
+                <span>{label}</span>
+                <div className="kbt-metric-icon">{icon}</div>
+              </div>
+              <strong style={{ color, fontFamily: mono ? 'JetBrains Mono, monospace' : 'inherit' }}>{value}</strong>
             </div>
-            <strong style={{ color, fontFamily: mono ? 'JetBrains Mono, monospace' : 'inherit' }}>{value}</strong>
-          </div>
-        ))}
+          ))
+        }
       </div>
 
       <div className="kbt-card">
@@ -82,7 +86,7 @@ export default function EvaluationListPage() {
         </div>
 
         {isLoading ? (
-          <div className="kbt-empty-panel">Loading evaluations...</div>
+          <table className="kbt-table"><tbody><SkeletonTableRows rows={6} cols={8} /></tbody></table>
         ) : !filtered.length ? (
           <div className="kbt-empty-panel">
             <TrendingUp size={24} />

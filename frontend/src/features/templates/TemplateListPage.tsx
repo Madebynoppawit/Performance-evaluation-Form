@@ -6,6 +6,7 @@ import api from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 import { formatDate, getTypeLabel } from '@/lib/utils'
 import type { Template } from '@/types'
+import { SkeletonTableRows } from '@/components/Skeleton'
 
 export default function TemplateListPage() {
   const navigate = useNavigate()
@@ -55,7 +56,7 @@ export default function TemplateListPage() {
         </div>
 
         {isLoading ? (
-          <div style={{ padding: 60, textAlign: 'center', color: 'var(--kbt-text-3)' }}>Loading...</div>
+          <table className="kbt-table"><tbody><SkeletonTableRows rows={5} cols={6} /></tbody></table>
         ) : (
           <table className="kbt-table">
             <thead>

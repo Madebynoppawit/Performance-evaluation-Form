@@ -4,12 +4,17 @@ import * as authService from '../services/authService'
 import { AuthRequest } from '../middleware/auth'
 
 const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
+  email:    z.string().email(),
+  password: z.string().min(1),
 })
 
-const registerSchema = loginSchema.extend({
-  name: z.string().min(1),
+const registerSchema = z.object({
+  email:      z.string().email(),
+  password:   z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
+    .regex(/[0-9]/, 'Must contain at least one number'),
+  name:       z.string().min(1, 'Name is required'),
   department: z.string().optional(),
 })
 

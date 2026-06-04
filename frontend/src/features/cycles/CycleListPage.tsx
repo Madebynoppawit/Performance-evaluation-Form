@@ -8,6 +8,7 @@ import api from '@/lib/api'
 import type { Cycle, Template } from '@/types'
 import { formatDate } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
+import { SkeletonTableRows } from '@/components/Skeleton'
 
 const STATUS: Record<string, { cls: string; label: string }> = {
   UPCOMING: { cls: 'kbt-badge-info', label: 'Upcoming' },
@@ -82,7 +83,7 @@ export default function CycleListPage() {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={6}><div className="kbt-empty-panel">Loading cycles...</div></td></tr>
+              <SkeletonTableRows rows={4} cols={6} />
             ) : !cycles?.length ? (
               <tr><td colSpan={6}><div className="kbt-empty-panel">No cycles yet</div></td></tr>
             ) : cycles.map((cycle) => (

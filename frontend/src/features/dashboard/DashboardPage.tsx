@@ -116,6 +116,13 @@ export default function DashboardPage() {
     queryFn: () => api.get('/evaluations').then(r => r.data),
   })
 
+  const { data: health, isError: healthDown } = useQuery<{ status: string; version: string }>({
+    queryKey: ['health'],
+    queryFn: () => api.get('/health').then(r => r.data),
+    refetchInterval: 30_000,
+    retry: 1,
+  })
+
   const recent = evaluations?.slice(0, 5) ?? []
   const completionPct = stats && stats.totalEvaluations > 0
     ? Math.round((stats.completedEvaluations / stats.totalEvaluations) * 100)
@@ -284,14 +291,26 @@ export default function DashboardPage() {
           </div>
 
           <div className="kbt-card">
-            <div className="kbt-card-header"><span className="kbt-card-title">System Status</span></div>
+            <div className="kbt-card-header">
+              <span className="kbt-card-title">System Status</span>
+              {health?.version && (
+                <span style={{ fontSize: '0.65rem', color: 'var(--kbt-text-3)', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
+                  v{health.version}
+                </span>
+              )}
+            </div>
             <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {['API Server', 'Database', 'Auth Service'].map((label) => (
+              {[
+                { label: 'API Server',    up: !healthDown && health?.status === 'ok' },
+                { label: 'Database',      up: !healthDown && health?.status === 'ok' },
+                { label: 'Auth Service',  up: !healthDown && health?.status === 'ok' },
+              ].map(({ label, up }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)', fontWeight: 700 }}>{label}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--kbt-success)', boxShadow: '0 0 8px var(--kbt-success)', animation: 'pulseGreen 2s ease infinite' }} />
-                    <span style={{ fontSize: '0.6875rem', color: 'var(--kbt-success)', fontWeight: 900 }}>Online</span>
+                    {up === true && <><span className="kbt-dot-live" /><span style={{ fontSize: '0.6875rem', color: 'var(--kbt-success)', fontWeight: 900 }}>Online</span></>}
+                    {up === false && <><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--kbt-error)', display: 'inline-block' }} /><span style={{ fontSize: '0.6875rem', color: 'var(--kbt-error)', fontWeight: 900 }}>Offline</span></>}
+                    {up == null && <><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--kbt-warning)', display: 'inline-block' }} /><span style={{ fontSize: '0.6875rem', color: 'var(--kbt-warning)', fontWeight: 900 }}>Checking…</span></>}
                   </div>
                 </div>
               ))}

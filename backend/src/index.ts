@@ -10,15 +10,31 @@ import reportRoutes from './routes/reports'
 import dashboardRoutes from './routes/dashboard'
 import userRoutes from './routes/users'
 
-const app = express()
+/* ── Env validation ─────────────────────────────────────────────────────── */
+const REQUIRED = ['DATABASE_URL', 'JWT_SECRET']
+const missing  = REQUIRED.filter(k => !process.env[k])
+if (missing.length) {
+  console.error(`[startup] Missing required env vars: ${missing.join(', ')}`)
+  process.exit(1)
+}
+if (
+  process.env.JWT_SECRET === 'dev-secret' ||
+  process.env.JWT_SECRET?.includes('change-this')
+) {
+  console.warn('[startup] ⚠️  WARNING: Insecure JWT_SECRET detected — change before production!')
+}
+
+const app  = express()
 const PORT = process.env.PORT ?? 3001
 
 app.use(cors({ origin: process.env.CLIENT_URL ?? 'http://localhost:5173' }))
 app.use(express.json())
 
-app.get('/health', (_req, res) => {
+const healthPayload = (_req: express.Request, res: express.Response) =>
   res.json({ status: 'ok', version: '0.1.0', ts: new Date().toISOString() })
-})
+
+app.get('/health',     healthPayload)
+app.get('/api/health', healthPayload)
 
 app.use('/api/auth', authLimiter, authRoutes)
 app.use('/api/evaluations', evaluationRoutes)
