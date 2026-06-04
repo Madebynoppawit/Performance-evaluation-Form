@@ -8,7 +8,7 @@ interface Props {
 }
 
 const SCORE_COLOR = (s: number) =>
-  s >= 4 ? '#00c87a' : s === 3 ? '#3b82f6' : s === 2 ? '#f59e0b' : '#ef4444'
+  s >= 4 ? '#00a86b' : s === 3 ? '#0a6ed1' : s === 2 ? '#f59e0b' : '#ed1c24'
 
 export default function AttendanceSection({ data, readOnly, onChange }: Props) {
   function update<K extends keyof AttendanceScore>(field: K, value: AttendanceScore[K]) {
@@ -20,17 +20,17 @@ export default function AttendanceSection({ data, readOnly, onChange }: Props) {
 
   const CRITERIA = [
     { label: 'Leave (Sick/Casual/Absent)', scores: { 5: '0 days', 4: '1-2 days', 3: '3-4 days', 2: '5-6 days', 1: '>7 days' } },
-    { label: 'Late',                       scores: { 5: '≤6×',    4: '≤8×',      3: '≤10×',     2: '≤12×',     1: '>14×'  } },
-    { label: 'Disciplinary',               scores: { 5: 'None',   4: 'None',     3: 'None',     2: 'Warning×1', 1: '>2 or Suspend' } },
+    { label: 'Late',                       scores: { 5: 'โค6ร—',    4: 'โค8ร—',      3: 'โค10ร—',     2: 'โค12ร—',     1: '>14ร—'  } },
+    { label: 'Disciplinary',               scores: { 5: 'None',   4: 'None',     3: 'None',     2: 'Warningร—1', 1: '>2 or Suspend' } },
   ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {avg && (
-        <div style={{ padding: '8px 14px', background: 'rgba(0,200,122,0.06)', border: '1px solid rgba(0,200,122,0.15)', borderRadius: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
-          <span style={{ fontSize: '0.75rem', color: '#4b5563' }}>Attendance Average:</span>
-          <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#00c87a' }}>{avg}</span>
-          <span style={{ fontSize: '0.75rem', color: '#4b5563' }}>/ 5.00</span>
+        <div style={{ padding: '8px 14px', background: 'rgba(0,168,107,0.06)', border: '1px solid rgba(0,168,107,0.15)', borderRadius: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span style={{ fontSize: '0.75rem', color: '#6b7a90' }}>Attendance Average:</span>
+          <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#00a86b' }}>{avg}</span>
+          <span style={{ fontSize: '0.75rem', color: '#6b7a90' }}>/ 5.00</span>
         </div>
       )}
 
@@ -39,13 +39,13 @@ export default function AttendanceSection({ data, readOnly, onChange }: Props) {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
           <thead>
             <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-              <th style={{ padding: '8px 12px', textAlign: 'left', color: '#4b5563', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>Criteria</th>
+              <th style={{ padding: '8px 12px', textAlign: 'left', color: '#6b7a90', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>Criteria</th>
               {[5, 4, 3, 2, 1].map(s => (
                 <th key={s} style={{ padding: '8px 12px', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     width: 22, height: 22, borderRadius: 5, fontWeight: 700, fontFamily: 'monospace', fontSize: '0.75rem',
-                    background: s >= 4 ? 'rgba(0,200,122,0.15)' : s === 3 ? 'rgba(59,130,246,0.15)' : s === 2 ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)',
+                    background: s >= 4 ? 'rgba(0,168,107,0.15)' : s === 3 ? 'rgba(10,110,209,0.15)' : s === 2 ? 'rgba(245,158,11,0.15)' : 'rgba(237,28,36,0.15)',
                     color: SCORE_COLOR(s),
                   }}>{s}</span>
                 </th>
@@ -55,9 +55,9 @@ export default function AttendanceSection({ data, readOnly, onChange }: Props) {
           <tbody>
             {CRITERIA.map((row, i) => (
               <tr key={row.label} style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <td style={{ padding: '8px 12px', fontWeight: 500, color: '#94a3b8' }}>{row.label}</td>
+                <td style={{ padding: '8px 12px', fontWeight: 500, color: '#a8b7cc' }}>{row.label}</td>
                 {([5, 4, 3, 2, 1] as const).map(s => (
-                  <td key={s} style={{ padding: '8px 12px', textAlign: 'center', color: '#4b5563' }}>{row.scores[s]}</td>
+                  <td key={s} style={{ padding: '8px 12px', textAlign: 'center', color: '#6b7a90' }}>{row.scores[s]}</td>
                 ))}
               </tr>
             ))}
@@ -72,7 +72,7 @@ export default function AttendanceSection({ data, readOnly, onChange }: Props) {
           <input type="number" min={0} value={data.leaveActualDays ?? ''} onChange={e => update('leaveActualDays', e.target.value ? Number(e.target.value) : null)} disabled={readOnly} className="kbt-input" placeholder="0" />
           {data.leaveScore != null && (
             <p style={{ fontSize: '0.75rem', marginTop: 5, color: SCORE_COLOR(data.leaveScore), fontFamily: 'monospace', fontWeight: 600 }}>
-              → Score: {data.leaveScore}
+              โ’ Score: {data.leaveScore}
             </p>
           )}
         </div>
@@ -81,7 +81,7 @@ export default function AttendanceSection({ data, readOnly, onChange }: Props) {
           <input type="number" min={0} value={data.lateActualTimes ?? ''} onChange={e => update('lateActualTimes', e.target.value ? Number(e.target.value) : null)} disabled={readOnly} className="kbt-input" placeholder="0" />
           {data.lateScore != null && (
             <p style={{ fontSize: '0.75rem', marginTop: 5, color: SCORE_COLOR(data.lateScore), fontFamily: 'monospace', fontWeight: 600 }}>
-              → Score: {data.lateScore}
+              โ’ Score: {data.lateScore}
             </p>
           )}
         </div>
@@ -92,7 +92,7 @@ export default function AttendanceSection({ data, readOnly, onChange }: Props) {
           </select>
           {data.disciplinaryScore != null && (
             <p style={{ fontSize: '0.75rem', marginTop: 5, color: SCORE_COLOR(data.disciplinaryScore), fontFamily: 'monospace', fontWeight: 600 }}>
-              → Score: {data.disciplinaryScore}
+              โ’ Score: {data.disciplinaryScore}
             </p>
           )}
         </div>

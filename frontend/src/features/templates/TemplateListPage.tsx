@@ -1,15 +1,17 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Trash2, RefreshCw, LayoutTemplate } from 'lucide-react'
+import { AlertTriangle, LayoutTemplate, Plus, RefreshCw, Trash2, X } from 'lucide-react'
 import api from '@/lib/api'
-import type { Template } from '@/types'
-import { formatDate, getTypeLabel } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
+import { formatDate, getTypeLabel } from '@/lib/utils'
+import type { Template } from '@/types'
 
 export default function TemplateListPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const { isAdmin } = useAuth()
+  const [deleteTarget, setDeleteTarget] = useState<Template | null>(null)
 
   const { data, isLoading, refetch, isFetching } = useQuery<Template[]>({
     queryKey: ['templates'],
@@ -18,7 +20,10 @@ export default function TemplateListPage() {
 
   const createMutation = useMutation({
     mutationFn: () => api.post('/templates', { name: 'New Template', type: 'SELF' }),
-    onSuccess: (res) => { qc.invalidateQueries({ queryKey: ['templates'] }); navigate(`/templates/${res.data.id}`) },
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ['templates'] })
+      navigate(`/templates/${res.data.id}`)
+    },
   })
 
   const deleteMutation = useMutation({
@@ -30,15 +35,11 @@ export default function TemplateListPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, animation: 'fadeIn 0.3s ease' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontSize: '1.375rem', fontWeight: 700, color: '#e2e8f0', letterSpacing: '-0.01em' }}>Templates</h1>
-          <p style={{ fontSize: '0.8125rem', color: '#4b5563', marginTop: 3 }}>แม่แบบฟอร์มประเมินผล</p>
+          <h1 style={{ fontSize: '1.375rem', fontWeight: 800, color: 'var(--kbt-text)', letterSpacing: 0 }}>Templates</h1>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--kbt-text-3)', marginTop: 3 }}>Build and manage reusable performance review forms.</p>
         </div>
         {isAdmin && (
-          <button
-            onClick={() => createMutation.mutate()}
-            disabled={createMutation.isPending}
-            className="kbt-btn-primary"
-          >
+          <button onClick={() => createMutation.mutate()} disabled={createMutation.isPending} className="kbt-btn-primary">
             <Plus size={15} /> New Template
           </button>
         )}
@@ -54,7 +55,7 @@ export default function TemplateListPage() {
         </div>
 
         {isLoading ? (
-          <div style={{ padding: 60, textAlign: 'center', color: '#4b5563' }}>Loading...</div>
+          <div style={{ padding: 60, textAlign: 'center', color: 'var(--kbt-text-3)' }}>Loading...</div>
         ) : (
           <table className="kbt-table">
             <thead>
@@ -68,37 +69,46 @@ export default function TemplateListPage() {
               </tr>
             </thead>
             <tbody>
-              {data?.map((t) => (
-                <tr key={t.id}>
+              {data?.map((template) => (
+                <tr key={template.id}>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{
-                        width: 30, height: 30, borderRadius: 8,
-                        background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                        width: 30,
+                        height: 30,
+                        borderRadius: 8,
+                        background: 'rgba(10,110,209,0.1)',
+                        border: '1px solid rgba(10,110,209,0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
                       }}>
-                        <LayoutTemplate size={14} color="#3b82f6" />
+                        <LayoutTemplate size={14} color="#0a6ed1" />
                       </div>
-                      <Link to={`/templates/${t.id}`} style={{ fontWeight: 600, color: '#e2e8f0', textDecoration: 'none' }}
-                        onMouseEnter={e => (e.currentTarget.style.color = '#00c87a')}
-                        onMouseLeave={e => (e.currentTarget.style.color = '#e2e8f0')}>
-                        {t.name}
+                      <Link
+                        to={`/templates/${template.id}`}
+                        style={{ fontWeight: 700, color: 'var(--kbt-text)', textDecoration: 'none' }}
+                        onMouseEnter={e => (e.currentTarget.style.color = '#0a6ed1')}
+                        onMouseLeave={e => (e.currentTarget.style.color = 'var(--kbt-text)')}
+                      >
+                        {template.name}
                       </Link>
                     </div>
                   </td>
-                  <td style={{ color: '#94a3b8' }}>{t.description ?? '—'}</td>
-                  <td><span className="kbt-badge-info">{getTypeLabel(t.type)}</span></td>
-                  <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 600, color: '#e2e8f0' }}>
-                    {t.sections.length}
+                  <td style={{ color: 'var(--kbt-text-2)' }}>{template.description ?? '-'}</td>
+                  <td><span className="kbt-badge-info">{getTypeLabel(template.type)}</span></td>
+                  <td style={{ textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, color: 'var(--kbt-text)' }}>
+                    {template.sections.length}
                   </td>
-                  <td style={{ color: '#4b5563', fontSize: '0.8125rem' }}>{formatDate(t.updatedAt)}</td>
+                  <td style={{ color: 'var(--kbt-text-3)', fontSize: '0.8125rem' }}>{formatDate(template.updatedAt)}</td>
                   <td>
                     <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                      <Link to={`/templates/${t.id}`} className="kbt-btn-ghost" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem' }}>
+                      <Link to={`/templates/${template.id}`} className="kbt-btn-ghost" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem' }}>
                         Edit
                       </Link>
                       {isAdmin && (
-                        <button onClick={() => deleteMutation.mutate(t.id)} className="kbt-btn-danger" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem' }}>
+                        <button onClick={() => setDeleteTarget(template)} className="kbt-btn-danger" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem' }}>
                           <Trash2 size={12} />
                         </button>
                       )}
@@ -110,7 +120,39 @@ export default function TemplateListPage() {
           </table>
         )}
       </div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+      {deleteTarget && (
+        <div className="kbt-modal-backdrop">
+          <div className="kbt-modal">
+            <div className="kbt-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(237,28,36,0.12)', border: '1px solid rgba(237,28,36,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <AlertTriangle size={14} color="#ed1c24" />
+                </div>
+                <span>Delete Template</span>
+              </div>
+              <button onClick={() => setDeleteTarget(null)} className="kbt-btn-ghost" style={{ width: 28, height: 28, padding: 0 }}>
+                <X size={15} />
+              </button>
+            </div>
+            <div className="kbt-modal-body">
+              <p style={{ color: 'var(--kbt-text-2)', fontSize: '0.875rem', lineHeight: 1.6 }}>
+                Are you sure you want to delete <strong style={{ color: 'var(--kbt-text)' }}>"{deleteTarget.name}"</strong>?
+                This action cannot be undone.
+              </p>
+              <div className="kbt-modal-actions">
+                <button onClick={() => setDeleteTarget(null)} className="kbt-btn-ghost">Cancel</button>
+                <button
+                  onClick={() => { deleteMutation.mutate(deleteTarget.id); setDeleteTarget(null) }}
+                  disabled={deleteMutation.isPending}
+                  className="kbt-btn-danger"
+                >
+                  <Trash2 size={13} /> Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

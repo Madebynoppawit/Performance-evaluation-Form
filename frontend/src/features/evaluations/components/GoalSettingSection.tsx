@@ -26,10 +26,10 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <div style={{ display: 'flex', gap: 16, fontSize: '0.75rem' }}>
-          <span style={{ color: '#4b5563' }}>Goals: <span style={{ color: '#94a3b8', fontWeight: 600 }}>{goals.length}/5</span></span>
-          <span style={{ color: '#4b5563' }}>
+          <span style={{ color: '#6b7a90' }}>Goals: <span style={{ color: '#a8b7cc', fontWeight: 600 }}>{goals.length}/5</span></span>
+          <span style={{ color: '#6b7a90' }}>
             Total weight:{' '}
-            <span style={{ fontFamily: 'monospace', fontWeight: 700, color: weightOk ? '#00c87a' : '#f59e0b' }}>
+            <span style={{ fontFamily: 'monospace', fontWeight: 700, color: weightOk ? '#00a86b' : '#f59e0b' }}>
               {totalWeight}%
             </span>
             {!weightOk && goals.length > 0 && <span style={{ color: '#f59e0b' }}> (should be 100%)</span>}
@@ -52,10 +52,10 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
         <div style={{
           padding: 40, textAlign: 'center',
           border: '1px dashed rgba(255,255,255,0.08)', borderRadius: 8,
-          color: '#4b5563', fontSize: '0.875rem',
+          color: '#6b7a90', fontSize: '0.875rem',
         }}>
           <Plus size={24} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
-          No goals yet — click Add Goal to start
+          No goals yet - click Add Goal to start
         </div>
       )}
 
@@ -69,24 +69,24 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)',
-            background: 'rgba(0,200,122,0.03)',
+            background: 'rgba(0,168,107,0.03)',
           }}>
             <span style={{
               width: 22, height: 22, borderRadius: 5, flexShrink: 0,
-              background: 'rgba(0,200,122,0.15)', border: '1px solid rgba(0,200,122,0.25)',
+              background: 'rgba(0,168,107,0.15)', border: '1px solid rgba(0,168,107,0.25)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.625rem', fontWeight: 700, color: '#00c87a', fontFamily: 'monospace',
+              fontSize: '0.625rem', fontWeight: 700, color: '#00a86b', fontFamily: 'monospace',
             }}>
               {String(idx + 1).padStart(2, '0')}
             </span>
-            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: goal.goal ? '#94a3b8' : '#4b5563', flex: 1 }}>
+            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: goal.goal ? '#a8b7cc' : '#6b7a90', flex: 1 }}>
               {goal.goal || `Goal ${idx + 1}`}
             </span>
             {!readOnly && (
               <button onClick={() => onChange(goals.filter((_, i) => i !== idx).map((g, i) => ({ ...g, order: i + 1 })))}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#4b5563', borderRadius: 4 }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#ef4444')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#4b5563')}>
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#6b7a90', borderRadius: 4 }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#ed1c24')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#6b7a90')}>
                 <Trash2 size={13} />
               </button>
             )}
@@ -116,8 +116,8 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                         width: 22, height: 22, borderRadius: 5, fontSize: '0.6875rem', fontWeight: 700,
                         fontFamily: 'monospace',
-                        background: r >= 4 ? 'rgba(0,200,122,0.12)' : r === 3 ? 'rgba(59,130,246,0.12)' : 'rgba(245,158,11,0.12)',
-                        color: r >= 4 ? '#00c87a' : r === 3 ? '#3b82f6' : '#f59e0b',
+                        background: r >= 4 ? 'rgba(0,168,107,0.12)' : r === 3 ? 'rgba(10,110,209,0.12)' : 'rgba(245,158,11,0.12)',
+                        color: r >= 4 ? '#00a86b' : r === 3 ? '#0a6ed1' : '#f59e0b',
                       }}>
                         {r}
                       </span>
@@ -138,7 +138,7 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
             <div>
               <label className="kbt-label">f. Evaluation Score</label>
               <select value={goal.evaluationScore ?? ''} onChange={e => update(idx, 'evaluationScore', e.target.value ? Number(e.target.value) : null)} disabled={readOnly} className="kbt-select">
-                <option value="">— Select —</option>
+                <option value="">Select</option>
                 {[5, 4, 3, 2, 1].map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>

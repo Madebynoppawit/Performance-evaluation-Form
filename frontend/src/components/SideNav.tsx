@@ -1,54 +1,62 @@
 import { NavLink } from 'react-router-dom'
-import { ClipboardList, LayoutTemplate, RefreshCw, BarChart2 } from 'lucide-react'
+import { BarChart2, ClipboardList, LayoutDashboard, LayoutTemplate, RefreshCw } from 'lucide-react'
 
 const navItems = [
-  { to: '/evaluations', label: 'แบบประเมิน',   sublabel: 'Evaluations',   icon: ClipboardList },
-  { to: '/templates',   label: 'แม่แบบฟอร์ม',   sublabel: 'Templates',     icon: LayoutTemplate },
-  { to: '/cycles',      label: 'รอบการประเมิน', sublabel: 'Cycles',        icon: RefreshCw },
-  { to: '/reports',     label: 'รายงาน',         sublabel: 'Reports',       icon: BarChart2 },
+  { to: '/', label: 'Dashboard', sublabel: 'Overview', icon: LayoutDashboard, end: true },
+  { to: '/evaluations', label: 'Evaluations', sublabel: 'Review workflow', icon: ClipboardList },
+  { to: '/templates', label: 'Templates', sublabel: 'Form builder', icon: LayoutTemplate },
+  { to: '/cycles', label: 'Cycles', sublabel: 'Review periods', icon: RefreshCw },
+  { to: '/reports', label: 'Reports', sublabel: 'Performance BI', icon: BarChart2 },
 ]
 
 export default function SideNav() {
   return (
     <aside className="kbt-sidebar">
-      {/* System label */}
-      <div style={{ padding: '16px 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <div style={{ padding: '18px 16px 10px', borderBottom: '1px solid var(--kbt-border)' }}>
         <p style={{
-          fontSize: '0.625rem', fontWeight: 700, color: '#4b5563',
-          textTransform: 'uppercase', letterSpacing: '0.1em',
+          fontSize: '0.625rem',
+          fontWeight: 800,
+          color: 'var(--kbt-text-3)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.12em',
         }}>
-          Main Menu
+          Workspace
         </p>
       </div>
 
-      <nav style={{ padding: '6px 0', flex: 1 }}>
-        {navItems.map(({ to, label, sublabel, icon: Icon }) => (
+      <nav style={{ padding: '8px 0', flex: 1 }}>
+        {navItems.map(({ to, label, sublabel, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
+            end={end}
             className="kbt-nav-item"
             style={({ isActive }) => ({
-              color: isActive ? '#00c87a' : '#94a3b8',
-              background: isActive ? 'rgba(0,200,122,0.07)' : 'transparent',
-              borderLeftColor: isActive ? '#00c87a' : 'transparent',
-              fontWeight: isActive ? 600 : 400,
+              color: isActive ? 'var(--sap-blue)' : 'var(--kbt-text-2)',
+              background: isActive ? 'rgba(10,110,209,0.08)' : 'transparent',
+              fontWeight: isActive ? 700 : 500,
             })}
           >
             {({ isActive }) => (
               <>
                 <div style={{
-                  width: 32, height: 32, borderRadius: 8,
-                  background: isActive ? 'rgba(0,200,122,0.12)' : 'rgba(255,255,255,0.04)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0, transition: 'all 0.15s',
+                  width: 34,
+                  height: 34,
+                  borderRadius: 9,
+                  background: isActive ? 'var(--brand-gradient)' : 'var(--control-bg)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  transition: 'all 0.16s',
                 }}>
-                  <Icon size={15} color={isActive ? '#00c87a' : '#4b5563'} />
+                  <Icon size={15} color={isActive ? '#ffffff' : 'var(--kbt-text-3)'} />
                 </div>
                 <div style={{ minWidth: 0 }}>
-                  <p style={{ fontSize: '0.8125rem', lineHeight: 1.2, color: isActive ? '#00c87a' : '#94a3b8' }}>
+                  <p style={{ fontSize: '0.8375rem', lineHeight: 1.2, color: isActive ? 'var(--kbt-text)' : 'var(--kbt-text-2)' }}>
                     {label}
                   </p>
-                  <p style={{ fontSize: '0.625rem', color: '#4b5563', marginTop: 1, letterSpacing: '0.02em' }}>
+                  <p style={{ fontSize: '0.65rem', color: 'var(--kbt-text-3)', marginTop: 2, letterSpacing: '0.02em' }}>
                     {sublabel}
                   </p>
                 </div>
@@ -58,22 +66,23 @@ export default function SideNav() {
         ))}
       </nav>
 
-      {/* Footer */}
-      <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-        <p style={{ fontSize: '0.625rem', color: '#4b5563', letterSpacing: '0.04em' }}>
-          v1.0.0 · KBTG Theme
-        </p>
+      <div style={{ padding: 14, borderTop: '1px solid var(--kbt-border)' }}>
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 5, marginTop: 4,
+          padding: '11px 14px',
+          borderRadius: 12,
+          border: '1px solid rgba(10,110,209,0.18)',
+          background: 'linear-gradient(135deg, rgba(10,110,209,0.08), rgba(10,110,209,0.02))',
+          boxShadow: '0 0 24px rgba(10,110,209,0.06)',
         }}>
-          <span style={{
-            width: 6, height: 6, borderRadius: '50%', background: '#22c55e',
-            boxShadow: '0 0 6px rgba(34,197,94,0.8)',
-            animation: 'pulseGreen 2s ease infinite',
-          }} />
-          <span style={{ fontSize: '0.6rem', color: '#22c55e', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-            System Online
-          </span>
+          <p style={{ fontSize: '0.6rem', color: 'var(--kbt-text-3)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 800 }}>
+            v0.1.0 · AMW Command
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 9 }}>
+            <span className="kbt-dot-live" />
+            <span style={{ fontSize: '0.6875rem', color: '#22c55e', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              Systems nominal
+            </span>
+          </div>
         </div>
       </div>
     </aside>

@@ -1,24 +1,29 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState } from 'react'
-import { Plus, X, Calendar, RefreshCw } from 'lucide-react'
+import { Calendar, Plus, RefreshCw, X } from 'lucide-react'
 import api from '@/lib/api'
 import type { Cycle, Template } from '@/types'
 import { formatDate } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 
 const STATUS: Record<string, { cls: string; label: string }> = {
-  UPCOMING: { cls: 'kbt-badge-info',    label: 'Upcoming' },
-  ACTIVE:   { cls: 'kbt-badge-success', label: 'Active' },
-  CLOSED:   { cls: 'kbt-badge-neutral', label: 'Closed' },
+  UPCOMING: { cls: 'kbt-badge-info', label: 'Upcoming' },
+  ACTIVE: { cls: 'kbt-badge-success', label: 'Active' },
+  CLOSED: { cls: 'kbt-badge-neutral', label: 'Closed' },
 }
 
 const schema = z.object({
-  name: z.string().min(1), templateId: z.string().min(1),
-  startDate: z.string().min(1), endDate: z.string().min(1),
+  name: z.string().min(1, 'Required'),
+  templateId: z.string().min(1, 'Required'),
+  startDate: z.string().min(1, 'Required'),
+  endDate: z.string().min(1, 'Required'),
   description: z.string().optional(),
+}).refine(d => !d.startDate || !d.endDate || d.endDate > d.startDate, {
+  message: 'End date must be after start date',
+  path: ['endDate'],
 })
 type FormData = z.infer<typeof schema>
 
@@ -27,22 +32,34 @@ export default function CycleListPage() {
   const { isAdmin } = useAuth()
   const [showDialog, setShowDialog] = useState(false)
 
-  const { data: cycles, isLoading } = useQuery<Cycle[]>({ queryKey: ['cycles'], queryFn: () => api.get('/cycles').then(r => r.data) })
-  const { data: templates } = useQuery<Template[]>({ queryKey: ['templates'], queryFn: () => api.get('/templates').then(r => r.data) })
+  const { data: cycles, isLoading } = useQuery<Cycle[]>({
+    queryKey: ['cycles'],
+    queryFn: () => api.get('/cycles').then(r => r.data),
+  })
+  const { data: templates } = useQuery<Template[]>({
+    queryKey: ['templates'],
+    queryFn: () => api.get('/templates').then(r => r.data),
+  })
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
+    useForm<FormData>({ resolver: zodResolver(schema) })
 
   const createMutation = useMutation({
     mutationFn: (d: FormData) => api.post('/cycles', d),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['cycles'] }); reset(); setShowDialog(false) },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['cycles'] })
+      reset()
+      setShowDialog(false)
+    },
   })
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, animation: 'fadeIn 0.3s ease' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div className="kbt-page">
+      <div className="kbt-page-header">
         <div>
-          <h1 style={{ fontSize: '1.375rem', fontWeight: 700, color: '#e2e8f0', letterSpacing: '-0.01em' }}>Cycles</h1>
-          <p style={{ fontSize: '0.8125rem', color: '#4b5563', marginTop: 3 }}>รอบการประเมินผลงาน</p>
+          <span className="amw-eyebrow">Review Calendar</span>
+          <h1>Cycles</h1>
+          <p>Plan performance review periods, connect templates, and monitor evaluation windows.</p>
         </div>
         {isAdmin && (
           <button onClick={() => setShowDialog(true)} className="kbt-btn-primary">
@@ -65,72 +82,54 @@ export default function CycleListPage() {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 48, color: '#4b5563' }}>Loading...</td></tr>
+              <tr><td colSpan={6}><div className="kbt-empty-panel">Loading cycles...</div></td></tr>
             ) : !cycles?.length ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 48, color: '#4b5563' }}>No cycles yet</td></tr>
-            ) : cycles.map((c) => (
-              <tr key={c.id}>
+              <tr><td colSpan={6}><div className="kbt-empty-panel">No cycles yet</div></td></tr>
+            ) : cycles.map((cycle) => (
+              <tr key={cycle.id}>
                 <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{
-                      width: 32, height: 32, borderRadius: 8,
-                      background: 'rgba(0,200,122,0.1)', border: '1px solid rgba(0,200,122,0.2)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    }}>
-                      <RefreshCw size={14} color="#00c87a" />
-                    </div>
-                    <span style={{ fontWeight: 600, color: '#e2e8f0' }}>{c.name}</span>
+                    <div className="kbt-metric-icon"><RefreshCw size={14} color="var(--sap-blue)" /></div>
+                    <strong>{cycle.name}</strong>
                   </div>
                 </td>
-                <td style={{ color: '#94a3b8' }}>{c.template?.name ?? '—'}</td>
-                <td style={{ color: '#94a3b8', fontFamily: 'monospace', fontSize: '0.8125rem' }}>{formatDate(c.startDate)}</td>
-                <td style={{ color: '#94a3b8', fontFamily: 'monospace', fontSize: '0.8125rem' }}>{formatDate(c.endDate)}</td>
-                <td><span className={STATUS[c.status]?.cls ?? 'kbt-badge-neutral'}>{STATUS[c.status]?.label ?? c.status}</span></td>
-                <td style={{ color: '#4b5563' }}>{c.description ?? '—'}</td>
+                <td style={{ color: 'var(--kbt-text-2)' }}>{cycle.template?.name ?? '-'}</td>
+                <td style={{ color: 'var(--kbt-text-2)', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8125rem' }}>{formatDate(cycle.startDate)}</td>
+                <td style={{ color: 'var(--kbt-text-2)', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8125rem' }}>{formatDate(cycle.endDate)}</td>
+                <td><span className={STATUS[cycle.status]?.cls ?? 'kbt-badge-neutral'}>{STATUS[cycle.status]?.label ?? cycle.status}</span></td>
+                <td style={{ color: 'var(--kbt-text-3)' }}>{cycle.description ?? '-'}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Dialog */}
       {showDialog && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: 16,
-          backdropFilter: 'blur(4px)',
-        }}>
-          <div style={{
-            width: '100%', maxWidth: 440,
-            background: '#111827', border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 12, boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-            animation: 'fadeIn 0.2s ease',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="kbt-modal-backdrop">
+          <div className="kbt-modal">
+            <div className="kbt-modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(0,200,122,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Calendar size={14} color="#00c87a" />
-                </div>
-                <span style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '0.9375rem' }}>Create Evaluation Cycle</span>
+                <div className="kbt-metric-icon"><Calendar size={14} color="var(--sap-blue)" /></div>
+                <span>Create Evaluation Cycle</span>
               </div>
               <button onClick={() => setShowDialog(false)} className="kbt-btn-ghost" style={{ width: 28, height: 28, padding: 0 }}>
                 <X size={15} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit(d => createMutation.mutate(d))} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <form onSubmit={handleSubmit(d => createMutation.mutate(d))} className="kbt-modal-body">
               <div>
                 <label className="kbt-label kbt-label-required">Cycle Name</label>
-                <input {...register('name')} className="kbt-input" placeholder="e.g. Q1 2026" />
-                {errors.name && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: 4 }}>Required</p>}
+                <input {...register('name')} className="kbt-input" placeholder="e.g. Annual Review 2026" />
+                {errors.name && <p className="kbt-field-error">Required</p>}
               </div>
               <div>
                 <label className="kbt-label kbt-label-required">Template</label>
                 <select {...register('templateId')} className="kbt-select">
-                  <option value="">— Select Template —</option>
+                  <option value="">Select Template</option>
                   {templates?.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
-                {errors.templateId && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: 4 }}>Required</p>}
+                {errors.templateId && <p className="kbt-field-error">Required</p>}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
@@ -140,13 +139,14 @@ export default function CycleListPage() {
                 <div>
                   <label className="kbt-label kbt-label-required">End Date</label>
                   <input {...register('endDate')} type="date" className="kbt-input" />
+                  {errors.endDate && <p className="kbt-field-error">{errors.endDate.message}</p>}
                 </div>
               </div>
               <div>
                 <label className="kbt-label">Description</label>
                 <input {...register('description')} className="kbt-input" placeholder="Optional description" />
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="kbt-modal-actions">
                 <button type="button" onClick={() => setShowDialog(false)} className="kbt-btn-ghost">Cancel</button>
                 <button type="submit" disabled={isSubmitting} className="kbt-btn-primary">{isSubmitting ? 'Creating...' : 'Create Cycle'}</button>
               </div>
@@ -154,7 +154,6 @@ export default function CycleListPage() {
           </div>
         </div>
       )}
-      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
     </div>
   )
 }

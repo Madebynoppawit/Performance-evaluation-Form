@@ -2,12 +2,13 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Loader2, Lock, Mail } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Loader2, Lock, Mail, ShieldCheck } from 'lucide-react'
 import api from '@/lib/api'
+import ThemeToggle from '@/components/ThemeToggle'
 import { useAuthStore } from './authStore'
 
 const schema = z.object({
-  email:    z.string().email('Invalid email address'),
+  email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 })
 type FormData = z.infer<typeof schema>
@@ -30,65 +31,79 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh', background: '#07090f',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      position: 'relative', overflow: 'hidden', padding: 24,
-    }}>
-      {/* Animated background glows */}
-      <div style={{
-        position: 'fixed', width: 600, height: 600,
-        borderRadius: '50%', top: '-20%', left: '-10%',
-        background: 'radial-gradient(circle, rgba(0,200,122,0.06) 0%, transparent 70%)',
-        pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'fixed', width: 500, height: 500,
-        borderRadius: '50%', bottom: '-15%', right: '-8%',
-        background: 'radial-gradient(circle, rgba(59,130,246,0.07) 0%, transparent 70%)',
-        pointerEvents: 'none',
-      }} />
+    <div className="amw-login" style={{ position: 'relative' }}>
+      {/* Ambient orbs */}
+      <div className="kbt-orb" style={{ width: 520, height: 520, background: 'radial-gradient(circle, rgba(10,110,209,0.16), transparent 70%)', top: -120, left: '8%', animationDuration: '12s' }} />
+      <div className="kbt-orb" style={{ width: 360, height: 360, background: 'radial-gradient(circle, rgba(22,88,142,0.18), transparent 70%)', bottom: '6%', left: '28%', animationDuration: '16s', animationDelay: '-6s' }} />
+      <div className="kbt-orb" style={{ width: 240, height: 240, background: 'radial-gradient(circle, rgba(231,34,46,0.1), transparent 70%)', top: '30%', left: '48%', animationDuration: '10s', animationDelay: '-3s' }} />
+      <div className="kbt-orb" style={{ width: 180, height: 180, background: 'radial-gradient(circle, rgba(129,196,255,0.14), transparent 70%)', top: '60%', right: '4%', animationDuration: '14s', animationDelay: '-8s' }} />
 
-      {/* Dot grid */}
-      <div style={{
-        position: 'fixed', inset: 0, pointerEvents: 'none',
-        backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)',
-        backgroundSize: '28px 28px',
-      }} />
+      <div style={{ position: 'fixed', top: 18, right: 18, zIndex: 5 }}>
+        <ThemeToggle />
+      </div>
 
-      {/* Card */}
-      <div style={{
-        width: '100%', maxWidth: 420, position: 'relative',
-        animation: 'fadeIn 0.4s ease',
-      }}>
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{
-            width: 52, height: 52, margin: '0 auto 16px',
-            background: 'linear-gradient(135deg, #00c87a, #3b82f6)',
-            borderRadius: 14,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 0 32px rgba(0,200,122,0.3)',
-            fontSize: '1rem', fontWeight: 800, color: '#000',
-          }}>
-            PE
+      <section className="amw-login-brand">
+        <div style={{ position: 'relative' }}>
+          <div className="amw-login-logo">
+            <img src="/amw-logo.png" alt="AMW" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
           </div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#e2e8f0', letterSpacing: '-0.02em' }}>
-            Performance Evaluation
-          </h1>
-          <p style={{ fontSize: '0.875rem', color: '#4b5563', marginTop: 6 }}>
-            Sign in to your account to continue
+
+          <div style={{ marginTop: 48 }}>
+            <p className="amw-login-eyebrow">Performance Intelligence Suite</p>
+            <h1 className="amw-login-title">
+              Evaluation<br /><span className="kbt-gradient-text">command center.</span>
+            </h1>
+            <p className="amw-login-subtitle">
+              A focused control surface for review cycles, competency scoring, salary decisions, and organization-wide performance visibility.
+            </p>
+          </div>
+
+          <div className="amw-status-grid">
+            {[
+              { value: '360°', label: 'Review ready', color: 'var(--sap-blue)' },
+              { value: '5.00', label: 'Score scale', color: 'var(--lambo-gold)' },
+              { value: 'RBAC', label: 'Access guard', color: 'var(--kbt-success)' },
+            ].map((item, i) => (
+              <div key={item.label} className={`amw-status-tile kbt-animate-up kbt-stagger-${i + 1}`} style={{ borderColor: 'rgba(10,110,209,0.18)', background: 'rgba(10,110,209,0.05)' }}>
+                <strong style={{ color: item.color }}>{item.value}</strong>
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, color: 'var(--kbt-text-2)', fontSize: '0.8125rem', fontWeight: 700 }}>
+          <CheckCircle2 size={16} color="var(--kbt-success)" />
+          Secure internal performance workflow
+        </div>
+      </section>
+
+      <section className="amw-login-panel">
+        <div style={{ marginBottom: 24 }}>
+          <div style={{
+            width: 48,
+            height: 48,
+            borderRadius: 14,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'var(--brand-gradient)',
+            color: '#ffffff',
+            boxShadow: '0 16px 32px rgba(10,110,209,0.28), var(--glow-blue)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <ShieldCheck size={22} style={{ position: 'relative', zIndex: 1 }} />
+          </div>
+          <h2 style={{ marginTop: 18, fontSize: '1.6rem', fontWeight: 900, color: 'var(--kbt-text)', letterSpacing: 0 }}>
+            Sign in to <span className="kbt-gradient-text">AMW Command</span>
+          </h2>
+          <p style={{ marginTop: 7, fontSize: '0.875rem', color: 'var(--kbt-text-3)', lineHeight: 1.55 }}>
+            Use your company account to continue.
           </p>
         </div>
 
-        {/* Form card */}
-        <div style={{
-          background: '#111827',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 14,
-          padding: 28,
-          boxShadow: '0 24px 64px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)',
-        }}>
+        <div className="amw-login-form-card">
           <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {errors.root && (
               <div className="kbt-msg-error" style={{ fontSize: '0.8125rem', padding: '10px 14px', borderRadius: 8 }}>
@@ -100,10 +115,7 @@ export default function LoginPage() {
             <div>
               <label className="kbt-label kbt-label-required">Email Address</label>
               <div style={{ position: 'relative' }}>
-                <Mail size={14} style={{
-                  position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                  color: '#4b5563', pointerEvents: 'none',
-                }} />
+                <Mail size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--kbt-text-3)', pointerEvents: 'none' }} />
                 <input
                   {...register('email')}
                   type="email"
@@ -113,16 +125,13 @@ export default function LoginPage() {
                   autoComplete="email"
                 />
               </div>
-              {errors.email && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: 4 }}>{errors.email.message}</p>}
+              {errors.email && <p style={{ color: '#ed1c24', fontSize: '0.75rem', marginTop: 4 }}>{errors.email.message}</p>}
             </div>
 
             <div>
               <label className="kbt-label kbt-label-required">Password</label>
               <div style={{ position: 'relative' }}>
-                <Lock size={14} style={{
-                  position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                  color: '#4b5563', pointerEvents: 'none',
-                }} />
+                <Lock size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--kbt-text-3)', pointerEvents: 'none' }} />
                 <input
                   {...register('password')}
                   type="password"
@@ -132,14 +141,14 @@ export default function LoginPage() {
                   autoComplete="current-password"
                 />
               </div>
-              {errors.password && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: 4 }}>{errors.password.message}</p>}
+              {errors.password && <p style={{ color: '#ed1c24', fontSize: '0.75rem', marginTop: 4 }}>{errors.password.message}</p>}
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
               className="kbt-btn-primary"
-              style={{ marginTop: 8, height: 44, fontSize: '0.9375rem', borderRadius: 8, width: '100%' }}
+              style={{ marginTop: 8, height: 46, fontSize: '0.9375rem', borderRadius: 9, width: '100%' }}
             >
               {isSubmitting ? (
                 <>
@@ -148,17 +157,16 @@ export default function LoginPage() {
                 </>
               ) : (
                 <>
-                  Sign In
+                  Enter Command
                   <ArrowRight size={16} />
                 </>
               )}
             </button>
           </form>
 
-          {/* Demo accounts */}
-          <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-            <p style={{ fontSize: '0.6875rem', color: '#4b5563', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Demo Accounts
+          <div style={{ marginTop: 22, paddingTop: 16, borderTop: '1px solid var(--kbt-border)' }}>
+            <p style={{ fontSize: '0.6875rem', color: 'var(--kbt-text-3)', marginBottom: 9, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800 }}>
+              Demo Access
             </p>
             {[
               { role: 'Admin', email: 'admin@company.com' },
@@ -166,33 +174,34 @@ export default function LoginPage() {
               { role: 'Officer', email: 'officer1@company.com' },
             ].map(({ role, email }) => (
               <div key={email} style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '6px 10px', borderRadius: 6, marginBottom: 4,
-                background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '7px 10px',
+                borderRadius: 8,
+                marginBottom: 5,
+                background: 'var(--control-bg)',
+                border: '1px solid var(--kbt-border)',
               }}>
-                <span style={{
-                  fontSize: '0.6875rem', fontWeight: 600, color: '#00c87a',
-                  textTransform: 'uppercase', letterSpacing: '0.04em',
-                }}>
+                <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: 'var(--lambo-gold)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   {role}
                 </span>
-                <span style={{ fontSize: '0.75rem', color: '#4b5563', fontFamily: 'monospace' }}>{email}</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)', fontFamily: 'JetBrains Mono, monospace' }}>{email}</span>
               </div>
             ))}
-            <p style={{ fontSize: '0.6875rem', color: '#4b5563', marginTop: 6, textAlign: 'center' }}>
-              Password: <span style={{ color: '#94a3b8', fontFamily: 'monospace' }}>P@ssw0rd!</span>
+            <p style={{ fontSize: '0.6875rem', color: 'var(--kbt-text-3)', marginTop: 8, textAlign: 'center' }}>
+              Password: <span style={{ color: 'var(--kbt-text-2)', fontFamily: 'JetBrains Mono, monospace', fontWeight: 800 }}>P@ssw0rd!</span>
             </p>
           </div>
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: '0.6875rem', color: '#4b5563', marginTop: 20 }}>
-          © {new Date().getFullYear()} KBTG · Performance Evaluation System
+        <p style={{ textAlign: 'center', fontSize: '0.6875rem', color: 'var(--kbt-text-3)', marginTop: 18 }}>
+          © {new Date().getFullYear()} AMW · Performance Evaluation System
         </p>
-      </div>
+      </section>
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </div>
   )

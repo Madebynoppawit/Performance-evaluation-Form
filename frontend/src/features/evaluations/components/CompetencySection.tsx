@@ -9,11 +9,11 @@ interface Props {
 }
 
 const SCORE_STYLES: Record<number, { bg: string; color: string; border: string }> = {
-  1: { bg: 'rgba(239,68,68,0.15)',   color: '#ef4444',  border: 'rgba(239,68,68,0.3)' },
+  1: { bg: 'rgba(237,28,36,0.15)',   color: '#ed1c24',  border: 'rgba(237,28,36,0.3)' },
   2: { bg: 'rgba(245,158,11,0.15)',  color: '#f59e0b',  border: 'rgba(245,158,11,0.3)' },
-  3: { bg: 'rgba(59,130,246,0.15)',  color: '#3b82f6',  border: 'rgba(59,130,246,0.3)' },
+  3: { bg: 'rgba(10,110,209,0.15)',  color: '#0a6ed1',  border: 'rgba(10,110,209,0.3)' },
   4: { bg: 'rgba(34,197,94,0.15)',   color: '#22c55e',  border: 'rgba(34,197,94,0.3)' },
-  5: { bg: 'rgba(0,200,122,0.15)',   color: '#00c87a',  border: 'rgba(0,200,122,0.3)' },
+  5: { bg: 'rgba(0,168,107,0.15)',   color: '#00a86b',  border: 'rgba(0,168,107,0.3)' },
 }
 
 export default function CompetencySection({ position, scores, readOnly, onChange }: Props) {
@@ -25,7 +25,7 @@ export default function CompetencySection({ position, scores, readOnly, onChange
     onChange(exists ? scores.map(s => s.competencyId === competencyId ? { ...s, score } : s) : [...scores, { competencyId, score }])
   }
 
-  if (!position) return <div className="kbt-msg-info" style={{ fontSize: '0.8125rem' }}>ไม่ระบุตำแหน่ง — ไม่สามารถแสดง Competency ได้</div>
+  if (!position) return <div className="kbt-msg-info" style={{ fontSize: '0.8125rem' }}>No position assigned - competency scoring is unavailable.</div>
 
   const validScores = scores.filter(s => s.score != null)
   const avg = validScores.length ? (validScores.reduce((s, c) => s + c.score!, 0) / validScores.length).toFixed(2) : null
@@ -33,19 +33,19 @@ export default function CompetencySection({ position, scores, readOnly, onChange
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {avg && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: 'rgba(0,200,122,0.06)', border: '1px solid rgba(0,200,122,0.15)', borderRadius: 8 }}>
-          <span style={{ fontSize: '0.75rem', color: '#4b5563' }}>Average Score:</span>
-          <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#00c87a', fontSize: '1rem' }}>{avg}</span>
-          <span style={{ fontSize: '0.75rem', color: '#4b5563' }}>/ 5.00</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: 'rgba(0,168,107,0.06)', border: '1px solid rgba(0,168,107,0.15)', borderRadius: 8 }}>
+          <span style={{ fontSize: '0.75rem', color: '#6b7a90' }}>Average Score:</span>
+          <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#00a86b', fontSize: '1rem' }}>{avg}</span>
+          <span style={{ fontSize: '0.75rem', color: '#6b7a90' }}>/ 5.00</span>
         </div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {/* Header */}
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 3fr auto', gap: 8, padding: '8px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px 6px 0 0', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <span style={{ fontSize: '0.625rem', fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Competency</span>
-          <span style={{ fontSize: '0.625rem', fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Description (for this position)</span>
-          <span style={{ fontSize: '0.625rem', fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center', width: 160 }}>Rating (1–5)</span>
+          <span style={{ fontSize: '0.625rem', fontWeight: 700, color: '#6b7a90', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Competency</span>
+          <span style={{ fontSize: '0.625rem', fontWeight: 700, color: '#6b7a90', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Description (for this position)</span>
+          <span style={{ fontSize: '0.625rem', fontWeight: 700, color: 'var(--kbt-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center', width: 160 }}>Rating (1-5)</span>
         </div>
 
         {competencies.map((c, idx) => {
@@ -59,9 +59,9 @@ export default function CompetencySection({ position, scores, readOnly, onChange
               borderTop: 'none',
             }}>
               <div>
-                <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#94a3b8' }}>{c.name}</p>
+                <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#a8b7cc' }}>{c.name}</p>
               </div>
-              <p style={{ fontSize: '0.75rem', color: '#4b5563', lineHeight: 1.5 }}>{c.descriptions[position]}</p>
+              <p style={{ fontSize: '0.75rem', color: '#6b7a90', lineHeight: 1.5 }}>{c.descriptions[position]}</p>
               <div style={{ display: 'flex', gap: 5, width: 160 }}>
                 {[1, 2, 3, 4, 5].map(v => {
                   const s = SCORE_STYLES[v]
@@ -71,7 +71,7 @@ export default function CompetencySection({ position, scores, readOnly, onChange
                       width: 28, height: 28, borderRadius: 6,
                       background: isSelected ? s.bg : 'rgba(255,255,255,0.04)',
                       border: `1px solid ${isSelected ? s.border : 'rgba(255,255,255,0.08)'}`,
-                      color: isSelected ? s.color : '#4b5563',
+                      color: isSelected ? s.color : '#6b7a90',
                       fontSize: '0.75rem', fontWeight: 700, fontFamily: 'monospace',
                       cursor: readOnly ? 'default' : 'pointer',
                       transition: 'all 0.15s',

@@ -9,11 +9,31 @@ export interface Toast {
   message?: string
 }
 
-const STYLES: Record<ToastType, { border: string; icon: ReactNode; glow: string }> = {
-  success: { border: 'rgba(0,200,122,0.3)',  glow: 'rgba(0,200,122,0.1)',  icon: <CheckCircle2 size={16} color="#00c87a" /> },
-  error:   { border: 'rgba(239,68,68,0.3)',  glow: 'rgba(239,68,68,0.1)',  icon: <XCircle size={16} color="#ef4444" /> },
-  warning: { border: 'rgba(245,158,11,0.3)', glow: 'rgba(245,158,11,0.1)', icon: <AlertTriangle size={16} color="#f59e0b" /> },
-  info:    { border: 'rgba(59,130,246,0.3)', glow: 'rgba(59,130,246,0.1)', icon: <Info size={16} color="#3b82f6" /> },
+const STYLES: Record<ToastType, { border: string; glow: string; accent: string; icon: ReactNode }> = {
+  success: {
+    border: 'rgba(34,197,94,0.28)',
+    glow:   '0 0 32px rgba(34,197,94,0.16)',
+    accent: '#22c55e',
+    icon: <CheckCircle2 size={15} color="#22c55e" />,
+  },
+  error: {
+    border: 'rgba(237,28,36,0.28)',
+    glow:   '0 0 32px rgba(237,28,36,0.16)',
+    accent: '#ed1c24',
+    icon: <XCircle size={15} color="#ed1c24" />,
+  },
+  warning: {
+    border: 'rgba(245,158,11,0.28)',
+    glow:   '0 0 32px rgba(245,158,11,0.14)',
+    accent: '#f59e0b',
+    icon: <AlertTriangle size={15} color="#f59e0b" />,
+  },
+  info: {
+    border: 'rgba(10,110,209,0.28)',
+    glow:   '0 0 32px rgba(10,110,209,0.18)',
+    accent: '#0a6ed1',
+    icon: <Info size={15} color="#0a6ed1" />,
+  },
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -43,39 +63,46 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {/* Toast container */}
       <div style={{
         position: 'fixed', bottom: 24, right: 24,
-        display: 'flex', flexDirection: 'column', gap: 8,
+        display: 'flex', flexDirection: 'column', gap: 10,
         zIndex: 9999, pointerEvents: 'none',
       }}>
         {toasts.map(t => {
           const s = STYLES[t.type]
           return (
             <div key={t.id} style={{
-              display: 'flex', alignItems: 'flex-start', gap: 10,
-              padding: '12px 14px',
-              background: '#111827',
+              display: 'flex', alignItems: 'flex-start', gap: 12,
+              padding: '13px 16px',
+              background: 'rgba(10,16,30,0.88)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
               border: `1px solid ${s.border}`,
-              borderRadius: 10,
-              boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px ${s.glow}`,
-              minWidth: 280, maxWidth: 380,
+              borderRadius: 14,
+              boxShadow: `0 24px 56px rgba(0,0,0,0.55), ${s.glow}, inset 0 1px 0 rgba(255,255,255,0.06)`,
+              minWidth: 300, maxWidth: 400,
               pointerEvents: 'all',
-              animation: 'toastIn 0.25s ease',
+              animation: 'toast-in 0.28s cubic-bezier(0.34,1.56,0.64,1)',
+              position: 'relative',
+              overflow: 'hidden',
             }}>
-              <span style={{ flexShrink: 0, marginTop: 1 }}>{s.icon}</span>
+              {/* Accent left bar */}
+              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: s.accent, borderRadius: '14px 0 0 14px' }} />
+              <span style={{ flexShrink: 0, marginTop: 1, marginLeft: 6 }}>{s.icon}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#e2e8f0' }}>{t.title}</p>
-                {t.message && <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>{t.message}</p>}
+                <p style={{ fontSize: '0.875rem', fontWeight: 700, color: '#eaf2ff', letterSpacing: '0.01em' }}>{t.title}</p>
+                {t.message && <p style={{ fontSize: '0.75rem', color: '#a8b7cc', marginTop: 3, lineHeight: 1.5 }}>{t.message}</p>}
               </div>
               <button onClick={() => remove(t.id)} style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: '#4b5563', padding: 2, flexShrink: 0,
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 6, cursor: 'pointer', color: '#6b7a90', padding: '3px 4px',
+                flexShrink: 0, transition: 'all 0.14s',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <X size={13} />
+                <X size={12} />
               </button>
             </div>
           )
         })}
       </div>
-      <style>{`@keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}`}</style>
     </ToastContext.Provider>
   )
 }
