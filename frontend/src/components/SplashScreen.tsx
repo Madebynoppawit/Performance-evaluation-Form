@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
 
 const TITLE    = 'AMW  COMMAND'
-const BOOT_SEQ = ['LOADING MODULES...', 'AUTHENTICATING...', 'SYSTEM READY']
+const BOOT_SEQ = [
+  '[ .... ] Starting performance engine',
+  '[  OK  ] Mounting user workspace',
+  '[  OK  ] System operational',
+]
 
 export default function SplashScreen({ onDone }: { onDone: () => void }) {
   const [show,     setShow]     = useState(false)
@@ -162,7 +166,7 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
       }}>
         {TITLE.slice(0, chars)}
         {chars < TITLE.length && (
-          <span style={{ animation: 'cursor-blink 0.7s ease infinite', marginLeft: 2, color: '#f9ce5c' }}>█</span>
+          <span style={{ animation: 'cursor-blink 0.7s ease infinite', marginLeft: 3, color: '#d8a016' }}>_</span>
         )}
       </div>
 
@@ -184,7 +188,7 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
         opacity: show ? 1 : 0,
         transition: 'opacity 0.4s ease 0.9s',
       }}>
-        Performance Intelligence Suite
+        performance-evaluation-form · v0.1.0
       </p>
 
       {/* ── Progress bar ───────────────────────────────────────────── */}
@@ -209,13 +213,20 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
 
         {/* Boot labels */}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, alignItems: 'center' }}>
-          <span style={{
-            fontFamily: '"JetBrains Mono", monospace',
-            fontSize: '0.6rem', letterSpacing: '0.08em',
-            color: ready ? '#22c55e' : 'rgba(216,160,22,0.65)',
-            transition: 'color 0.3s ease',
-          }}>
-            {BOOT_SEQ[bootIdx]}
+          <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: '0.6rem', letterSpacing: '0.06em' }}>
+            {BOOT_SEQ[bootIdx].startsWith('[  OK  ]') ? (
+              <>
+                <span style={{ color: '#22c55e' }}>[  OK  ]</span>
+                <span style={{ color: ready ? '#22c55e' : 'rgba(168,183,204,0.65)', transition: 'color 0.3s ease' }}>
+                  {BOOT_SEQ[bootIdx].slice(8)}
+                </span>
+              </>
+            ) : (
+              <>
+                <span style={{ color: 'rgba(216,160,22,0.7)' }}>[ .... ]</span>
+                <span style={{ color: 'rgba(168,183,204,0.65)' }}>{BOOT_SEQ[bootIdx].slice(8)}</span>
+              </>
+            )}
           </span>
           <span style={{
             fontFamily: '"JetBrains Mono", monospace',
@@ -235,8 +246,8 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
         transition: 'opacity 0.4s ease 1.2s',
       }}>
         <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#d8a016' }} />
-        <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: '0.58rem', letterSpacing: '0.12em', color: 'rgba(216,160,22,0.8)' }}>
-          v0.1.0  ·  AMW COMMAND
+        <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: '0.58rem', letterSpacing: '0.08em', color: 'rgba(168,183,204,0.5)' }}>
+          root@amw-command:~<span style={{ color: '#22c55e' }}>$</span> _
         </span>
         <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#d8a016' }} />
       </div>
