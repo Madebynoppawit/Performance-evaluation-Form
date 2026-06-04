@@ -1,6 +1,5 @@
-import { PrismaClient, EvaluationStatus, CycleStatus } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '../lib/prisma'
+import { EvaluationStatus, CycleStatus } from '@prisma/client'
 
 const COMPLETED: EvaluationStatus[] = [
   EvaluationStatus.SUBMITTED,

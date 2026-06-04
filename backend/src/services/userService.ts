@@ -1,7 +1,6 @@
-import { PrismaClient, Role, Position } from '@prisma/client'
+import { prisma } from '../lib/prisma'
+import { Role, Position } from '@prisma/client'
 import { hashPassword } from '../utils/hash'
-
-const prisma = new PrismaClient()
 
 export async function getAllUsers() {
   return prisma.user.findMany({

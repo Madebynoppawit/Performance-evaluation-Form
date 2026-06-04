@@ -24,8 +24,9 @@ const sectionSchema = z.object({
 const questionSchema = z.object({
   text:     z.string().min(1).max(500),
   type:     QuestionType,
+  weight:   z.number().min(0).max(10).default(1.0),
   order:    z.number().int().min(0),
-  required: z.boolean().optional(),
+  required: z.boolean().default(true),
 })
 
 export async function list(_req: AuthRequest, res: Response, next: NextFunction) {

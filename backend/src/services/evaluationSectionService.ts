@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '../lib/prisma'
 import { calculateGoalScore } from './goalService'
 import { calculateCompetencyScore } from './competencyService'
-
-const prisma = new PrismaClient()
 
 export async function upsertComment(
   evaluationId: string,

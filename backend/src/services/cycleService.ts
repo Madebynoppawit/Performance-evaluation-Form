@@ -1,6 +1,5 @@
-import { PrismaClient, CycleStatus } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '../lib/prisma'
+import { CycleStatus } from '@prisma/client'
 
 export async function getAllCycles() {
   return prisma.cycle.findMany({
