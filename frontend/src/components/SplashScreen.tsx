@@ -1,274 +1,272 @@
 import { useEffect, useState } from 'react'
 
-const TITLE    = 'AMW  COMMAND'
-const BOOT_SEQ = [
-  '[ .... ] Starting performance engine',
-  '[  OK  ] Mounting user workspace',
-  '[  OK  ] System operational',
-]
+const TITLE = 'AMW  COMMAND'
+const PHASES = ['IGNITION', 'LAUNCH CONTROL', 'THROTTLE : ENGAGED']
 
 export default function SplashScreen({ onDone }: { onDone: () => void }) {
-  const [show,     setShow]     = useState(false)
-  const [chars,    setChars]    = useState(0)
-  const [progress, setProgress] = useState(0)
-  const [bootIdx,  setBootIdx]  = useState(0)
-  const [ready,    setReady]    = useState(false)
+  const [step,     setStep]     = useState(0)   // animation step
+  const [chars,    setChars]    = useState(0)   // typewriter
+  const [progress, setProgress] = useState(0)  // 0-100
+  const [phaseIdx, setPhaseIdx] = useState(0)
   const [fadeOut,  setFadeOut]  = useState(false)
 
   useEffect(() => {
     const ts = [
-      setTimeout(() => setShow(true),      380),
-      setTimeout(() => setBootIdx(1),     1500),
-      setTimeout(() => setBootIdx(2),     2000),
-      setTimeout(() => setReady(true),    2100),
-      setTimeout(() => setFadeOut(true),  2600),
-      setTimeout(onDone,                  3200),
+      setTimeout(() => setStep(1),        180),   // logo in
+      setTimeout(() => setStep(2),        600),   // title
+      setTimeout(() => setStep(3),       1000),   // progress start
+      setTimeout(() => setPhaseIdx(1),   1400),
+      setTimeout(() => setPhaseIdx(2),   1900),
+      setTimeout(() => setStep(4),       2100),   // final hold
+      setTimeout(() => setFadeOut(true), 2500),
+      setTimeout(onDone,                 3100),
     ]
     return () => ts.forEach(clearTimeout)
   }, [onDone])
 
-  /* Typewriter */
   useEffect(() => {
-    if (!show || chars >= TITLE.length) return
-    const t = setTimeout(() => setChars(c => c + 1), 58)
+    if (step < 2 || chars >= TITLE.length) return
+    const t = setTimeout(() => setChars(c => c + 1), 54)
     return () => clearTimeout(t)
-  }, [show, chars])
+  }, [step, chars])
 
-  /* Progress */
   useEffect(() => {
-    if (!show || progress >= 100) return
-    const t = setTimeout(() => setProgress(p => Math.min(p + 1.4, 100)), 14)
+    if (step < 3 || progress >= 100) return
+    const t = setTimeout(() => setProgress(p => Math.min(p + 1.5, 100)), 12)
     return () => clearTimeout(t)
-  }, [show, progress])
+  }, [step, progress])
 
   const pct = Math.round(progress)
+  /* RPM arc: semicircle r=88, circumference ≈ 276 */
+  const arcLen = 276
+  const arcOffset = arcLen - (pct / 100) * arcLen
 
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 99999,
-      background: '#030303',
+      overflow: 'hidden',
+      background: '#060606',
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
-      overflow: 'hidden',
       opacity: fadeOut ? 0 : 1,
       transition: fadeOut ? 'opacity 0.6s cubic-bezier(0.4,0,0.2,1)' : 'none',
       pointerEvents: fadeOut ? 'none' : 'all',
     }}>
 
-      {/* ── Scan line ──────────────────────────────────────────────── */}
-      <div style={{
-        position: 'absolute', left: 0, right: 0,
-        height: 2, top: 0,
-        background: 'linear-gradient(90deg, transparent 0%, rgba(216,160,22,0.9) 30%, #f9ce5c 50%, rgba(216,160,22,0.9) 70%, transparent 100%)',
-        boxShadow: '0 0 18px rgba(216,160,22,0.7), 0 0 36px rgba(216,160,22,0.3)',
-        animation: 'scan-sweep 0.55s cubic-bezier(0.4,0,1,1) forwards',
-      }} />
-
-      {/* ── Noise grain ────────────────────────────────────────────── */}
-      <div style={{
-        position: 'absolute', inset: 0, opacity: 0.04, pointerEvents: 'none',
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-        backgroundSize: '256px 256px',
-      }} />
-
-      {/* ── Grid ───────────────────────────────────────────────────── */}
+      {/* ── Carbon fiber weave ─────────────────────────────────────── */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
         backgroundImage: [
-          'linear-gradient(rgba(216,160,22,0.04) 1px, transparent 1px)',
-          'linear-gradient(90deg, rgba(216,160,22,0.04) 1px, transparent 1px)',
+          'repeating-linear-gradient(45deg,  rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 1px, transparent 1px, transparent 7px)',
+          'repeating-linear-gradient(-45deg, rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 1px, transparent 1px, transparent 7px)',
         ].join(','),
-        backgroundSize: '56px 56px',
-        maskImage: 'radial-gradient(ellipse 75% 75% at 50% 50%, black 10%, transparent 80%)',
-        WebkitMaskImage: 'radial-gradient(ellipse 75% 75% at 50% 50%, black 10%, transparent 80%)',
       }} />
 
-      {/* ── Ambient glow ───────────────────────────────────────────── */}
-      <div style={{ position:'absolute', width:500, height:500, borderRadius:'50%', background:'radial-gradient(circle, rgba(216,160,22,0.06), transparent 70%)', top:'50%', left:'50%', transform:'translate(-50%,-50%)', filter:'blur(60px)', pointerEvents:'none' }} />
-      <div style={{ position:'absolute', width:300, height:300, borderRadius:'50%', background:'radial-gradient(circle, rgba(10,110,209,0.08), transparent 70%)', top:'30%', right:'20%', filter:'blur(50px)', pointerEvents:'none' }} />
+      {/* ── French tricolor stripe (top) ───────────────────────────── */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ height: 2, background: '#0032a0', opacity: step >= 1 ? 0.85 : 0, transition: 'opacity 0.5s ease 0.2s' }} />
+        <div style={{ height: 2, background: '#f0f0f0', opacity: step >= 1 ? 0.5  : 0, transition: 'opacity 0.5s ease 0.3s' }} />
+        <div style={{ height: 2, background: '#e10600', opacity: step >= 1 ? 0.9  : 0, transition: 'opacity 0.5s ease 0.4s' }} />
+      </div>
 
-      {/* ── Side data strips ───────────────────────────────────────── */}
-      {['left', 'right'].map(side => (
-        <div key={side} style={{
-          position: 'absolute',
-          [side]: 32, top: '50%',
-          transform: 'translateY(-50%)',
-          width: 1, height: 220,
-          background: `linear-gradient(to bottom, transparent, rgba(216,160,22,0.3), rgba(216,160,22,0.5), rgba(216,160,22,0.3), transparent)`,
-          opacity: show ? 0.7 : 0,
-          transition: 'opacity 0.6s ease 0.6s',
-        }} />
-      ))}
+      {/* ── Speed lines (blast on load) ────────────────────────────── */}
+      <div style={{ position: 'absolute', top: '38%', left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent 0%, #e10600 40%, #ff4444 50%, #e10600 60%, transparent 100%)', opacity: step === 1 ? 1 : 0, transition: 'opacity 0.4s ease', animation: step === 1 ? 'speed-blast 0.45s ease-out forwards' : 'none' }} />
+      <div style={{ position: 'absolute', top: '62%', left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent 0%, #e10600 40%, #ff4444 50%, #e10600 60%, transparent 100%)', opacity: step === 1 ? 1 : 0, transition: 'opacity 0.4s ease', animation: step === 1 ? 'speed-blast 0.45s ease-out 0.06s forwards' : 'none' }} />
 
-      {/* ── Logo + HUD frame ───────────────────────────────────────── */}
+      {/* ── Ambient red glow center ─────────────────────────────────── */}
+      <div style={{ position: 'absolute', width: 600, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(225,6,0,0.07), transparent 70%)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', filter: 'blur(30px)', pointerEvents: 'none', opacity: step >= 1 ? 1 : 0, transition: 'opacity 0.6s ease' }} />
+
+      {/* ── Logo + angular frame ────────────────────────────────────── */}
       <div style={{
-        position: 'relative',
-        opacity: show ? 1 : 0,
-        transform: show ? 'translateY(0)' : 'translateY(16px)',
-        transition: 'opacity 0.55s ease, transform 0.55s cubic-bezier(0.34,1.56,0.64,1)',
-        marginBottom: 32,
+        position: 'relative', marginBottom: 28,
+        opacity: step >= 1 ? 1 : 0,
+        transform: step >= 1 ? 'translateY(0)' : 'translateY(-20px)',
+        transition: 'opacity 0.5s ease, transform 0.5s cubic-bezier(0.34,1.2,0.64,1)',
       }}>
-        {/* HUD corner brackets */}
+        {/* Angular corner marks (sharper than before — F1 style) */}
         {[
-          { top: -14, left: -14, borderTop: true, borderLeft: true },
-          { top: -14, right: -14, borderTop: true, borderRight: true },
-          { bottom: -14, left: -14, borderBottom: true, borderLeft: true },
-          { bottom: -14, right: -14, borderBottom: true, borderRight: true },
+          { top: -10, left: -10 },
+          { top: -10, right: -10 },
+          { bottom: -10, left: -10 },
+          { bottom: -10, right: -10 },
         ].map((pos, i) => (
           <div key={i} style={{
-            position: 'absolute',
-            ...pos as any,
-            width: 22, height: 22,
-            borderTop:    pos.borderTop    ? '1.5px solid #d8a016' : 'none',
-            borderBottom: pos.borderBottom ? '1.5px solid #d8a016' : 'none',
-            borderLeft:   pos.borderLeft   ? '1.5px solid #d8a016' : 'none',
-            borderRight:  pos.borderRight  ? '1.5px solid #d8a016' : 'none',
-            opacity: show ? 1 : 0,
-            transform: show ? 'scale(1)' : 'scale(0.7)',
-            transition: `all 0.35s ease ${0.1 + i * 0.06}s`,
+            position: 'absolute', ...pos,
+            width: 16, height: 16,
+            borderTop:    i < 2  ? '2px solid #e10600' : 'none',
+            borderBottom: i >= 2 ? '2px solid #e10600' : 'none',
+            borderLeft:   i % 2 === 0 ? '2px solid #e10600' : 'none',
+            borderRight:  i % 2 === 1 ? '2px solid #e10600' : 'none',
+            opacity: step >= 1 ? 1 : 0,
+            transition: `opacity 0.3s ease ${0.1 + i * 0.05}s`,
           }} />
         ))}
 
-        {/* Logo card */}
-        <div style={{
-          width: 196, height: 84,
-          background: '#ffffff',
-          borderRadius: 12,
-          padding: '11px 18px',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          animation: show ? 'glow-gold 3s ease-in-out infinite' : 'none',
-        }}>
-          <img src="/amw-logo.png" alt="AMW" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
-        </div>
+        {/* Red side accent bars */}
+        <div style={{ position: 'absolute', left: -20, top: '15%', width: 3, height: '70%', background: 'linear-gradient(to bottom, transparent, #e10600, transparent)', opacity: step >= 1 ? 1 : 0, transition: 'opacity 0.4s ease 0.3s' }} />
+        <div style={{ position: 'absolute', right: -20, top: '15%', width: 3, height: '70%', background: 'linear-gradient(to bottom, transparent, #e10600, transparent)', opacity: step >= 1 ? 1 : 0, transition: 'opacity 0.4s ease 0.3s' }} />
 
-        {/* Bottom accent line on logo */}
+        {/* Logo card — brushed chrome feel */}
         <div style={{
-          position: 'absolute', bottom: -6, left: '10%', right: '10%',
-          height: 1,
-          background: 'linear-gradient(90deg, transparent, rgba(216,160,22,0.8), transparent)',
-          opacity: show ? 1 : 0,
-          transition: 'opacity 0.4s ease 0.5s',
-        }} />
+          width: 192, height: 80,
+          background: 'linear-gradient(160deg, #ffffff 0%, #f0f0f0 100%)',
+          borderRadius: 4,
+          padding: '10px 16px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 0 40px rgba(225,6,0,0.25), 0 0 80px rgba(225,6,0,0.1), 0 2px 0 rgba(255,255,255,0.9) inset, 0 20px 50px rgba(0,0,0,0.7)',
+          animation: step >= 1 ? 'red-glow-pulse 2.8s ease infinite' : 'none',
+        }}>
+          <img src="/amw-logo.png" alt="AMW" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        </div>
       </div>
 
-      {/* ── Typewriter title ───────────────────────────────────────── */}
+      {/* ── Typewriter title ─────────────────────────────────────────── */}
       <div style={{
-        fontFamily: '"JetBrains Mono", monospace',
-        fontSize: 'clamp(1.5rem, 3.5vw, 2.2rem)',
-        fontWeight: 900,
-        letterSpacing: '0.32em',
-        color: '#d8a016',
-        textShadow: '0 0 24px rgba(216,160,22,0.55)',
-        minHeight: '2.5rem',
+        fontFamily: '"Inter", sans-serif',
+        fontSize: 'clamp(1.4rem, 3vw, 2rem)',
+        fontWeight: 800,
+        letterSpacing: '0.38em',
+        color: '#ececec',
+        textShadow: '0 0 30px rgba(225,6,0,0.35)',
+        minHeight: '2.4rem',
         display: 'flex', alignItems: 'center',
-        opacity: show ? 1 : 0,
-        transition: 'opacity 0.3s ease 0.3s',
+        opacity: step >= 2 ? 1 : 0,
+        transition: 'opacity 0.4s ease',
       }}>
         {TITLE.slice(0, chars)}
-        {chars < TITLE.length && (
-          <span style={{ animation: 'cursor-blink 0.7s ease infinite', marginLeft: 3, color: '#d8a016' }}>_</span>
+        {chars < TITLE.length && step >= 2 && (
+          <span style={{ animation: 'cursor-blink 0.6s ease infinite', marginLeft: 3, color: '#e10600' }}>|</span>
         )}
       </div>
 
-      {/* ── Thin gold separator ────────────────────────────────────── */}
+      {/* ── Red separator ──────────────────────────────────────────── */}
       <div style={{
-        width: 260, height: 1, margin: '14px 0',
-        background: 'linear-gradient(90deg, transparent, rgba(216,160,22,0.5), rgba(10,110,209,0.5), transparent)',
-        opacity: show ? 1 : 0,
-        transition: 'opacity 0.5s ease 0.7s',
+        width: step >= 2 ? 300 : 0,
+        height: 1,
+        margin: '12px 0',
+        background: 'linear-gradient(90deg, transparent, #e10600 30%, #c9a84c 50%, #e10600 70%, transparent)',
+        boxShadow: '0 0 8px rgba(225,6,0,0.5)',
+        transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1) 0.4s',
       }} />
 
       {/* ── Tagline ────────────────────────────────────────────────── */}
       <p style={{
-        fontFamily: 'Inter, sans-serif',
-        fontSize: '0.68rem', fontWeight: 700,
-        letterSpacing: '0.2em', textTransform: 'uppercase',
-        color: 'rgba(129,196,255,0.75)',
-        marginBottom: 28,
-        opacity: show ? 1 : 0,
-        transition: 'opacity 0.4s ease 0.9s',
+        fontFamily: '"Inter", sans-serif',
+        fontSize: '0.68rem', fontWeight: 500,
+        letterSpacing: '0.22em', textTransform: 'uppercase',
+        color: 'rgba(201,168,76,0.8)',
+        marginBottom: 28, marginTop: 4,
+        opacity: step >= 2 ? 1 : 0,
+        transition: 'opacity 0.5s ease 0.6s',
       }}>
-        performance-evaluation-form · v0.1.0
+        Engineered for Performance · Paris · Monaco
       </p>
 
-      {/* ── Progress bar ───────────────────────────────────────────── */}
-      <div style={{
-        width: 260,
-        opacity: show ? 1 : 0,
-        transition: 'opacity 0.3s ease 1.0s',
-      }}>
-        <div style={{ height: 2, background: 'rgba(255,255,255,0.06)', borderRadius: 999, overflow: 'hidden', position: 'relative' }}>
-          <div style={{
-            height: '100%', borderRadius: 999,
-            width: `${pct}%`,
-            background: 'linear-gradient(90deg, rgba(216,160,22,0.6), #d8a016 60%, #f9ce5c)',
-            boxShadow: '0 0 10px rgba(216,160,22,0.7)',
-            transition: 'width 0.12s linear',
-            position: 'relative',
-          }}>
-            {/* Shimmer */}
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s ease infinite' }} />
-          </div>
-        </div>
+      {/* ── RPM arc (SVG) ──────────────────────────────────────────── */}
+      <div style={{ position: 'relative', width: 200, height: 100, opacity: step >= 3 ? 1 : 0, transition: 'opacity 0.4s ease' }}>
+        <svg width="200" height="100" viewBox="0 0 200 100" style={{ overflow: 'visible' }}>
+          {/* Track */}
+          <path d="M 10,95 A 90,90 0 0,1 190,95" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="2" />
+          {/* Fill — red to gold */}
+          <path d="M 10,95 A 90,90 0 0,1 190,95" fill="none"
+            stroke="url(#rpmGrad)" strokeWidth="2.5" strokeLinecap="round"
+            strokeDasharray={`${arcLen}`}
+            strokeDashoffset={arcOffset}
+            style={{ transition: 'stroke-dashoffset 0.12s linear' }}
+          />
+          {/* Tick marks */}
+          {Array.from({ length: 11 }).map((_, i) => {
+            const angle = -180 + i * 18
+            const rad   = (angle * Math.PI) / 180
+            const cx    = 100 + 90 * Math.cos(rad)
+            const cy    = 95  + 90 * Math.sin(rad)
+            const cx2   = 100 + 82 * Math.cos(rad)
+            const cy2   = 95  + 82 * Math.sin(rad)
+            return <line key={i} x1={cx} y1={cy} x2={cx2} y2={cy2} stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+          })}
+          <defs>
+            <linearGradient id="rpmGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stopColor="#e10600" />
+              <stop offset="60%"  stopColor="#e10600" />
+              <stop offset="100%" stopColor="#c9a84c" />
+            </linearGradient>
+          </defs>
+        </svg>
 
-        {/* Boot labels */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, alignItems: 'center' }}>
-          <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: '0.6rem', letterSpacing: '0.06em' }}>
-            {BOOT_SEQ[bootIdx].startsWith('[  OK  ]') ? (
-              <>
-                <span style={{ color: '#22c55e' }}>[  OK  ]</span>
-                <span style={{ color: ready ? '#22c55e' : 'rgba(168,183,204,0.65)', transition: 'color 0.3s ease' }}>
-                  {BOOT_SEQ[bootIdx].slice(8)}
-                </span>
-              </>
-            ) : (
-              <>
-                <span style={{ color: 'rgba(216,160,22,0.7)' }}>[ .... ]</span>
-                <span style={{ color: 'rgba(168,183,204,0.65)' }}>{BOOT_SEQ[bootIdx].slice(8)}</span>
-              </>
-            )}
-          </span>
-          <span style={{
-            fontFamily: '"JetBrains Mono", monospace',
-            fontSize: '0.6rem',
-            color: 'rgba(216,160,22,0.5)',
-          }}>
-            {pct.toString().padStart(3, '0')}%
+        {/* Percentage readout */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+          textAlign: 'center',
+        }}>
+          <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: '1.1rem', fontWeight: 900, color: '#ececec', letterSpacing: '0.06em' }}>
+            {pct}<span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.4)', marginLeft: 2 }}>%</span>
           </span>
         </div>
       </div>
 
-      {/* ── Version badge ──────────────────────────────────────────── */}
+      {/* ── Phase status ───────────────────────────────────────────── */}
       <div style={{
-        position: 'absolute', bottom: 26, left: '50%', transform: 'translateX(-50%)',
+        marginTop: 16,
+        fontFamily: '"JetBrains Mono", monospace',
+        fontSize: '0.62rem', letterSpacing: '0.14em',
         display: 'flex', alignItems: 'center', gap: 8,
-        opacity: show ? 0.4 : 0,
-        transition: 'opacity 0.4s ease 1.2s',
+        opacity: step >= 3 ? 1 : 0,
+        transition: 'opacity 0.3s ease',
       }}>
-        <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#d8a016' }} />
-        <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: '0.58rem', letterSpacing: '0.08em', color: 'rgba(168,183,204,0.5)' }}>
-          root@amw-command:~<span style={{ color: '#22c55e' }}>$</span> _
+        <span style={{
+          width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+          background: phaseIdx === 2 ? '#22c55e' : phaseIdx === 1 ? '#f59e0b' : '#e10600',
+          boxShadow: phaseIdx === 2 ? '0 0 8px #22c55e' : phaseIdx === 1 ? '0 0 8px #f59e0b' : '0 0 8px #e10600',
+          transition: 'all 0.3s ease',
+          animation: 'dot-pulse 1s ease infinite',
+        }} />
+        <span style={{ color: phaseIdx === 2 ? '#22c55e' : 'rgba(236,236,236,0.65)', transition: 'color 0.3s ease' }}>
+          {PHASES[phaseIdx]}
         </span>
-        <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#d8a016' }} />
+      </div>
+
+      {/* ── Bottom rule + location ──────────────────────────────────── */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        display: 'flex', flexDirection: 'column',
+        opacity: step >= 1 ? 1 : 0,
+        transition: 'opacity 0.5s ease 0.8s',
+      }}>
+        {/* Tricolor bottom (reversed: red-white-blue) */}
+        <div style={{ height: 2, background: '#e10600', opacity: 0.9 }} />
+        <div style={{ height: 2, background: '#f0f0f0', opacity: 0.5 }} />
+        <div style={{ height: 2, background: '#0032a0', opacity: 0.85 }} />
+      </div>
+
+      <div style={{
+        position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)',
+        display: 'flex', alignItems: 'center', gap: 10,
+        opacity: step >= 2 ? 0.45 : 0,
+        transition: 'opacity 0.4s ease 1.2s',
+        whiteSpace: 'nowrap',
+      }}>
+        <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: '0.55rem', letterSpacing: '0.14em', color: 'rgba(201,168,76,0.9)' }}>
+          AMW PERFORMANCE  ·  v0.1.0  ·  GRAND PRIX EDITION
+        </span>
       </div>
 
       <style>{`
-        @keyframes scan-sweep {
-          from { top: -2px; opacity: 1; }
-          80%  { opacity: 1; }
-          to   { top: 100%; opacity: 0; }
+        @keyframes speed-blast {
+          0%   { clip-path: inset(0 100% 0 0); opacity: 1; }
+          60%  { clip-path: inset(0 0% 0 0);   opacity: 1; }
+          100% { clip-path: inset(0 0% 0 0);   opacity: 0; }
         }
-        @keyframes glow-gold {
-          0%,100% { box-shadow: 0 0 36px rgba(216,160,22,0.22), 0 0 72px rgba(216,160,22,0.08), 0 18px 48px rgba(0,0,0,0.6); }
-          50%      { box-shadow: 0 0 56px rgba(216,160,22,0.38), 0 0 100px rgba(216,160,22,0.16), 0 18px 48px rgba(0,0,0,0.6); }
+        @keyframes red-glow-pulse {
+          0%,100% { box-shadow: 0 0 32px rgba(225,6,0,0.2),  0 0 64px rgba(225,6,0,0.08),  0 20px 50px rgba(0,0,0,0.7); }
+          50%      { box-shadow: 0 0 52px rgba(225,6,0,0.36), 0 0 100px rgba(225,6,0,0.16), 0 20px 50px rgba(0,0,0,0.7); }
         }
         @keyframes cursor-blink {
           0%,100% { opacity: 1; }
           50%      { opacity: 0; }
         }
-        @keyframes shimmer {
-          from { background-position: -200% center; }
-          to   { background-position:  200% center; }
+        @keyframes dot-pulse {
+          0%,100% { opacity: 1; }
+          50%      { opacity: 0.5; }
         }
       `}</style>
     </div>
