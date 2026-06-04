@@ -1,152 +1,263 @@
 import { useEffect, useState } from 'react'
 
+const TITLE    = 'AMW  COMMAND'
+const BOOT_SEQ = ['LOADING MODULES...', 'AUTHENTICATING...', 'SYSTEM READY']
+
 export default function SplashScreen({ onDone }: { onDone: () => void }) {
-  const [phase, setPhase] = useState<'in' | 'hold' | 'out'>('in')
+  const [show,     setShow]     = useState(false)
+  const [chars,    setChars]    = useState(0)
+  const [progress, setProgress] = useState(0)
+  const [bootIdx,  setBootIdx]  = useState(0)
+  const [ready,    setReady]    = useState(false)
+  const [fadeOut,  setFadeOut]  = useState(false)
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase('hold'), 700)
-    const t2 = setTimeout(() => setPhase('out'),  1900)
-    const t3 = setTimeout(onDone,                 2500)
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
+    const ts = [
+      setTimeout(() => setShow(true),      380),
+      setTimeout(() => setBootIdx(1),     1500),
+      setTimeout(() => setBootIdx(2),     2000),
+      setTimeout(() => setReady(true),    2100),
+      setTimeout(() => setFadeOut(true),  2600),
+      setTimeout(onDone,                  3200),
+    ]
+    return () => ts.forEach(clearTimeout)
   }, [onDone])
+
+  /* Typewriter */
+  useEffect(() => {
+    if (!show || chars >= TITLE.length) return
+    const t = setTimeout(() => setChars(c => c + 1), 58)
+    return () => clearTimeout(t)
+  }, [show, chars])
+
+  /* Progress */
+  useEffect(() => {
+    if (!show || progress >= 100) return
+    const t = setTimeout(() => setProgress(p => Math.min(p + 1.4, 100)), 14)
+    return () => clearTimeout(t)
+  }, [show, progress])
+
+  const pct = Math.round(progress)
 
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 99999,
+      background: '#030303',
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
-      background: '#000000',
-      opacity:    phase === 'out' ? 0 : 1,
-      transition: phase === 'out' ? 'opacity 0.6s cubic-bezier(0.4,0,0.2,1)' : 'none',
-      pointerEvents: phase === 'out' ? 'none' : 'all',
+      overflow: 'hidden',
+      opacity: fadeOut ? 0 : 1,
+      transition: fadeOut ? 'opacity 0.6s cubic-bezier(0.4,0,0.2,1)' : 'none',
+      pointerEvents: fadeOut ? 'none' : 'all',
     }}>
 
-      {/* Grid background */}
+      {/* ── Scan line ──────────────────────────────────────────────── */}
+      <div style={{
+        position: 'absolute', left: 0, right: 0,
+        height: 2, top: 0,
+        background: 'linear-gradient(90deg, transparent 0%, rgba(216,160,22,0.9) 30%, #f9ce5c 50%, rgba(216,160,22,0.9) 70%, transparent 100%)',
+        boxShadow: '0 0 18px rgba(216,160,22,0.7), 0 0 36px rgba(216,160,22,0.3)',
+        animation: 'scan-sweep 0.55s cubic-bezier(0.4,0,1,1) forwards',
+      }} />
+
+      {/* ── Noise grain ────────────────────────────────────────────── */}
+      <div style={{
+        position: 'absolute', inset: 0, opacity: 0.04, pointerEvents: 'none',
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+        backgroundSize: '256px 256px',
+      }} />
+
+      {/* ── Grid ───────────────────────────────────────────────────── */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
         backgroundImage: [
-          'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)',
-          'linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
+          'linear-gradient(rgba(216,160,22,0.04) 1px, transparent 1px)',
+          'linear-gradient(90deg, rgba(216,160,22,0.04) 1px, transparent 1px)',
         ].join(','),
-        backgroundSize: '48px 48px',
-        maskImage: 'radial-gradient(ellipse 70% 70% at center, black 30%, transparent 80%)',
-        WebkitMaskImage: 'radial-gradient(ellipse 70% 70% at center, black 30%, transparent 80%)',
+        backgroundSize: '56px 56px',
+        maskImage: 'radial-gradient(ellipse 75% 75% at 50% 50%, black 10%, transparent 80%)',
+        WebkitMaskImage: 'radial-gradient(ellipse 75% 75% at 50% 50%, black 10%, transparent 80%)',
       }} />
 
-      {/* Ambient orbs */}
-      <div style={{ position: 'absolute', width: 480, height: 480, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,110,209,0.12), transparent 70%)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', filter: 'blur(40px)', pointerEvents: 'none', animation: 'splash-orb 3s ease infinite' }} />
-      <div style={{ position: 'absolute', width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(231,34,46,0.08), transparent 70%)', bottom: '20%', right: '22%', filter: 'blur(40px)', pointerEvents: 'none', animation: 'splash-orb 4s ease 1s infinite' }} />
+      {/* ── Ambient glow ───────────────────────────────────────────── */}
+      <div style={{ position:'absolute', width:500, height:500, borderRadius:'50%', background:'radial-gradient(circle, rgba(216,160,22,0.06), transparent 70%)', top:'50%', left:'50%', transform:'translate(-50%,-50%)', filter:'blur(60px)', pointerEvents:'none' }} />
+      <div style={{ position:'absolute', width:300, height:300, borderRadius:'50%', background:'radial-gradient(circle, rgba(10,110,209,0.08), transparent 70%)', top:'30%', right:'20%', filter:'blur(50px)', pointerEvents:'none' }} />
 
-      {/* Brand line top */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-        background: 'linear-gradient(90deg, transparent, #81c4ff, #0a6ed1, #ed1c24, transparent)',
-        opacity: phase === 'in' ? 0 : 1,
-        transition: 'opacity 0.5s ease 0.5s',
-      }} />
+      {/* ── Side data strips ───────────────────────────────────────── */}
+      {['left', 'right'].map(side => (
+        <div key={side} style={{
+          position: 'absolute',
+          [side]: 32, top: '50%',
+          transform: 'translateY(-50%)',
+          width: 1, height: 220,
+          background: `linear-gradient(to bottom, transparent, rgba(216,160,22,0.3), rgba(216,160,22,0.5), rgba(216,160,22,0.3), transparent)`,
+          opacity: show ? 0.7 : 0,
+          transition: 'opacity 0.6s ease 0.6s',
+        }} />
+      ))}
 
-      {/* Main content */}
+      {/* ── Logo + HUD frame ───────────────────────────────────────── */}
       <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28,
-        position: 'relative', zIndex: 1,
-        animation: 'splash-logo-in 0.75s cubic-bezier(0.34,1.56,0.64,1) both',
+        position: 'relative',
+        opacity: show ? 1 : 0,
+        transform: show ? 'translateY(0)' : 'translateY(16px)',
+        transition: 'opacity 0.55s ease, transform 0.55s cubic-bezier(0.34,1.56,0.64,1)',
+        marginBottom: 32,
       }}>
+        {/* HUD corner brackets */}
+        {[
+          { top: -14, left: -14, borderTop: true, borderLeft: true },
+          { top: -14, right: -14, borderTop: true, borderRight: true },
+          { bottom: -14, left: -14, borderBottom: true, borderLeft: true },
+          { bottom: -14, right: -14, borderBottom: true, borderRight: true },
+        ].map((pos, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            ...pos as any,
+            width: 22, height: 22,
+            borderTop:    pos.borderTop    ? '1.5px solid #d8a016' : 'none',
+            borderBottom: pos.borderBottom ? '1.5px solid #d8a016' : 'none',
+            borderLeft:   pos.borderLeft   ? '1.5px solid #d8a016' : 'none',
+            borderRight:  pos.borderRight  ? '1.5px solid #d8a016' : 'none',
+            opacity: show ? 1 : 0,
+            transform: show ? 'scale(1)' : 'scale(0.7)',
+            transition: `all 0.35s ease ${0.1 + i * 0.06}s`,
+          }} />
+        ))}
 
         {/* Logo card */}
         <div style={{
-          width: 180, height: 78,
+          width: 196, height: 84,
           background: '#ffffff',
-          borderRadius: 18,
-          padding: '12px 18px',
+          borderRadius: 12,
+          padding: '11px 18px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 48px rgba(10,110,209,0.35), 0 0 96px rgba(10,110,209,0.18), 0 24px 60px rgba(0,0,0,0.5)',
-          animation: 'splash-glow 2.5s ease infinite',
+          animation: show ? 'glow-gold 3s ease-in-out infinite' : 'none',
         }}>
-          <img
-            src="/amw-logo.png"
-            alt="AMW"
-            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
-          />
+          <img src="/amw-logo.png" alt="AMW" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
         </div>
 
-        {/* Text group */}
+        {/* Bottom accent line on logo */}
         <div style={{
-          textAlign: 'center',
-          animation: 'splash-text-in 0.5s ease 0.35s both',
-        }}>
-          <p style={{
-            fontSize: '0.68rem', fontWeight: 900,
-            letterSpacing: '0.22em', textTransform: 'uppercase',
-            color: 'var(--sap-blue)', marginBottom: 10,
+          position: 'absolute', bottom: -6, left: '10%', right: '10%',
+          height: 1,
+          background: 'linear-gradient(90deg, transparent, rgba(216,160,22,0.8), transparent)',
+          opacity: show ? 1 : 0,
+          transition: 'opacity 0.4s ease 0.5s',
+        }} />
+      </div>
+
+      {/* ── Typewriter title ───────────────────────────────────────── */}
+      <div style={{
+        fontFamily: '"JetBrains Mono", monospace',
+        fontSize: 'clamp(1.5rem, 3.5vw, 2.2rem)',
+        fontWeight: 900,
+        letterSpacing: '0.32em',
+        color: '#d8a016',
+        textShadow: '0 0 24px rgba(216,160,22,0.55)',
+        minHeight: '2.5rem',
+        display: 'flex', alignItems: 'center',
+        opacity: show ? 1 : 0,
+        transition: 'opacity 0.3s ease 0.3s',
+      }}>
+        {TITLE.slice(0, chars)}
+        {chars < TITLE.length && (
+          <span style={{ animation: 'cursor-blink 0.7s ease infinite', marginLeft: 2, color: '#f9ce5c' }}>█</span>
+        )}
+      </div>
+
+      {/* ── Thin gold separator ────────────────────────────────────── */}
+      <div style={{
+        width: 260, height: 1, margin: '14px 0',
+        background: 'linear-gradient(90deg, transparent, rgba(216,160,22,0.5), rgba(10,110,209,0.5), transparent)',
+        opacity: show ? 1 : 0,
+        transition: 'opacity 0.5s ease 0.7s',
+      }} />
+
+      {/* ── Tagline ────────────────────────────────────────────────── */}
+      <p style={{
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '0.68rem', fontWeight: 700,
+        letterSpacing: '0.2em', textTransform: 'uppercase',
+        color: 'rgba(129,196,255,0.75)',
+        marginBottom: 28,
+        opacity: show ? 1 : 0,
+        transition: 'opacity 0.4s ease 0.9s',
+      }}>
+        Performance Intelligence Suite
+      </p>
+
+      {/* ── Progress bar ───────────────────────────────────────────── */}
+      <div style={{
+        width: 260,
+        opacity: show ? 1 : 0,
+        transition: 'opacity 0.3s ease 1.0s',
+      }}>
+        <div style={{ height: 2, background: 'rgba(255,255,255,0.06)', borderRadius: 999, overflow: 'hidden', position: 'relative' }}>
+          <div style={{
+            height: '100%', borderRadius: 999,
+            width: `${pct}%`,
+            background: 'linear-gradient(90deg, rgba(216,160,22,0.6), #d8a016 60%, #f9ce5c)',
+            boxShadow: '0 0 10px rgba(216,160,22,0.7)',
+            transition: 'width 0.12s linear',
+            position: 'relative',
           }}>
-            Performance Intelligence Suite
-          </p>
-          <h1 style={{
-            fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 950,
-            lineHeight: 1,
-            background: 'linear-gradient(135deg, #81c4ff 0%, #0a6ed1 42%, #16588e 70%, #e7222e 100%)',
-            backgroundSize: '200% 200%',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            animation: 'splash-gradient-shift 3s ease infinite',
-          }}>
-            AMW Command
-          </h1>
+            {/* Shimmer */}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s ease infinite' }} />
+          </div>
         </div>
 
-        {/* Loading dots */}
-        <div style={{
-          display: 'flex', gap: 10, alignItems: 'center',
-          animation: 'splash-text-in 0.4s ease 0.65s both',
-        }}>
-          {[0, 1, 2].map(i => (
-            <div key={i} style={{
-              width: 6, height: 6, borderRadius: '50%',
-              background: 'var(--sap-blue)',
-              boxShadow: '0 0 8px rgba(10,110,209,0.8)',
-              animation: `splash-dot 1.3s ease-in-out ${i * 0.18}s infinite`,
-            }} />
-          ))}
+        {/* Boot labels */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, alignItems: 'center' }}>
+          <span style={{
+            fontFamily: '"JetBrains Mono", monospace',
+            fontSize: '0.6rem', letterSpacing: '0.08em',
+            color: ready ? '#22c55e' : 'rgba(216,160,22,0.65)',
+            transition: 'color 0.3s ease',
+          }}>
+            {BOOT_SEQ[bootIdx]}
+          </span>
+          <span style={{
+            fontFamily: '"JetBrains Mono", monospace',
+            fontSize: '0.6rem',
+            color: 'rgba(216,160,22,0.5)',
+          }}>
+            {pct.toString().padStart(3, '0')}%
+          </span>
         </div>
       </div>
 
-      {/* Brand line bottom */}
+      {/* ── Version badge ──────────────────────────────────────────── */}
       <div style={{
-        position: 'absolute', bottom: 28, left: '50%', transform: 'translateX(-50%)',
+        position: 'absolute', bottom: 26, left: '50%', transform: 'translateX(-50%)',
         display: 'flex', alignItems: 'center', gap: 8,
-        opacity: phase === 'in' ? 0 : 0.45,
-        transition: 'opacity 0.5s ease 0.8s',
+        opacity: show ? 0.4 : 0,
+        transition: 'opacity 0.4s ease 1.2s',
       }}>
-        <span style={{ fontSize: '0.6rem', fontWeight: 800, letterSpacing: '0.14em', color: 'rgba(168,183,204,0.7)', textTransform: 'uppercase' }}>
-          v0.1.0
+        <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#d8a016' }} />
+        <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: '0.58rem', letterSpacing: '0.12em', color: 'rgba(216,160,22,0.8)' }}>
+          v0.1.0  ·  AMW COMMAND
         </span>
+        <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#d8a016' }} />
       </div>
 
       <style>{`
-        @keyframes splash-logo-in {
-          from { opacity: 0; transform: scale(0.82) translateY(18px); }
-          to   { opacity: 1; transform: scale(1)    translateY(0); }
+        @keyframes scan-sweep {
+          from { top: -2px; opacity: 1; }
+          80%  { opacity: 1; }
+          to   { top: 100%; opacity: 0; }
         }
-        @keyframes splash-text-in {
-          from { opacity: 0; transform: translateY(14px); }
-          to   { opacity: 1; transform: translateY(0); }
+        @keyframes glow-gold {
+          0%,100% { box-shadow: 0 0 36px rgba(216,160,22,0.22), 0 0 72px rgba(216,160,22,0.08), 0 18px 48px rgba(0,0,0,0.6); }
+          50%      { box-shadow: 0 0 56px rgba(216,160,22,0.38), 0 0 100px rgba(216,160,22,0.16), 0 18px 48px rgba(0,0,0,0.6); }
         }
-        @keyframes splash-glow {
-          0%,100% { box-shadow: 0 0 40px rgba(10,110,209,0.32), 0 0 80px rgba(10,110,209,0.14), 0 24px 60px rgba(0,0,0,0.5); }
-          50%      { box-shadow: 0 0 64px rgba(10,110,209,0.52), 0 0 120px rgba(10,110,209,0.24), 0 24px 60px rgba(0,0,0,0.5); }
+        @keyframes cursor-blink {
+          0%,100% { opacity: 1; }
+          50%      { opacity: 0; }
         }
-        @keyframes splash-dot {
-          0%,100% { transform: scale(1);    opacity: 0.35; }
-          50%      { transform: scale(1.5);  opacity: 1; }
-        }
-        @keyframes splash-orb {
-          0%,100% { transform: translate(-50%,-50%) scale(1); }
-          50%      { transform: translate(-50%,-50%) scale(1.15); }
-        }
-        @keyframes splash-gradient-shift {
-          0%,100% { background-position: 0% 50%; }
-          50%      { background-position: 100% 50%; }
+        @keyframes shimmer {
+          from { background-position: -200% center; }
+          to   { background-position:  200% center; }
         }
       `}</style>
     </div>
