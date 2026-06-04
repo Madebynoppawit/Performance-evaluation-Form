@@ -1,7 +1,9 @@
+import { useCallback, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
 import Layout from '@/components/Layout'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import SplashScreen from '@/components/SplashScreen'
 import LoginPage from '@/features/auth/LoginPage'
 import DashboardPage from '@/features/dashboard/DashboardPage'
 import EvaluationListPage from '@/features/evaluations/EvaluationListPage'
@@ -18,7 +20,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const [splashDone, setSplashDone] = useState(false)
+  const handleSplashDone = useCallback(() => setSplashDone(true), [])
+
   return (
+    <>
+      {!splashDone && <SplashScreen onDone={handleSplashDone} />}
     <ErrorBoundary>
       <BrowserRouter>
         <Routes>
@@ -44,5 +51,6 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>
+    </>
   )
 }
