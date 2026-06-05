@@ -138,6 +138,18 @@ body,
 
 * { box-sizing: border-box; }
 
+/* ── Global keyboard focus ring ─────────────────────────────────────────────
+   Low-specificity (:where) so component styles still win on color/bg;
+   only shows for keyboard nav (focus-visible), never on mouse click. */
+:where(a, button, [role='button'], [role='radio'], [role='tab'], [tabindex]):focus-visible {
+  outline: 2px solid var(--sap-blue);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+:where(.kbt-input, .kbt-textarea, .kbt-select):focus-visible {
+  outline: none;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--kbt-surface); }
@@ -3125,6 +3137,14 @@ body,
     cursor: pointer;
   }
 
+  /* ── Dashboard bottom row ───────────────────────────────────────────────── */
+  .amw-dash-bottom {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 296px;
+    gap: 16px;
+    align-items: start;
+  }
+
   /* ── Reports Overview ───────────────────────────────────────────────────── */
   .amw-reports-overview {
     display: flex;
@@ -3859,7 +3879,8 @@ body,
     .amw-onboard-steps,
     .amw-guide-grid,
     .amw-reports-split,
-    .amw-reports-kpis {
+    .amw-reports-kpis,
+    .amw-dash-bottom {
       grid-template-columns: 1fr;
     }
     .amw-reports-hero {

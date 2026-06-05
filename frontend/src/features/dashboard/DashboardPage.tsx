@@ -238,7 +238,7 @@ export default function DashboardPage() {
 
       {!!evaluations?.length && <DashboardAnalytics evaluations={evaluations} />}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 296px', gap: 16 }}>
+      <div className="amw-dash-bottom">
         <div className="kbt-card">
           <div className="kbt-card-header">
             <span className="kbt-card-title">Recent Evaluations</span>
