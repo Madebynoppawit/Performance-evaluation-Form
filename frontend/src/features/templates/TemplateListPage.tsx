@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { formatDate, getTypeLabel } from '@/lib/utils'
 import type { Template } from '@/types'
 import { SkeletonTableRows } from '@/components/Skeleton'
+import EmptyState from '@/components/EmptyState'
 
 export default function TemplateListPage() {
   const navigate = useNavigate()
@@ -57,6 +58,13 @@ export default function TemplateListPage() {
 
         {isLoading ? (
           <table className="kbt-table"><tbody><SkeletonTableRows rows={5} cols={6} /></tbody></table>
+        ) : !data?.length ? (
+          <EmptyState
+            icon={LayoutTemplate}
+            title="No templates yet"
+            description="Templates define the weighted sections and competencies used across review cycles."
+            action={isAdmin ? { label: 'Create template', onClick: () => createMutation.mutate() } : undefined}
+          />
         ) : (
           <table className="kbt-table">
             <thead>

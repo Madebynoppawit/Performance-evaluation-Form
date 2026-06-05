@@ -1,11 +1,15 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, type LucideIcon } from 'lucide-react'
 
+type Action =
+  | { label: string; to: string; onClick?: never }
+  | { label: string; onClick: () => void; to?: never }
+
 interface Props {
   icon: LucideIcon
   title: string
   description: string
-  action?: { label: string; to: string }
+  action?: Action
   compact?: boolean
 }
 
@@ -19,10 +23,16 @@ export default function EmptyState({ icon: Icon, title, description, action, com
       </div>
       <strong>{title}</strong>
       <span className="amw-empty-desc">{description}</span>
-      {action && (
-        <Link to={action.to} className="kbt-btn-primary" style={{ marginTop: 16, textDecoration: 'none' }}>
-          {action.label} <ArrowRight size={15} />
-        </Link>
+      {action && (action.to
+        ? (
+          <Link to={action.to} className="kbt-btn-primary" style={{ marginTop: 16, textDecoration: 'none' }}>
+            {action.label} <ArrowRight size={15} />
+          </Link>
+        ) : (
+          <button type="button" onClick={action.onClick} className="kbt-btn-primary" style={{ marginTop: 16 }}>
+            {action.label} <ArrowRight size={15} />
+          </button>
+        )
       )}
     </div>
   )

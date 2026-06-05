@@ -9,6 +9,7 @@ import type { Cycle, Template } from '@/types'
 import { formatDate } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { SkeletonTableRows } from '@/components/Skeleton'
+import EmptyState from '@/components/EmptyState'
 
 const STATUS: Record<string, { cls: string; label: string }> = {
   UPCOMING: { cls: 'kbt-badge-info', label: 'Upcoming' },
@@ -85,7 +86,16 @@ export default function CycleListPage() {
             {isLoading ? (
               <SkeletonTableRows rows={4} cols={6} />
             ) : !cycles?.length ? (
-              <tr><td colSpan={6}><div className="kbt-empty-panel">No cycles yet</div></td></tr>
+              <tr>
+                <td colSpan={6} style={{ padding: 0 }}>
+                  <EmptyState
+                    icon={Calendar}
+                    title="No cycles yet"
+                    description="A cycle defines a review period and attaches a template so evaluations can begin."
+                    action={isAdmin ? { label: 'Create cycle', onClick: () => setShowDialog(true) } : undefined}
+                  />
+                </td>
+              </tr>
             ) : cycles.map((cycle) => (
               <tr key={cycle.id}>
                 <td>

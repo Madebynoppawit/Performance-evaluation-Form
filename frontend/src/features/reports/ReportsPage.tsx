@@ -3,6 +3,7 @@ import { Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Toolt
 import { BarChart2, CheckCircle2, TrendingUp, Users } from 'lucide-react'
 import api from '@/lib/api'
 import { SkeletonReport } from '@/components/Skeleton'
+import EmptyState from '@/components/EmptyState'
 
 interface ReportSummary {
   cycleId: string
@@ -68,11 +69,12 @@ export default function ReportsPage() {
         </div>
       ) : !data?.length ? (
         <div className="kbt-card">
-          <div className="kbt-empty-panel">
-            <BarChart2 size={28} />
-            <strong>No report data yet</strong>
-            <span>Reports will appear after evaluations are assigned and scored.</span>
-          </div>
+          <EmptyState
+            icon={BarChart2}
+            title="No report data yet"
+            description="Reports appear once evaluations are assigned and scored. Open a cycle and run reviews to populate analytics."
+            action={{ label: 'Go to evaluations', to: '/evaluations' }}
+          />
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

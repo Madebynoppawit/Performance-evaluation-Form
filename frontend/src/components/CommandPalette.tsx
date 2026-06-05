@@ -39,7 +39,7 @@ export default function CommandPalette() {
   const { open, setOpen, toggle } = useCommandPalette()
   const navigate = useNavigate()
   const { theme, toggleTheme } = useThemeMode()
-  const { logout, isManager } = useAuth()
+  const { logout, isManager, isAdmin } = useAuth()
 
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
@@ -56,7 +56,13 @@ export default function CommandPalette() {
       { id: 'nav-cycles',    label: 'Cycles',       hint: 'Review periods',       group: 'Navigate', icon: RefreshCw,       keywords: 'periods schedule', run: goto('/cycles') },
       { id: 'nav-reports',   label: 'Reports',      hint: 'Performance BI',       group: 'Navigate', icon: BarChart2,       keywords: 'analytics charts', run: goto('/reports') },
       ...(isManager
-        ? [{ id: 'act-new-eval', label: 'New Evaluation', hint: 'Start a review', group: 'Actions' as Group, icon: Plus, keywords: 'create add', run: goto('/evaluations') }]
+        ? [{ id: 'act-new-eval', label: 'New Evaluation', hint: 'Start a review', group: 'Actions' as Group, icon: Plus, keywords: 'create add new evaluation', run: goto('/evaluations') }]
+        : []),
+      ...(isAdmin
+        ? [
+            { id: 'act-new-tpl', label: 'New Template', hint: 'Build a review form', group: 'Actions' as Group, icon: LayoutTemplate, keywords: 'create add template form', run: goto('/templates') },
+            { id: 'act-new-cycle', label: 'New Cycle', hint: 'Open a review period', group: 'Actions' as Group, icon: RefreshCw, keywords: 'create add cycle period', run: goto('/cycles') },
+          ]
         : []),
       { id: 'act-theme', label: theme === 'dark' ? 'Switch to Light theme' : 'Switch to Dark theme', group: 'Appearance', icon: theme === 'dark' ? Sun : Moon, keywords: 'dark light mode appearance', shortcut: '⌘T', run: () => { toggleTheme() } },
       { id: 'nav-guide',    label: 'Guidelines', hint: 'TH · EN · FR user guide', group: 'Account', icon: BookOpen, keywords: 'help guide manual docs language thai french คู่มือ guide', run: goto('/guidelines') },
@@ -65,7 +71,7 @@ export default function CommandPalette() {
       { id: 'act-signout', label: 'Sign out', group: 'Account', icon: LogOut, keywords: 'logout exit leave', run: () => { close(); logout(); navigate('/login') } },
     ]
     return list
-  }, [navigate, setOpen, theme, toggleTheme, logout, isManager])
+  }, [navigate, setOpen, theme, toggleTheme, logout, isManager, isAdmin])
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase()
