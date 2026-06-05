@@ -4442,7 +4442,10 @@ body,
   pointer-events: none;
 }
 
-/* Cursor-following spotlight on metric cards */
+/* Cursor-reactive 3D tilt + spotlight on metric cards */
+.kbt-metric {
+  will-change: transform;
+}
 .kbt-metric::after {
   content: '';
   position: absolute;
