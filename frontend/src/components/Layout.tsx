@@ -4,11 +4,15 @@ import ShellBar from './ShellBar'
 import SideNav from './SideNav'
 import CommandPalette from './CommandPalette'
 import RouteFallback from './RouteFallback'
+import TopProgressBar from './TopProgressBar'
+import { useCardSpotlight } from '@/hooks/useCardSpotlight'
 
 export default function Layout() {
   const location = useLocation()
+  useCardSpotlight()
   return (
     <div className="amw-app-shell">
+      <TopProgressBar />
       <ShellBar />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
         <SideNav />

@@ -19,7 +19,18 @@ export function useThemeMode() {
   }, [theme])
 
   const toggleTheme = useCallback(() => {
-    setTheme((current) => (current === 'dark' ? 'light' : 'dark'))
+    const next: ThemeMode = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'
+    const apply = () => {
+      document.documentElement.dataset.theme = next // sync for the View Transition snapshot
+      setTheme(next)
+    }
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => void }
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (doc.startViewTransition && !reduced) {
+      doc.startViewTransition(apply)
+    } else {
+      apply()
+    }
   }, [])
 
   return { theme, toggleTheme }
