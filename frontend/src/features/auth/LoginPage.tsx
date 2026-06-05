@@ -33,8 +33,18 @@ export default function LoginPage() {
     }
   }
 
+  function onMove(e: React.MouseEvent<HTMLDivElement>) {
+    const r = e.currentTarget.getBoundingClientRect()
+    e.currentTarget.style.setProperty('--mx', String((e.clientX - r.left) / r.width - 0.5))
+    e.currentTarget.style.setProperty('--my', String((e.clientY - r.top) / r.height - 0.5))
+  }
+  function onLeave(e: React.MouseEvent<HTMLDivElement>) {
+    e.currentTarget.style.setProperty('--mx', '0')
+    e.currentTarget.style.setProperty('--my', '0')
+  }
+
   return (
-    <div className="amw-login" style={{ position: 'relative' }}>
+    <div className="amw-login" style={{ position: 'relative' }} onMouseMove={onMove} onMouseLeave={onLeave}>
       {/* Ambient orbs */}
       <div className="kbt-orb" style={{ width: 520, height: 520, background: 'radial-gradient(circle, rgba(10,110,209,0.16), transparent 70%)', top: -120, left: '8%', animationDuration: '12s' }} />
       <div className="kbt-orb" style={{ width: 360, height: 360, background: 'radial-gradient(circle, rgba(22,88,142,0.18), transparent 70%)', bottom: '6%', left: '28%', animationDuration: '16s', animationDelay: '-6s' }} />

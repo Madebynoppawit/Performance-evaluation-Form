@@ -4504,3 +4504,17 @@ body,
   50%  { transform: translate3d(2%, -1.5%, 0) scale(1.08); }
   100% { transform: translate3d(-2.5%, 2%, 0) scale(1.14); }
 }
+
+/* ── Cinematic login ─────────────────────────────────────────────────────────
+   Orbs drift with the cursor (parallax depth); the title gradient shimmers. */
+.amw-login .kbt-orb {
+  transition: translate 0.25s ease-out;
+}
+.amw-login .kbt-orb:nth-child(1) { translate: calc(var(--mx, 0) *  42px) calc(var(--my, 0) *  42px); }
+.amw-login .kbt-orb:nth-child(2) { translate: calc(var(--mx, 0) * -30px) calc(var(--my, 0) * -26px); }
+.amw-login .kbt-orb:nth-child(3) { translate: calc(var(--mx, 0) *  22px) calc(var(--my, 0) *  26px); }
+.amw-login .kbt-orb:nth-child(4) { translate: calc(var(--mx, 0) * -18px) calc(var(--my, 0) *  20px); }
+.amw-login-title .kbt-gradient-text {
+  background-size: 220% 220%;
+  animation: gradient-x 7s ease infinite;
+}
