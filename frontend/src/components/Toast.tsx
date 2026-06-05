@@ -86,7 +86,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             }}>
               {/* Accent left bar */}
               <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: s.accent, borderRadius: '14px 0 0 14px' }} />
-              <span style={{ flexShrink: 0, marginTop: 1, marginLeft: 6 }}>{s.icon}</span>
+              <span className="amw-toast-icon" style={{ flexShrink: 0, marginTop: 1, marginLeft: 6 }}>{s.icon}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: '0.875rem', fontWeight: 700, color: '#eaf2ff', letterSpacing: '0.01em' }}>{t.title}</p>
                 {t.message && <p style={{ fontSize: '0.75rem', color: '#a8b7cc', marginTop: 3, lineHeight: 1.5 }}>{t.message}</p>}
