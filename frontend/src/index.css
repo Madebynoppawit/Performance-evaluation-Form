@@ -3125,6 +3125,68 @@ body,
     cursor: pointer;
   }
 
+  /* ── Dashboard Analytics ────────────────────────────────────────────────── */
+  .amw-analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .amw-analytics-status {
+    grid-column: 1 / -1;
+  }
+  .amw-analytics-empty {
+    height: 170px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--kbt-text-3);
+    font-size: 0.8rem;
+  }
+
+  .amw-status-bar {
+    display: flex;
+    height: 12px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--control-bg);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+  }
+  .amw-status-bar > div {
+    height: 100%;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 3px;
+  }
+  .amw-status-bar > div:not(:last-child) {
+    border-right: 1px solid rgba(0,0,0,0.25);
+  }
+  .amw-status-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 14px;
+  }
+  .amw-status-legend > div {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.75rem;
+    color: var(--kbt-text-2);
+    font-weight: 600;
+  }
+  .amw-status-legend > div span {
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .amw-status-legend > div strong {
+    color: var(--kbt-text);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+  }
+
   /* ── Route transition ───────────────────────────────────────────────────── */
   .amw-route-view {
     animation: route-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -3304,6 +3366,9 @@ body,
   }
 
   @media (max-width: 960px) {
+    .amw-analytics-grid {
+      grid-template-columns: 1fr;
+    }
     .amw-app-main {
       padding: 18px;
     }

@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import api from '@/lib/api'
 import { getTypeLabel } from '@/lib/utils'
 import type { Evaluation } from '@/types'
+import DashboardAnalytics from './DashboardAnalytics'
 
 interface DashboardStats {
   totalEvaluations: number
@@ -230,6 +231,8 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {!!evaluations?.length && <DashboardAnalytics evaluations={evaluations} />}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 296px', gap: 16 }}>
         <div className="kbt-card">
