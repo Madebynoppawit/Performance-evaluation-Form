@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, BarChart2, CheckCircle2, ClipboardList, FileCheck2, Plus, RefreshCw, Scale, ShieldCheck, TrendingUp, Users } from 'lucide-react'
+import { ArrowUpRight, BarChart2, BookOpen, CheckCircle2, ClipboardList, FileCheck2, LayoutTemplate, Plus, RefreshCw, Scale, ShieldCheck, TrendingUp, Users } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import api from '@/lib/api'
 import { getTypeLabel } from '@/lib/utils'
@@ -296,10 +296,10 @@ export default function DashboardPage() {
             <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[
                 { label: 'View My Evaluations', icon: <ClipboardList size={14} />, to: '/evaluations' },
-                { label: 'Browse Templates', icon: <RefreshCw size={14} />, to: '/templates' },
+                { label: 'Browse Templates', icon: <LayoutTemplate size={14} />, to: '/templates' },
                 { label: 'Evaluation Cycles', icon: <RefreshCw size={14} />, to: '/cycles' },
                 { label: 'View Reports', icon: <BarChart2 size={14} />, to: '/reports' },
-                ...(isAdmin ? [{ label: 'User Management', icon: <Users size={14} />, to: '/users' }] : []),
+                { label: 'User Guidelines', icon: <BookOpen size={14} />, to: '/guidelines' },
               ].map(({ label, icon, to }) => (
                 <Link key={to} to={to} style={{ textDecoration: 'none' }}>
                   <div className="kbt-action-row">

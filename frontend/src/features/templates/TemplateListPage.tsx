@@ -34,11 +34,12 @@ export default function TemplateListPage() {
   })
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, animation: 'fadeIn 0.3s ease' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div className="kbt-page">
+      <div className="kbt-page-header">
         <div>
-          <h1 style={{ fontSize: '1.375rem', fontWeight: 800, color: 'var(--kbt-text)', letterSpacing: 0 }}>Templates</h1>
-          <p style={{ fontSize: '0.8125rem', color: 'var(--kbt-text-3)', marginTop: 3 }}>Build and manage reusable performance review forms.</p>
+          <span className="amw-eyebrow">Form Library</span>
+          <h1>Templates</h1>
+          <p>Build and manage reusable performance review forms.</p>
         </div>
         {isAdmin && (
           <button onClick={() => createMutation.mutate()} disabled={createMutation.isPending} className="kbt-btn-primary">
