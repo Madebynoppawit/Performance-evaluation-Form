@@ -14,6 +14,7 @@ import CycleListPage from '@/features/cycles/CycleListPage'
 import ReportsPage from '@/features/reports/ReportsPage'
 import AccountPage from '@/features/account/AccountPage'
 import SettingsPage from '@/features/settings/SettingsPage'
+import GuidelinesPage from '@/features/guidelines/GuidelinesPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -49,6 +50,7 @@ export default function App() {
             <Route path="reports" element={<ReportsPage />} />
             <Route path="account" element={<AccountPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="guidelines" element={<GuidelinesPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />

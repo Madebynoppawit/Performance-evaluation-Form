@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { BarChart2, ClipboardList, LayoutDashboard, LayoutTemplate, RefreshCw, Settings, UserRound } from 'lucide-react'
+import { BarChart2, BookOpen, ClipboardList, LayoutDashboard, LayoutTemplate, RefreshCw, Settings, UserRound } from 'lucide-react'
 
 const workspaceNav = [
   { to: '/', label: 'Dashboard', sublabel: 'Overview', icon: LayoutDashboard, end: true },
@@ -10,6 +10,7 @@ const workspaceNav = [
 ]
 
 const userNav = [
+  { to: '/guidelines', label: 'Guidelines', sublabel: 'TH · EN · FR', icon: BookOpen },
   { to: '/account', label: 'Account', sublabel: 'User access', icon: UserRound },
   { to: '/settings', label: 'Settings', sublabel: 'Preferences', icon: Settings },
 ]

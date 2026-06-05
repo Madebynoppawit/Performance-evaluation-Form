@@ -3125,6 +3125,110 @@ body,
     cursor: pointer;
   }
 
+  /* ── Guidelines page ────────────────────────────────────────────────────── */
+  .amw-lang-switch {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid var(--kbt-border);
+    background: var(--control-bg);
+    flex-shrink: 0;
+  }
+  .amw-lang-switch button {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 34px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--kbt-text-3);
+    font-size: 0.8rem;
+    font-weight: 750;
+    cursor: pointer;
+    transition: all 0.16s ease;
+  }
+  .amw-lang-switch button:hover { color: var(--kbt-text); }
+  .amw-lang-switch button.active {
+    background: var(--brand-gradient);
+    color: #ffffff;
+    box-shadow: 0 8px 18px rgba(10,110,209,0.22);
+  }
+  .amw-lang-flag { font-size: 0.95rem; line-height: 1; }
+
+  .amw-guide-updated {
+    margin-top: -8px;
+    color: var(--kbt-text-3);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .amw-guide-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .amw-guide-card { padding: 20px; }
+  .amw-guide-card-head {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .amw-guide-icon {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    background: var(--brand-gradient);
+    box-shadow: 0 10px 22px rgba(10,110,209,0.2);
+  }
+  .amw-guide-card-head h2 {
+    color: var(--kbt-text);
+    font-size: 1.02rem;
+    font-weight: 900;
+  }
+  .amw-guide-card-head p {
+    margin-top: 4px;
+    color: var(--kbt-text-3);
+    font-size: 0.8rem;
+    line-height: 1.55;
+  }
+  .amw-guide-items {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .amw-guide-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    transition: background 0.14s ease, border-color 0.14s ease;
+  }
+  .amw-guide-item:hover {
+    background: var(--control-bg);
+    border-color: var(--kbt-border);
+  }
+  .amw-guide-item strong {
+    color: var(--kbt-text);
+    font-size: 0.84rem;
+    font-weight: 800;
+  }
+  .amw-guide-item span {
+    color: var(--kbt-text-3);
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+
   /* ── Empty State ────────────────────────────────────────────────────────── */
   .amw-empty {
     display: flex;
@@ -3546,7 +3650,8 @@ body,
 
   @media (max-width: 960px) {
     .amw-analytics-grid,
-    .amw-onboard-steps {
+    .amw-onboard-steps,
+    .amw-guide-grid {
       grid-template-columns: 1fr;
     }
     .amw-app-main {

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
   BarChart2,
+  BookOpen,
   ClipboardList,
   CornerDownLeft,
   LayoutDashboard,
@@ -58,6 +59,7 @@ export default function CommandPalette() {
         ? [{ id: 'act-new-eval', label: 'New Evaluation', hint: 'Start a review', group: 'Actions' as Group, icon: Plus, keywords: 'create add', run: goto('/evaluations') }]
         : []),
       { id: 'act-theme', label: theme === 'dark' ? 'Switch to Light theme' : 'Switch to Dark theme', group: 'Appearance', icon: theme === 'dark' ? Sun : Moon, keywords: 'dark light mode appearance', shortcut: '⌘T', run: () => { toggleTheme() } },
+      { id: 'nav-guide',    label: 'Guidelines', hint: 'TH · EN · FR user guide', group: 'Account', icon: BookOpen, keywords: 'help guide manual docs language thai french คู่มือ guide', run: goto('/guidelines') },
       { id: 'nav-account',  label: 'Account',  hint: 'User access',  group: 'Account', icon: UserRound, keywords: 'profile me', run: goto('/account') },
       { id: 'nav-settings', label: 'Settings', hint: 'Preferences',  group: 'Account', icon: Settings,  keywords: 'preferences config', run: goto('/settings') },
       { id: 'act-signout', label: 'Sign out', group: 'Account', icon: LogOut, keywords: 'logout exit leave', run: () => { close(); logout(); navigate('/login') } },
