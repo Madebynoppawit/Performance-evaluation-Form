@@ -503,6 +503,7 @@ body,
   }
 
   .amw-app-shell {
+    position: relative;
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -512,15 +513,12 @@ body,
 
   .amw-app-main {
     position: relative;
+    z-index: 1;
     flex: 1;
     min-width: 0;
     overflow-y: auto;
     padding: 24px;
-    background:
-      radial-gradient(ellipse at 16% 8%, var(--surface-glow), transparent 32%),
-      radial-gradient(ellipse at 88% 4%, color-mix(in srgb, var(--m-light-blue) 18%, transparent), transparent 36%),
-      linear-gradient(135deg, transparent 0 72%, color-mix(in srgb, var(--m-red) 6%, transparent) 72.1% 82%, transparent 82.1%),
-      var(--app-bg-overlay);
+    background: transparent;          /* let the living aurora show through */
     isolation: isolate;
   }
 
@@ -619,6 +617,8 @@ body,
 
   /* ── Sidebar ─────────────────────────────────────────────────────────────── */
   .kbt-sidebar {
+    position: relative;
+    z-index: 1;
     width: 236px;
     flex-shrink: 0;
     background: var(--kbt-sidebar);
@@ -4474,4 +4474,33 @@ body,
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 0.35s;
+}
+
+/* ── Living aurora background ─────────────────────────────────────────────────
+   Fixed gradient-mesh that slowly drifts behind the (transparent) content
+   area. Sits above the black shell base, below the sidebar/main (z-index 1). */
+.amw-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(40% 46% at 16% 16%, rgba(10, 110, 209, 0.20), transparent 70%),
+    radial-gradient(34% 42% at 84% 10%, rgba(41, 37, 82, 0.26),  transparent 70%),
+    radial-gradient(46% 52% at 74% 86%, rgba(231, 34, 46, 0.12),  transparent 72%),
+    radial-gradient(30% 38% at 36% 82%, rgba(129, 196, 255, 0.12), transparent 72%);
+  animation: aurora-drift 30s ease-in-out infinite alternate;
+}
+:root[data-theme='light'] .amw-aurora {
+  background:
+    radial-gradient(40% 46% at 16% 16%, rgba(10, 110, 209, 0.12), transparent 70%),
+    radial-gradient(34% 42% at 84% 10%, rgba(41, 37, 82, 0.10),  transparent 70%),
+    radial-gradient(46% 52% at 74% 86%, rgba(231, 34, 46, 0.06),  transparent 72%),
+    radial-gradient(30% 38% at 36% 82%, rgba(129, 196, 255, 0.16), transparent 72%);
+}
+@keyframes aurora-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(2%, -1.5%, 0) scale(1.08); }
+  100% { transform: translate3d(-2.5%, 2%, 0) scale(1.14); }
 }

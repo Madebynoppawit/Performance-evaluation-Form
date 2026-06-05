@@ -12,6 +12,7 @@ export default function Layout() {
   useCardSpotlight()
   return (
     <div className="amw-app-shell">
+      <div className="amw-aurora" aria-hidden="true" />
       <TopProgressBar />
       <ShellBar />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
