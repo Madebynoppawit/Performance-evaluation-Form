@@ -33,6 +33,13 @@ const schema = z.object({
   BCRYPT_ROUNDS: z.coerce.number().int().min(8).max(15).default(10),
 
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+
+  /* Error monitoring — when set, Sentry activates; otherwise dormant.
+     Empty string (from an unset .env line) is treated as "not configured". */
+  SENTRY_DSN: z.preprocess(
+    v => (v === '' ? undefined : v),
+    z.string().url().optional()
+  ),
 })
 
 const parsed = schema.safeParse(process.env)

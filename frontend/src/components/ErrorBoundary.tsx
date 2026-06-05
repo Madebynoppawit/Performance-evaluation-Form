@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
+import { reportError } from '@/lib/monitoring'
 
 interface Props  { children: ReactNode }
 interface State  { error: Error | null }
@@ -13,6 +14,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('[ErrorBoundary]', error, info.componentStack)
+    reportError(error)
   }
 
   render() {

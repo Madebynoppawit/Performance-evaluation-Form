@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { ZodError } from 'zod'
+import { reportError } from '../config/monitoring'
 
 export function errorHandler(err: unknown, req: Request, res: Response, _next: NextFunction) {
   const ts     = new Date().toISOString()
@@ -21,6 +22,10 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     res.status(400).json({ message: 'ข้อมูลไม่ถูกต้อง', errors: err.flatten().fieldErrors })
     return
   }
+
+  // Report unexpected server errors (5xx) to monitoring; skip client 4xx.
+  if (status >= 500) reportError(err)
+
   const message = err instanceof Error ? err.message : 'เกิดข้อผิดพลาด'
   res.status(status).json({ message })
 }

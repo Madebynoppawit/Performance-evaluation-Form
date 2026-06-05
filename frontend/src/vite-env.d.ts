@@ -7,6 +7,8 @@ interface ImportMetaEnv {
   readonly VITE_APP_NAME?: string
   /** App version surfaced in the UI. */
   readonly VITE_APP_VERSION?: string
+  /** Sentry DSN. When set, error monitoring activates; otherwise dormant. */
+  readonly VITE_SENTRY_DSN?: string
 }
 
 interface ImportMeta {

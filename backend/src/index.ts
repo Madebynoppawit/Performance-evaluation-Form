@@ -1,5 +1,6 @@
 /* env must load first — it calls dotenv before any module reads process.env. */
 import { env } from './config/env'
+import { initMonitoring } from './config/monitoring'
 import express from 'express'
 import cors from 'cors'
 import { errorHandler } from './middleware/errorHandler'
@@ -13,6 +14,8 @@ import dashboardRoutes from './routes/dashboard'
 import userRoutes from './routes/users'
 
 const APP_VERSION = '0.1.0'
+
+void initMonitoring()
 
 const app = express()
 
