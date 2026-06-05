@@ -6,6 +6,7 @@ import { SkeletonReport } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
 import ReportsOverview from './ReportsOverview'
 import { scoreTier } from '@/lib/score'
+import { chartColor, chartMargin, chartStroke, chartTick } from '@/lib/chartTheme'
 
 interface ReportSummary {
   cycleId: string
@@ -34,15 +35,11 @@ const scoreLabel = (score: number) => {
 function CustomTooltip({ active, payload }: CustomTooltipProps) {
   if (!active || !payload?.length) return null
   return (
-    <div style={{
-      background: 'rgba(10,16,30,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-      border: '1px solid rgba(10,110,209,0.28)', borderRadius: 10, padding: '10px 14px',
-      boxShadow: '0 16px 40px rgba(0,0,0,0.5), 0 0 24px rgba(10,110,209,0.12)',
-    }}>
-      <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}>
+    <div className="amw-chart-tooltip">
+      <p>
         {payload[0]?.payload?.department}
       </p>
-      <p className="kbt-score-value" style={{ fontSize: '1.1rem' }}>{Number(payload[0]?.value).toFixed(2)}</p>
+      <p className="kbt-score-value">{Number(payload[0]?.value).toFixed(2)}</p>
     </div>
   )
 }
@@ -134,17 +131,17 @@ export default function ReportsPage() {
                         Score by Department
                       </p>
                       <ResponsiveContainer width="100%" height={180}>
-                        <BarChart data={report.byDepartment} margin={{ top: 0, right: 4, left: -20, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="2 4" stroke="rgba(137,145,154,0.18)" />
-                          <XAxis dataKey="department" tick={{ fontSize: 11, fill: 'var(--kbt-text-3)' }} axisLine={false} tickLine={false} />
-                          <YAxis domain={[0, 5]} tick={{ fontSize: 11, fill: 'var(--kbt-text-3)' }} axisLine={false} tickLine={false} />
-                          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(10,110,209,0.06)' }} />
-                          <ReferenceLine y={3} stroke="rgba(129,196,255,0.45)" strokeDasharray="3 3" />
+                        <BarChart data={report.byDepartment} margin={chartMargin.report}>
+                          <CartesianGrid strokeDasharray={chartStroke.gridDash} stroke={chartColor.grid} />
+                          <XAxis dataKey="department" tick={chartTick.md} axisLine={false} tickLine={false} />
+                          <YAxis domain={[0, 5]} tick={chartTick.md} axisLine={false} tickLine={false} />
+                          <Tooltip content={<CustomTooltip />} cursor={{ fill: chartColor.primarySoft }} />
+                          <ReferenceLine y={3} stroke={chartColor.reference} strokeDasharray={chartStroke.dash} />
                           <defs>
                             <linearGradient id={`barGradient-${report.cycleId}`} x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#f9ce5c" stopOpacity={0.95} />
-                              <stop offset="48%" stopColor="#0a6ed1" stopOpacity={0.82} />
-                              <stop offset="100%" stopColor="#16588e" stopOpacity={0.72} />
+                              <stop offset="0%" stopColor={chartColor.gold} stopOpacity={0.95} />
+                              <stop offset="48%" stopColor={chartColor.primary} stopOpacity={0.82} />
+                              <stop offset="100%" stopColor="var(--m-blue)" stopOpacity={0.72} />
                             </linearGradient>
                           </defs>
                           <Bar dataKey="averageScore" radius={[5, 5, 0, 0]} fill={`url(#barGradient-${report.cycleId})`} />

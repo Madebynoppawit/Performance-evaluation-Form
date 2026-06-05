@@ -4,6 +4,7 @@ import { Award, Building2, CheckCircle2, Gauge, TrendingDown, TrendingUp, Users 
 import api from '@/lib/api'
 import type { Evaluation } from '@/types'
 import { scoreTier } from '@/lib/score'
+import { chartColor, chartMotion, performerTone } from '@/lib/chartTheme'
 
 interface ReportSummary {
   totalEvaluations: number
@@ -14,7 +15,7 @@ interface Props {
   summaries: ReportSummary[]
 }
 
-const medal = ['#f9ce5c', '#cfd8e3', '#d8a016']
+const medal = [chartColor.gold, chartColor.silver, chartColor.bronze]
 
 function Gauge100({ pct }: { pct: number }) {
   const r = 52
@@ -23,17 +24,17 @@ function Gauge100({ pct }: { pct: number }) {
   return (
     <div className="amw-gauge">
       <svg width="128" height="128" viewBox="0 0 128 128">
-        <circle cx="64" cy="64" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="9" />
+        <circle cx="64" cy="64" r={r} fill="none" stroke="var(--kbt-border)" strokeWidth="9" />
         <circle
           cx="64" cy="64" r={r} fill="none" stroke="url(#gaugeGrad)" strokeWidth="9" strokeLinecap="round"
           strokeDasharray={circ} strokeDashoffset={offset}
           transform="rotate(-90 64 64)"
-          style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)' }}
+          style={chartMotion}
         />
         <defs>
           <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#81c4ff" />
-            <stop offset="60%" stopColor="#0a6ed1" />
+            <stop offset="0%" stopColor="var(--m-light-blue)" />
+            <stop offset="60%" stopColor="var(--sap-blue)" />
             <stop offset="100%" stopColor="#22c55e" />
           </linearGradient>
         </defs>
@@ -52,8 +53,7 @@ export default function ReportsOverview({ summaries }: Props) {
     queryFn: () => api.get('/evaluations').then(r => r.data),
   })
 
-  const evals = evaluations ?? []
-  const scored = useMemo(() => evals.filter(e => e.totalScore != null), [evals])
+  const scored = useMemo(() => (evaluations ?? []).filter(e => e.totalScore != null), [evaluations])
 
   const totalReviews = summaries.reduce((s, x) => s + x.totalEvaluations, 0)
   const completed = summaries.reduce((s, x) => s + x.completedEvaluations, 0)
@@ -118,15 +118,15 @@ export default function ReportsOverview({ summaries }: Props) {
         {/* Department leaderboard */}
         <div className="kbt-card">
           <div className="kbt-card-header">
-            <span className="kbt-card-title" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <Award size={15} color="var(--lambo-gold)" /> Department Leaderboard
+            <span className="kbt-card-title amw-card-title-inline">
+              <Award size={15} color={chartColor.gold} /> Department Leaderboard
             </span>
-            <span style={{ fontSize: '0.68rem', color: 'var(--kbt-text-3)', fontWeight: 700 }}>avg score</span>
+            <span className="amw-card-meta">avg score</span>
           </div>
           <div className="amw-leaderboard">
             {departments.length ? departments.map((d, i) => (
               <div key={d.name} className="amw-leader-row">
-                <span className="amw-leader-rank" style={{ background: i < 3 ? medal[i] : 'var(--control-bg)', color: i < 3 ? '#0a0a0a' : 'var(--kbt-text-3)' }}>
+                <span className="amw-leader-rank" style={{ background: i < 3 ? medal[i] : 'var(--control-bg)', color: i < 3 ? chartColor.ink : chartColor.textMuted }}>
                   {i + 1}
                 </span>
                 <div className="amw-leader-body">
@@ -147,17 +147,17 @@ export default function ReportsOverview({ summaries }: Props) {
         {/* Performers */}
         <div className="kbt-card">
           <div className="kbt-card-header">
-            <span className="kbt-card-title" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <TrendingUp size={15} color="var(--kbt-success)" /> Performers
+            <span className="kbt-card-title amw-card-title-inline">
+              <TrendingUp size={15} color={chartColor.success} /> Performers
             </span>
           </div>
           <div className="amw-performers">
             {top.length > 0 && (
               <>
-                <p className="amw-performers-label"><TrendingUp size={12} color="var(--kbt-success)" /> Top performers</p>
+                <p className="amw-performers-label"><TrendingUp size={12} color={chartColor.success} /> Top performers</p>
                 {top.map(e => (
                   <div key={e.id} className="amw-performer-row">
-                    <span className="amw-performer-avatar" style={{ background: 'linear-gradient(135deg,#0a6ed1,#22c55e)' }}>{e.evaluatee?.name?.charAt(0) ?? '?'}</span>
+                    <span className="amw-performer-avatar" style={{ background: performerTone.top }}>{e.evaluatee?.name?.charAt(0) ?? '?'}</span>
                     <div>
                       <strong>{e.evaluatee?.name ?? 'Unknown'}</strong>
                       <span>{e.evaluatee?.department ?? '—'}</span>
@@ -169,10 +169,10 @@ export default function ReportsOverview({ summaries }: Props) {
             )}
             {attention.length > 0 && (
               <>
-                <p className="amw-performers-label" style={{ marginTop: 14 }}><TrendingDown size={12} color="var(--kbt-warning)" /> Needs attention</p>
+                <p className="amw-performers-label amw-performers-label-spaced"><TrendingDown size={12} color={chartColor.warning} /> Needs attention</p>
                 {attention.map(e => (
                   <div key={e.id} className="amw-performer-row">
-                    <span className="amw-performer-avatar" style={{ background: 'linear-gradient(135deg,#f59e0b,#ed1c24)' }}>{e.evaluatee?.name?.charAt(0) ?? '?'}</span>
+                    <span className="amw-performer-avatar" style={{ background: performerTone.attention }}>{e.evaluatee?.name?.charAt(0) ?? '?'}</span>
                     <div>
                       <strong>{e.evaluatee?.name ?? 'Unknown'}</strong>
                       <span>{e.evaluatee?.department ?? '—'}</span>

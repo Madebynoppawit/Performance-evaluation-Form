@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Lint · Test · Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run db:generate -w backend
+        env:
+          # generate only reads the schema; a dummy URL satisfies the datasource
+          DATABASE_URL: postgresql://user:pass@localhost:5432/db
+
+      - name: Lint (frontend)
+        run: npm run lint -w frontend
+
+      - name: Test (backend + frontend)
+        run: npm test
+
+      - name: Build (backend + frontend)
+        run: npm run build
