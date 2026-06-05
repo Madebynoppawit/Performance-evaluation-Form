@@ -61,7 +61,7 @@ export default function ReportsPage() {
       </div>
 
       {isLoading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="amw-stack">
           <SkeletonReport /><SkeletonReport />
         </div>
       ) : !data?.length ? (
@@ -74,10 +74,10 @@ export default function ReportsPage() {
           />
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="amw-stack">
           <ReportsOverview summaries={data} />
 
-          <div className="kbt-section-title" style={{ marginTop: 4, marginBottom: 0 }}>Cycle Breakdown</div>
+          <div className="kbt-section-title amw-section-title-compact">Cycle Breakdown</div>
 
           {data.map((report) => {
             const pct = report.totalEvaluations > 0
@@ -87,37 +87,37 @@ export default function ReportsPage() {
 
             return (
               <div key={report.cycleId} className="kbt-card">
-                <div style={{ padding: 20 }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 18, marginBottom: 20 }}>
+                <div className="amw-report-card-body">
+                  <div className="amw-report-card-head">
                     <div>
-                      <h2 style={{ fontSize: '1.08rem', fontWeight: 900, color: 'var(--kbt-text)' }}>{report.cycleName}</h2>
-                      <div style={{ marginTop: 7 }}><span className={cls}>{label}</span></div>
+                      <h2>{report.cycleName}</h2>
+                      <div className="amw-report-badge-row"><span className={cls}>{label}</span></div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p className="kbt-score-value" style={{ fontSize: '2.4rem', lineHeight: 1 }}>{report.averageScore.toFixed(2)}</p>
-                      <p style={{ fontSize: '0.68rem', color: 'var(--kbt-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 900 }}>Avg Score</p>
+                    <div className="amw-report-score">
+                      <p className="kbt-score-value">{report.averageScore.toFixed(2)}</p>
+                      <p>Avg Score</p>
                     </div>
                   </div>
 
-                  <div className="kbt-metric-grid kbt-metric-grid-3" style={{ marginBottom: 20 }}>
+                  <div className="kbt-metric-grid kbt-metric-grid-3 amw-report-metrics">
                     {[
                       { label: 'Total', value: report.totalEvaluations, icon: <Users size={14} color="var(--sap-blue)" /> },
                       { label: 'Completed', value: report.completedEvaluations, icon: <CheckCircle2 size={14} color="var(--m-blue)" /> },
                       { label: 'Completion', value: `${pct}%`, icon: <TrendingUp size={14} color="var(--amw-red)" /> },
                     ].map(({ label: metricLabel, value, icon }) => (
-                      <div key={metricLabel} className="kbt-metric" style={{ padding: 14 }}>
-                        <div className="kbt-metric-head" style={{ marginBottom: 8 }}>
+                      <div key={metricLabel} className="kbt-metric amw-report-metric">
+                        <div className="kbt-metric-head amw-report-metric-head">
                           <span>{metricLabel}</span>
                           <div className="kbt-metric-icon">{icon}</div>
                         </div>
-                        <strong style={{ fontSize: '1.35rem', fontFamily: 'JetBrains Mono, monospace' }}>{value}</strong>
+                        <strong>{value}</strong>
                       </div>
                     ))}
                   </div>
 
-                  <div style={{ marginBottom: 20 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-2)', fontWeight: 800 }}>Completion Progress</span>
+                  <div className="amw-report-progress">
+                    <div>
+                      <span>Completion Progress</span>
                       <span className="kbt-score-value">{pct}%</span>
                     </div>
                     <div className="kbt-progress">
@@ -127,7 +127,7 @@ export default function ReportsPage() {
 
                   {report.byDepartment.length > 0 && (
                     <div>
-                      <p style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--kbt-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+                      <p className="amw-chart-section-label">
                         Score by Department
                       </p>
                       <ResponsiveContainer width="100%" height={180}>

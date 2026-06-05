@@ -3143,6 +3143,18 @@ body,
     cursor: pointer;
   }
 
+  /* ── Lazy route fallback ────────────────────────────────────────────────── */
+  .amw-route-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 55vh;
+    color: var(--sap-blue);
+  }
+  .amw-spin {
+    animation: spin 0.8s linear infinite;
+  }
+
   /* ── Generic 2-col field grid (collapses on mobile) ─────────────────────── */
   .amw-grid-2 {
     display: grid;
@@ -3358,6 +3370,92 @@ body,
 
   .amw-chart-tooltip .kbt-score-value {
     font-size: 1.1rem;
+  }
+
+  .amw-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .amw-section-title-compact {
+    margin-top: 4px;
+    margin-bottom: 0;
+  }
+
+  .amw-report-card-body {
+    padding: 20px;
+  }
+
+  .amw-report-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 20px;
+  }
+
+  .amw-report-card-head h2 {
+    color: var(--kbt-text);
+    font-size: 1.08rem;
+    font-weight: 900;
+  }
+
+  .amw-report-badge-row {
+    margin-top: 7px;
+  }
+
+  .amw-report-score {
+    text-align: right;
+  }
+
+  .amw-report-score .kbt-score-value {
+    font-size: 2.4rem;
+    line-height: 1;
+  }
+
+  .amw-report-score p:last-child,
+  .amw-chart-section-label {
+    color: var(--kbt-text-3);
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .amw-report-metrics,
+  .amw-report-progress {
+    margin-bottom: 20px;
+  }
+
+  .amw-report-metric {
+    padding: 14px;
+  }
+
+  .amw-report-metric-head {
+    margin-bottom: 8px;
+  }
+
+  .amw-report-metric strong {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.35rem;
+  }
+
+  .amw-report-progress > div:first-child {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .amw-report-progress > div:first-child > span:first-child {
+    color: var(--kbt-text-2);
+    font-size: 0.75rem;
+    font-weight: 800;
+  }
+
+  .amw-chart-section-label {
+    margin-bottom: 12px;
+    font-size: 0.7rem;
   }
 
   .amw-performers { padding: 14px 16px; }

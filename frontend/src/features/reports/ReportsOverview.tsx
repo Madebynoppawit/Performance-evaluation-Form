@@ -35,7 +35,7 @@ function Gauge100({ pct }: { pct: number }) {
           <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="var(--m-light-blue)" />
             <stop offset="60%" stopColor="var(--sap-blue)" />
-            <stop offset="100%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor={chartColor.successStrong} />
           </linearGradient>
         </defs>
       </svg>

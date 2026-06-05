@@ -1,21 +1,25 @@
-import { useCallback, useState } from 'react'
+import { lazy, Suspense, useCallback, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
 import Layout from '@/components/Layout'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import SplashScreen from '@/components/SplashScreen'
-import LoginPage from '@/features/auth/LoginPage'
-import DashboardPage from '@/features/dashboard/DashboardPage'
-import EvaluationListPage from '@/features/evaluations/EvaluationListPage'
-import EvaluationFormPage from '@/features/evaluations/EvaluationFormPage'
-import TemplateListPage from '@/features/templates/TemplateListPage'
-import TemplateBuilderPage from '@/features/templates/TemplateBuilderPage'
-import CycleListPage from '@/features/cycles/CycleListPage'
-import ReportsPage from '@/features/reports/ReportsPage'
-import AccountPage from '@/features/account/AccountPage'
-import SettingsPage from '@/features/settings/SettingsPage'
-import GuidelinesPage from '@/features/guidelines/GuidelinesPage'
-import NotFoundPage from '@/pages/NotFoundPage'
+import RouteFallback from '@/components/RouteFallback'
+
+/* Route components are code-split — each loads only when first visited.
+   Heavy deps (e.g. recharts on Dashboard/Reports) stay out of the initial bundle. */
+const LoginPage           = lazy(() => import('@/features/auth/LoginPage'))
+const DashboardPage       = lazy(() => import('@/features/dashboard/DashboardPage'))
+const EvaluationListPage  = lazy(() => import('@/features/evaluations/EvaluationListPage'))
+const EvaluationFormPage  = lazy(() => import('@/features/evaluations/EvaluationFormPage'))
+const TemplateListPage    = lazy(() => import('@/features/templates/TemplateListPage'))
+const TemplateBuilderPage = lazy(() => import('@/features/templates/TemplateBuilderPage'))
+const CycleListPage       = lazy(() => import('@/features/cycles/CycleListPage'))
+const ReportsPage         = lazy(() => import('@/features/reports/ReportsPage'))
+const AccountPage         = lazy(() => import('@/features/account/AccountPage'))
+const SettingsPage        = lazy(() => import('@/features/settings/SettingsPage'))
+const GuidelinesPage      = lazy(() => import('@/features/guidelines/GuidelinesPage'))
+const NotFoundPage        = lazy(() => import('@/pages/NotFoundPage'))
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token)
@@ -31,6 +35,7 @@ export default function App() {
       {!splashDone && <SplashScreen onDone={handleSplashDone} />}
     <ErrorBoundary>
       <BrowserRouter>
+        <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route
@@ -55,6 +60,7 @@ export default function App() {
           </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+        </Suspense>
       </BrowserRouter>
     </ErrorBoundary>
     </>

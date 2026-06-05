@@ -9,6 +9,18 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Stable vendor chunks → long-term browser caching
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'charts': ['recharts'],
+          'query': ['@tanstack/react-query'],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     proxy: {

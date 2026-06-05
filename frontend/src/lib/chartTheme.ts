@@ -9,7 +9,9 @@ export const chartColor = {
   benchmark: 'rgba(216,160,22,0.5)',
   grid: 'rgba(137,145,154,0.18)',
   success: 'var(--kbt-success)',
+  successStrong: '#22c55e',
   warning: 'var(--kbt-warning)',
+  attention: '#f59e0b',
   gold: 'var(--lambo-gold)',
   silver: '#cfd8e3',
   bronze: '#d8a016',
@@ -37,14 +39,13 @@ export const chartMotion: CSSProperties = {
 
 export const statusTone = {
   DRAFT: { label: 'Draft', color: 'rgba(168,183,204,0.5)' },
-  IN_PROGRESS: { label: 'In Progress', color: '#f59e0b' },
+  IN_PROGRESS: { label: 'In Progress', color: chartColor.attention },
   SUBMITTED: { label: 'Submitted', color: 'var(--sap-blue)' },
-  REVIEWED: { label: 'Reviewed', color: '#22c55e' },
+  REVIEWED: { label: 'Reviewed', color: chartColor.successStrong },
   CLOSED: { label: 'Closed', color: 'var(--m-light-blue)' },
 } as const
 
 export const performerTone = {
-  top: 'linear-gradient(135deg,var(--sap-blue),#22c55e)',
-  attention: 'linear-gradient(135deg,#f59e0b,var(--amw-red))',
+  top: `linear-gradient(135deg,var(--sap-blue),${chartColor.successStrong})`,
+  attention: `linear-gradient(135deg,${chartColor.attention},var(--amw-red))`,
 } as const
-
