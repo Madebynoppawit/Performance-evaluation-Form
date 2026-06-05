@@ -189,6 +189,38 @@ Open **http://localhost:5173**
 
 ---
 
+## Testing
+
+```bash
+# Unit tests (fast, no database) — backend + frontend
+npm test
+```
+
+Unit tests are DB-free and CI-safe (backend uses a committed `.env.test`).
+Both run automatically in CI on every push/PR.
+
+**Integration tests** (real HTTP + Postgres) run separately:
+
+```bash
+# One-time: create & seed a test database
+docker compose up -d postgres
+docker exec performance-evaluation-form-postgres-1 \
+  psql -U postgres -c "CREATE DATABASE amw_test"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/amw_test" \
+  npm run db:deploy -w backend && \
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/amw_test" \
+  npm run db:seed -w backend
+
+# Run them (uses .env.test → amw_test)
+npm run test:integration -w backend
+```
+
+CI runs integration tests in a dedicated job with a Postgres service
+(migrate → seed → supertest against the real Express app, covering auth,
+authn guards, and RBAC).
+
+---
+
 ## API Reference
 
 Base URL: `http://localhost:3001`
