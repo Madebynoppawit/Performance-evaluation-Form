@@ -9,6 +9,7 @@ import type { Template } from '@/types'
 import { SkeletonTableRows } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
+import Spinner from '@/components/Spinner'
 
 export default function TemplateListPage() {
   const navigate = useNavigate()
@@ -45,7 +46,8 @@ export default function TemplateListPage() {
         </div>
         {isAdmin && (
           <button onClick={() => createMutation.mutate()} disabled={createMutation.isPending} className="kbt-btn-primary">
-            <Plus size={15} /> New Template
+            {createMutation.isPending ? <Spinner size={15} /> : <Plus size={15} />}
+            {createMutation.isPending ? 'Creating…' : 'New Template'}
           </button>
         )}
       </div>

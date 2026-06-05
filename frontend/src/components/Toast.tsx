@@ -1,5 +1,5 @@
 import { useState, useCallback, ReactNode } from 'react'
-import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-react'
+import { XCircle, AlertTriangle, Info, X } from 'lucide-react'
 import { ToastContext, ToastType, ToastContextValue } from './toastContext'
 
 export interface Toast {
@@ -9,12 +9,22 @@ export interface Toast {
   message?: string
 }
 
+/* Checkmark that draws itself in (circle then tick) for success toasts. */
+function AnimatedCheck() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="#81c4ff" strokeWidth="2" className="amw-check-circle" />
+      <path d="M7 12.5l3.2 3.2L17 8.8" stroke="#81c4ff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="amw-check-path" />
+    </svg>
+  )
+}
+
 const STYLES: Record<ToastType, { border: string; glow: string; accent: string; icon: ReactNode }> = {
   success: {
     border: 'rgba(129,196,255,0.28)',
     glow:   '0 0 32px rgba(10,110,209,0.16)',
     accent: '#81c4ff',
-    icon: <CheckCircle2 size={15} color="#81c4ff" />,
+    icon: <AnimatedCheck />,
   },
   error: {
     border: 'rgba(237,28,36,0.28)',

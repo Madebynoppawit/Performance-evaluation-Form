@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { SkeletonTableRows } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
+import Spinner from '@/components/Spinner'
 
 const STATUS: Record<string, { cls: string; label: string }> = {
   UPCOMING: { cls: 'kbt-badge-info', label: 'Upcoming' },
@@ -161,7 +162,10 @@ export default function CycleListPage() {
               </div>
               <div className="kbt-modal-actions">
                 <button type="button" onClick={() => setShowDialog(false)} className="kbt-btn-ghost">Cancel</button>
-                <button type="submit" disabled={isSubmitting} className="kbt-btn-primary">{isSubmitting ? 'Creating...' : 'Create Cycle'}</button>
+                <button type="submit" disabled={isSubmitting} className="kbt-btn-primary">
+                  {isSubmitting && <Spinner size={14} />}
+                  {isSubmitting ? 'Creating…' : 'Create Cycle'}
+                </button>
               </div>
             </form>
           </div>

@@ -4394,3 +4394,36 @@ body,
   from { opacity: 0; transform: translateY(5px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* Success toast: draw the checkmark (circle, then tick) */
+.amw-check-circle {
+  stroke-dasharray: 64;
+  stroke-dashoffset: 64;
+  animation: check-draw 0.45s ease forwards 0.06s;
+}
+.amw-check-path {
+  stroke-dasharray: 22;
+  stroke-dashoffset: 22;
+  animation: check-draw 0.3s ease forwards 0.42s;
+}
+@keyframes check-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Form labels brighten while their field is focused (progressive — :has) */
+.kbt-label {
+  transition: color 0.16s ease;
+}
+.kbt-label:has(~ .kbt-input:focus),
+.kbt-label:has(~ .kbt-textarea:focus),
+.kbt-label:has(~ .kbt-select:focus),
+.kbt-label:has(~ * .kbt-input:focus),
+.kbt-label:has(~ * .kbt-select:focus),
+.kbt-label:has(~ * .kbt-textarea:focus) {
+  color: var(--sap-blue);
+}
+
+/* Charts fade in when they replace their skeletons (content crossfade) */
+.amw-chart-frame {
+  animation: fadeIn 0.45s ease both;
+}
