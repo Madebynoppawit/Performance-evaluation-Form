@@ -4,6 +4,7 @@ import { BarChart2, CheckCircle2, TrendingUp, Users } from 'lucide-react'
 import api from '@/lib/api'
 import { SkeletonReport } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
+import ReportsOverview from './ReportsOverview'
 
 interface ReportSummary {
   cycleId: string
@@ -78,6 +79,10 @@ export default function ReportsPage() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <ReportsOverview summaries={data} />
+
+          <div className="kbt-section-title" style={{ marginTop: 4, marginBottom: 0 }}>Cycle Breakdown</div>
+
           {data.map((report) => {
             const pct = report.totalEvaluations > 0
               ? Math.round((report.completedEvaluations / report.totalEvaluations) * 100)
