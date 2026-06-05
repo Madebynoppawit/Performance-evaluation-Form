@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, BarChart2, CheckCircle2, ClipboardList, Plus, RefreshCw, TrendingUp, Users } from 'lucide-react'
+import { ArrowUpRight, BarChart2, CheckCircle2, ClipboardList, FileCheck2, Plus, RefreshCw, Scale, ShieldCheck, TrendingUp, Users } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import api from '@/lib/api'
 import { getTypeLabel } from '@/lib/utils'
@@ -50,8 +50,8 @@ interface MetricCardProps {
 }
 const ACCENT: Record<Accent, string> = {
   blue:  'var(--sap-blue)',
-  green: 'var(--kbt-success)',
-  gold:  'var(--lambo-gold)',
+  green: 'var(--m-blue)',
+  gold:  'var(--amw-red)',
   cyan:  'var(--kbt-cyan)',
 }
 function MetricCard({ label, numericValue, displayValue, icon, accent, sub, trend, trendUp, spark, delay = 0 }: MetricCardProps) {
@@ -175,28 +175,37 @@ export default function DashboardPage() {
     <div className="kbt-page">
       <section className="amw-studio-hero" style={{ minHeight: 188 }}>
         <div className="amw-hero-copy">
-          <span className="amw-eyebrow">AMW Performance Command</span>
+          <span className="amw-eyebrow">AMW Corporate Performance</span>
           <h1 style={{ fontSize: 'clamp(2rem, 3.6vw, 3.9rem)' }}>
             {greeting}, <span className="kbt-gradient-text">{user?.name}</span>
           </h1>
           <p>
-            Executive cockpit for review readiness, active evaluation work, scoring coverage, and operational status.
+            Executive cockpit for review readiness, corporate governance, scoring evidence, and performance decisions.
           </p>
           <div className="amw-hero-badges">
             <span>{completionPct}% completion</span>
             <span>{stats?.activeCycles ?? 0} active cycles</span>
             <span>{stats?.pendingEvaluations ?? 0} pending</span>
+            <span>Corporate standard</span>
           </div>
         </div>
-        <div className="amw-hero-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          {(isAdmin || isManager) && (
-            <Link to="/evaluations" style={{ textDecoration: 'none' }}>
-              <button className="kbt-btn-primary"><Plus size={14} /> New Evaluation</button>
+        <div className="amw-hero-actions amw-corporate-stack">
+          <div className="amw-corporate-seal">
+            <Scale size={26} />
+            <span>Legal Tech Record</span>
+            <strong>AMW-PEF</strong>
+            <small>Audit Node 01</small>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {(isAdmin || isManager) && (
+              <Link to="/evaluations" style={{ textDecoration: 'none' }}>
+                <button className="kbt-btn-primary"><Plus size={14} /> New Evaluation</button>
+              </Link>
+            )}
+            <Link to="/reports" style={{ textDecoration: 'none' }}>
+              <button className="kbt-btn-report"><BarChart2 size={15} /> View Reports</button>
             </Link>
-          )}
-          <Link to="/reports" style={{ textDecoration: 'none' }}>
-            <button className="kbt-btn-outline"><BarChart2 size={14} /> View Reports</button>
-          </Link>
+          </div>
         </div>
       </section>
 
@@ -290,6 +299,30 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          <div className="amw-corporate-card">
+            <div className="amw-corporate-card-head">
+              <ShieldCheck size={17} />
+              <span>Corporate Control</span>
+            </div>
+            <div className="amw-corporate-list">
+              <div>
+                <ShieldCheck size={14} />
+                <span>Role-based access</span>
+                <strong>Enforced</strong>
+              </div>
+              <div>
+                <FileCheck2 size={14} />
+                <span>Consent workflow</span>
+                <strong>Tracked</strong>
+              </div>
+              <div>
+                <ClipboardList size={14} />
+                <span>Evidence record</span>
+                <strong>Retained</strong>
+              </div>
+            </div>
+          </div>
+
           <div className="kbt-card">
             <div className="kbt-card-header">
               <span className="kbt-card-title">System Status</span>
@@ -308,7 +341,7 @@ export default function DashboardPage() {
                 <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)', fontWeight: 700 }}>{label}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {up === true && <><span className="kbt-dot-live" /><span style={{ fontSize: '0.6875rem', color: 'var(--kbt-success)', fontWeight: 900 }}>Online</span></>}
+                    {up === true && <><span className="kbt-dot-live" /><span style={{ fontSize: '0.6875rem', color: 'var(--m-light-blue)', fontWeight: 900 }}>Online</span></>}
                     {up === false && <><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--kbt-error)', display: 'inline-block' }} /><span style={{ fontSize: '0.6875rem', color: 'var(--kbt-error)', fontWeight: 900 }}>Offline</span></>}
                     {up == null && <><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--kbt-warning)', display: 'inline-block' }} /><span style={{ fontSize: '0.6875rem', color: 'var(--kbt-warning)', fontWeight: 900 }}>Checking…</span></>}
                   </div>

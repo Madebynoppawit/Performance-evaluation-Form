@@ -37,8 +37,8 @@ export default function EvaluationListPage() {
 
   const metricItems = [
     { label: 'Total Evaluations', value: stats.total, icon: <TrendingUp size={16} color="var(--sap-blue)" />, color: 'var(--sap-blue)' },
-    { label: 'Completed', value: stats.completed, icon: <CheckCircle2 size={16} color="var(--kbt-success)" />, color: 'var(--kbt-success)' },
-    { label: 'Avg Score', value: stats.avgScore, icon: <Gauge size={16} color="var(--lambo-gold)" />, color: 'var(--lambo-gold)', mono: true },
+    { label: 'Completed', value: stats.completed, icon: <CheckCircle2 size={16} color="var(--m-blue)" />, color: 'var(--m-blue)' },
+    { label: 'Avg Score', value: stats.avgScore, icon: <Gauge size={16} color="var(--amw-red)" />, color: 'var(--amw-red)', mono: true },
   ]
 
   return (

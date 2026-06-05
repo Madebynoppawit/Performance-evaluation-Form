@@ -25,7 +25,7 @@ export default function AcknowledgementSection({ data, currentUserId, evaluateeI
         <div key={signer.type} className="kbt-card" style={{ padding: 18, textAlign: 'center' }}>
           <div style={{ marginBottom: 12 }}>
             {signer.signedAt
-              ? <CheckCircle2 size={30} color="var(--kbt-success)" style={{ margin: '0 auto' }} />
+              ? <CheckCircle2 size={30} color="var(--m-light-blue)" style={{ margin: '0 auto' }} />
               : <Clock4 size={30} color="var(--kbt-text-3)" style={{ margin: '0 auto' }} />}
           </div>
           <p style={{ color: 'var(--kbt-text)', fontSize: '0.94rem', fontWeight: 900 }}>{signer.label}</p>

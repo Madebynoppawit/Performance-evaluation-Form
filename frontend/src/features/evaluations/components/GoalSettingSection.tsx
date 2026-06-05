@@ -29,10 +29,10 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
           <span style={{ color: '#6b7a90' }}>Goals: <span style={{ color: '#a8b7cc', fontWeight: 600 }}>{goals.length}/5</span></span>
           <span style={{ color: '#6b7a90' }}>
             Total weight:{' '}
-            <span style={{ fontFamily: 'monospace', fontWeight: 700, color: weightOk ? '#00a86b' : '#f59e0b' }}>
+            <span style={{ fontFamily: 'monospace', fontWeight: 700, color: weightOk ? 'var(--m-light-blue)' : 'var(--amw-red)' }}>
               {totalWeight}%
             </span>
-            {!weightOk && goals.length > 0 && <span style={{ color: '#f59e0b' }}> (should be 100%)</span>}
+            {!weightOk && goals.length > 0 && <span style={{ color: 'var(--amw-red)' }}> (should be 100%)</span>}
           </span>
         </div>
         <div style={{ flex: 1 }} />
@@ -69,13 +69,13 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)',
-            background: 'rgba(0,168,107,0.03)',
+            background: 'rgba(10,110,209,0.04)',
           }}>
             <span style={{
               width: 22, height: 22, borderRadius: 5, flexShrink: 0,
-              background: 'rgba(0,168,107,0.15)', border: '1px solid rgba(0,168,107,0.25)',
+              background: 'rgba(10,110,209,0.14)', border: '1px solid rgba(129,196,255,0.25)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.625rem', fontWeight: 700, color: '#00a86b', fontFamily: 'monospace',
+              fontSize: '0.625rem', fontWeight: 700, color: 'var(--m-light-blue)', fontFamily: 'monospace',
             }}>
               {String(idx + 1).padStart(2, '0')}
             </span>
@@ -116,8 +116,8 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                         width: 22, height: 22, borderRadius: 5, fontSize: '0.6875rem', fontWeight: 700,
                         fontFamily: 'monospace',
-                        background: r >= 4 ? 'rgba(0,168,107,0.12)' : r === 3 ? 'rgba(10,110,209,0.12)' : 'rgba(245,158,11,0.12)',
-                        color: r >= 4 ? '#00a86b' : r === 3 ? '#0a6ed1' : '#f59e0b',
+                        background: r >= 4 ? 'rgba(129,196,255,0.14)' : r === 3 ? 'rgba(10,110,209,0.12)' : 'rgba(237,28,36,0.1)',
+                        color: r >= 4 ? 'var(--m-light-blue)' : r === 3 ? 'var(--sap-blue)' : 'var(--amw-red)',
                       }}>
                         {r}
                       </span>

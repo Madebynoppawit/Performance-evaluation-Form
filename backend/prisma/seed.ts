@@ -33,6 +33,24 @@ async function main() {
     },
   })
 
+  const directorEngineering = await prisma.user.upsert({
+    where: { email: 'k.keng@company.com' },
+    update: {
+      name:       'K.Keng',
+      role:       Role.ADMIN,
+      position:   Position.DIRECTOR_UP,
+      department: 'Engineering',
+    },
+    create: {
+      email:      'k.keng@company.com',
+      name:       'K.Keng',
+      password:   hash,
+      role:       Role.ADMIN,
+      position:   Position.DIRECTOR_UP,
+      department: 'Engineering',
+    },
+  })
+
   const manager1 = await prisma.user.upsert({
     where: { email: 'manager.eng@company.com' },
     update: {},
@@ -226,6 +244,7 @@ async function main() {
   const users = [
     { role: 'Admin / Director',  email: admin.email,       name: admin.name,       position: 'Director and up', dept: 'Executive'   },
     { role: 'Admin / Director',  email: director.email,    name: director.name,    position: 'Director and up', dept: 'Operations'  },
+    { role: 'Director',          email: directorEngineering.email, name: directorEngineering.name, position: 'Director of Engineering', dept: 'Engineering' },
     { role: 'Manager',           email: manager1.email,    name: manager1.name,    position: 'Manager',         dept: 'Engineering' },
     { role: 'Manager',           email: manager2.email,    name: manager2.name,    position: 'Manager',         dept: 'HR'          },
     { role: 'Employee (Officer)',    email: officer1.email,    name: officer1.name,    position: 'Officer',         dept: 'Engineering' },

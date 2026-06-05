@@ -12,6 +12,8 @@ import TemplateListPage from '@/features/templates/TemplateListPage'
 import TemplateBuilderPage from '@/features/templates/TemplateBuilderPage'
 import CycleListPage from '@/features/cycles/CycleListPage'
 import ReportsPage from '@/features/reports/ReportsPage'
+import AccountPage from '@/features/account/AccountPage'
+import SettingsPage from '@/features/settings/SettingsPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -45,6 +47,8 @@ export default function App() {
             <Route path="templates/:id" element={<TemplateBuilderPage />} />
             <Route path="cycles" element={<CycleListPage />} />
             <Route path="reports" element={<ReportsPage />} />
+            <Route path="account" element={<AccountPage />} />
+            <Route path="settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />

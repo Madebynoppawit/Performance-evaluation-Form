@@ -11,10 +11,10 @@ export interface Toast {
 
 const STYLES: Record<ToastType, { border: string; glow: string; accent: string; icon: ReactNode }> = {
   success: {
-    border: 'rgba(34,197,94,0.28)',
-    glow:   '0 0 32px rgba(34,197,94,0.16)',
-    accent: '#22c55e',
-    icon: <CheckCircle2 size={15} color="#22c55e" />,
+    border: 'rgba(129,196,255,0.28)',
+    glow:   '0 0 32px rgba(10,110,209,0.16)',
+    accent: '#81c4ff',
+    icon: <CheckCircle2 size={15} color="#81c4ff" />,
   },
   error: {
     border: 'rgba(237,28,36,0.28)',
@@ -23,10 +23,10 @@ const STYLES: Record<ToastType, { border: string; glow: string; accent: string; 
     icon: <XCircle size={15} color="#ed1c24" />,
   },
   warning: {
-    border: 'rgba(245,158,11,0.28)',
-    glow:   '0 0 32px rgba(245,158,11,0.14)',
-    accent: '#f59e0b',
-    icon: <AlertTriangle size={15} color="#f59e0b" />,
+    border: 'rgba(237,28,36,0.24)',
+    glow:   '0 0 32px rgba(237,28,36,0.12)',
+    accent: '#ed1c24',
+    icon: <AlertTriangle size={15} color="#ed1c24" />,
   },
   info: {
     border: 'rgba(10,110,209,0.28)',

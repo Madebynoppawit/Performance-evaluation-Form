@@ -99,8 +99,8 @@ export default function ReportsPage() {
                   <div className="kbt-metric-grid kbt-metric-grid-3" style={{ marginBottom: 20 }}>
                     {[
                       { label: 'Total', value: report.totalEvaluations, icon: <Users size={14} color="var(--sap-blue)" /> },
-                      { label: 'Completed', value: report.completedEvaluations, icon: <CheckCircle2 size={14} color="var(--kbt-success)" /> },
-                      { label: 'Completion', value: `${pct}%`, icon: <TrendingUp size={14} color="var(--lambo-gold)" /> },
+                      { label: 'Completed', value: report.completedEvaluations, icon: <CheckCircle2 size={14} color="var(--m-blue)" /> },
+                      { label: 'Completion', value: `${pct}%`, icon: <TrendingUp size={14} color="var(--amw-red)" /> },
                     ].map(({ label: metricLabel, value, icon }) => (
                       <div key={metricLabel} className="kbt-metric" style={{ padding: 14 }}>
                         <div className="kbt-metric-head" style={{ marginBottom: 8 }}>
@@ -133,7 +133,7 @@ export default function ReportsPage() {
                           <XAxis dataKey="department" tick={{ fontSize: 11, fill: 'var(--kbt-text-3)' }} axisLine={false} tickLine={false} />
                           <YAxis domain={[0, 5]} tick={{ fontSize: 11, fill: 'var(--kbt-text-3)' }} axisLine={false} tickLine={false} />
                           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(10,110,209,0.06)' }} />
-                          <ReferenceLine y={3} stroke="rgba(216,160,22,0.45)" strokeDasharray="3 3" />
+                          <ReferenceLine y={3} stroke="rgba(129,196,255,0.45)" strokeDasharray="3 3" />
                           <defs>
                             <linearGradient id={`barGradient-${report.cycleId}`} x1="0" y1="0" x2="0" y2="1">
                               <stop offset="0%" stopColor="#f9ce5c" stopOpacity={0.95} />

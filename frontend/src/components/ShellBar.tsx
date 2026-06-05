@@ -1,26 +1,78 @@
-import { Bell, Search, LogOut, ChevronDown } from 'lucide-react'
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+  AlertTriangle,
+  Bell,
+  CheckCircle2,
+  ChevronDown,
+  Clock4,
+  LogOut,
+  Search,
+  ShieldCheck,
+  User,
+  X,
+  type LucideIcon,
+} from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { useCommandPalette } from './commandPaletteStore'
 import ThemeToggle from './ThemeToggle'
+
+interface NotificationItem {
+  title: string
+  description: string
+  time: string
+  type: 'approval' | 'deadline' | 'system'
+  icon: LucideIcon
+}
+
+const NOTIFICATIONS: NotificationItem[] = [
+  { title: '3 reviews need acknowledgement', description: 'Pending employee or manager sign-off in the current cycle.', time: 'Today', type: 'approval', icon: ShieldCheck },
+  { title: 'Cycle closes in 5 days', description: 'Complete remaining evaluations before the review window closes.', time: 'Jun 9', type: 'deadline', icon: Clock4 },
+  { title: 'Report snapshot is ready', description: 'Department summary and completion metrics have been refreshed.', time: '30 min', type: 'system', icon: CheckCircle2 },
+]
+
+function getDisplayRole(user: ReturnType<typeof useAuth>['user']) {
+  if (user?.position === 'DIRECTOR_UP') return 'Director'
+  return user?.role === 'ADMIN' ? 'Administrator' : user?.role === 'MANAGER' ? 'Manager' : 'Employee'
+}
 
 export default function ShellBar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const openPalette = useCommandPalette(s => s.setOpen)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [notificationOpen, setNotificationOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const notificationRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+      const target = e.target as Node
+      if (menuRef.current && !menuRef.current.contains(target)) setMenuOpen(false)
+      if (notificationRef.current && !notificationRef.current.contains(target)) setNotificationOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setNotificationOpen(false)
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [])
+
+  function go(to: string) {
+    setNotificationOpen(false)
+    navigate(to)
+  }
+
   return (
     <header className="kbt-header" style={{ boxShadow: '0 1px 0 rgba(255,255,255,0.04)' }}>
-      {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <div style={{
           width: 104, height: 38,
@@ -30,11 +82,7 @@ export default function ShellBar() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 10px 24px rgba(3,11,22,0.12), 0 0 0 1px rgba(255,255,255,0.08)',
         }}>
-          <img
-            src="/amw-logo.png"
-            alt="AMW"
-            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
-          />
+          <img src="/amw-logo.png" alt="AMW" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
           <span style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--shell-text)', letterSpacing: '0.01em' }}>
@@ -46,37 +94,72 @@ export default function ShellBar() {
         </div>
       </div>
 
-      {/* Divider */}
       <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
 
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-        <div className="kbt-command" style={{ cursor: 'pointer', transition: 'all 0.18s', maxWidth: 380, width: '100%' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(10,110,209,0.4)'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 0 3px rgba(10,110,209,0.1)' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = ''; (e.currentTarget as HTMLDivElement).style.boxShadow = '' }}
-        >
-          <Search size={14} />
-          <span>Search employee, cycle, report...</span>
-          <span style={{ marginLeft: 'auto', fontSize: '0.625rem', color: 'var(--kbt-text-3)', border: '1px solid var(--kbt-border)', borderRadius: 5, padding: '1px 6px', flexShrink: 0 }}>
-            CTRL K
-          </span>
-        </div>
+      {/* Command palette trigger */}
+      <div className="amw-search-wrap">
+        <button type="button" className="kbt-command" onClick={() => openPalette(true)} aria-haspopup="dialog" aria-label="Open command palette">
+          <Search size={16} />
+          <span>Search or jump to…</span>
+          <span className="kbt-kbd">CTRL K</span>
+        </button>
       </div>
 
-      {/* Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
         <ThemeToggle />
-        <button className="kbt-icon-button" style={{ position: 'relative' }}>
-          <Bell size={15} />
-          <span style={{
-            position: 'absolute', top: 5, right: 5,
-            width: 8, height: 8, borderRadius: '50%',
-            background: 'var(--sap-blue)',
-            boxShadow: '0 0 8px rgba(10,110,209,0.7), 0 0 16px rgba(10,110,209,0.4)',
-            animation: 'pulse-live 2s ease infinite',
-          }} />
-        </button>
+        <div ref={notificationRef} style={{ position: 'relative' }}>
+          <button
+            type="button"
+            className={`kbt-icon-button${notificationOpen ? ' active' : ''}`}
+            style={{ position: 'relative' }}
+            onClick={() => setNotificationOpen(v => !v)}
+            aria-haspopup="dialog"
+            aria-expanded={notificationOpen}
+            aria-label="Open notifications"
+          >
+            <Bell size={15} />
+            <span className="amw-notification-dot" />
+          </button>
 
-        {/* User menu */}
+          {notificationOpen && (
+            <div className="amw-notification-popover" role="dialog" aria-label="Notifications">
+              <div className="amw-popover-head">
+                <div>
+                  <span>Notifications</span>
+                  <strong>3 active updates</strong>
+                </div>
+                <button type="button" className="amw-popover-close" onClick={() => setNotificationOpen(false)} aria-label="Close notifications">
+                  <X size={14} />
+                </button>
+              </div>
+              <div className="amw-tag-row">
+                <button type="button" className="active">All</button>
+                <button type="button">Approval</button>
+                <button type="button">Deadline</button>
+              </div>
+              <div className="amw-notification-list">
+                {NOTIFICATIONS.map(item => {
+                  const Icon = item.icon
+                  return (
+                    <button key={item.title} type="button" className={`amw-notification-item ${item.type}`} onClick={() => go(item.type === 'system' ? '/reports' : '/evaluations')}>
+                      <div className="amw-result-icon"><Icon size={16} /></div>
+                      <div>
+                        <strong>{item.title}</strong>
+                        <span>{item.description}</span>
+                      </div>
+                      <em>{item.time}</em>
+                    </button>
+                  )
+                })}
+              </div>
+              <button type="button" className="amw-popover-action" onClick={() => go('/evaluations')}>
+                <AlertTriangle size={14} />
+                Review pending items
+              </button>
+            </div>
+          )}
+        </div>
+
         <div ref={menuRef} style={{ position: 'relative', marginLeft: 4 }}>
           <button
             onClick={() => setMenuOpen(v => !v)}
@@ -115,7 +198,6 @@ export default function ShellBar() {
               overflow: 'hidden', zIndex: 200,
               animation: 'fadeIn 0.2s ease',
             }}>
-              {/* User info */}
               <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{
@@ -138,10 +220,25 @@ export default function ShellBar() {
                     background: 'rgba(10,110,209,0.1)', color: 'var(--sap-blue)',
                     border: '1px solid rgba(10,110,209,0.2)', textTransform: 'uppercase', letterSpacing: '0.06em',
                   }}>
-                    {user?.role === 'ADMIN' ? 'Administrator' : user?.role === 'MANAGER' ? 'Manager' : 'Employee'}
+                    {getDisplayRole(user)}
                   </span>
                 </div>
               </div>
+
+              <button
+                onClick={() => { setMenuOpen(false); navigate('/account') }}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center',
+                  gap: 10, padding: '11px 16px', fontSize: '0.875rem',
+                  color: 'var(--kbt-text-2)', background: 'none', border: 'none',
+                  cursor: 'pointer', textAlign: 'left', transition: 'all 0.12s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(10,110,209,0.08)'; e.currentTarget.style.color = 'var(--sap-blue)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--kbt-text-2)' }}
+              >
+                <User size={14} />
+                Account User
+              </button>
 
               <button
                 onClick={() => { logout(); navigate('/login') }}

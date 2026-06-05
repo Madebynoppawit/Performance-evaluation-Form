@@ -6,26 +6,21 @@ export default function ThemeToggle() {
   const isLight = theme === 'light'
 
   return (
-    <div className="kbt-theme-switch" title="Change background mode">
+    <div className={`kbt-theme-switch${isLight ? ' is-light' : ' is-dark'}`} title="Change background mode">
       <button
         type="button"
-        className={`kbt-theme-option${isLight ? ' active' : ''}`}
-        onClick={() => {
-          if (!isLight) toggleTheme()
-        }}
-        aria-label="Use white background"
+        className="kbt-theme-slider"
+        onClick={toggleTheme}
+        aria-label={isLight ? 'Switch to dark background' : 'Switch to white background'}
+        aria-pressed={!isLight}
       >
-        <Sun size={13} /> Light
-      </button>
-      <button
-        type="button"
-        className={`kbt-theme-option${!isLight ? ' active' : ''}`}
-        onClick={() => {
-          if (isLight) toggleTheme()
-        }}
-        aria-label="Use dark background"
-      >
-        <Moon size={13} /> Dark
+        <span className="kbt-theme-thumb" />
+        <span className={`kbt-theme-option${isLight ? ' active' : ''}`}>
+          <Sun size={13} /> Light
+        </span>
+        <span className={`kbt-theme-option${!isLight ? ' active' : ''}`}>
+          <Moon size={13} /> Dark
+        </span>
       </button>
     </div>
   )

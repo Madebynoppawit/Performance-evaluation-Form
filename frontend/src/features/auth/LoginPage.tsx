@@ -61,8 +61,8 @@ export default function LoginPage() {
           <div className="amw-status-grid">
             {[
               { value: '360°', label: 'Review ready', color: 'var(--sap-blue)' },
-              { value: '5.00', label: 'Score scale', color: 'var(--lambo-gold)' },
-              { value: 'RBAC', label: 'Access guard', color: 'var(--kbt-success)' },
+              { value: '5.00', label: 'Score scale', color: 'var(--amw-red)' },
+              { value: 'RBAC', label: 'Access guard', color: 'var(--m-light-blue)' },
             ].map((item, i) => (
               <div key={item.label} className={`amw-status-tile kbt-animate-up kbt-stagger-${i + 1}`} style={{ borderColor: 'rgba(10,110,209,0.18)', background: 'rgba(10,110,209,0.05)' }}>
                 <strong style={{ color: item.color }}>{item.value}</strong>
@@ -73,7 +73,7 @@ export default function LoginPage() {
         </div>
 
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, color: 'var(--kbt-text-2)', fontSize: '0.8125rem', fontWeight: 700 }}>
-          <CheckCircle2 size={16} color="var(--kbt-success)" />
+          <CheckCircle2 size={16} color="var(--m-light-blue)" />
           Secure internal performance workflow
         </div>
       </section>
@@ -170,6 +170,7 @@ export default function LoginPage() {
             </p>
             {[
               { role: 'Admin', email: 'admin@company.com' },
+              { role: 'Director', email: 'k.keng@company.com' },
               { role: 'Manager', email: 'manager.eng@company.com' },
               { role: 'Officer', email: 'officer1@company.com' },
             ].map(({ role, email }) => (
@@ -183,7 +184,7 @@ export default function LoginPage() {
                 background: 'var(--control-bg)',
                 border: '1px solid var(--kbt-border)',
               }}>
-                <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: 'var(--lambo-gold)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: 'var(--m-light-blue)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   {role}
                 </span>
                 <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)', fontFamily: 'JetBrains Mono, monospace' }}>{email}</span>

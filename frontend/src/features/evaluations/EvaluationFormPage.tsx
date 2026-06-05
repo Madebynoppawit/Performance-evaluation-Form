@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { CheckSquare, ChevronRight, Loader2, Save, Send } from 'lucide-react'
+import { CheckSquare, ChevronRight, FileCheck2, Loader2, Save, Scale, ScrollText, Send, ShieldCheck } from 'lucide-react'
 import api from '@/lib/api'
 import type { AttendanceScore, CompetencyScore, Evaluation, EvaluationComment, GoalEntry, SalarySummary } from '@/types'
 import { formatDate, getTypeLabel } from '@/lib/utils'
@@ -133,7 +133,7 @@ export default function EvaluationFormPage() {
       <section className="amw-studio-hero" style={{ minHeight: 188 }}>
         <div className="amw-hero-copy">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <span className="amw-eyebrow">Evaluation Workflow</span>
+            <span className="amw-eyebrow">Corporate Review Record</span>
             <span className={STATUS[ev.status]?.cls ?? 'kbt-badge-neutral'}>{STATUS[ev.status]?.label ?? ev.status}</span>
           </div>
           <h1 style={{ fontSize: 'clamp(2rem, 3.3vw, 3.5rem)' }}>{ev.evaluatee?.name}</h1>
@@ -143,14 +143,22 @@ export default function EvaluationFormPage() {
           </p>
           <div className="amw-hero-badges">
             {factItems.slice(0, 3).map(([label, value]) => <span key={label}>{label}: {dash(value)}</span>)}
+            <span>AMW standard</span>
           </div>
         </div>
-        {ev.totalScore != null && (
-          <div className="amw-hero-actions" style={{ textAlign: 'right' }}>
-            <span style={{ color: 'var(--kbt-text-3)', fontSize: '0.68rem', fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Total Score</span>
-            <div className="kbt-score-value" style={{ fontSize: '3rem', lineHeight: 1 }}>{ev.totalScore.toFixed(2)}</div>
+        <div className="amw-hero-actions amw-corporate-stack">
+          <div className="amw-corporate-seal amw-corporate-seal--compact">
+            <Scale size={22} />
+            <span>Legal File</span>
+            <strong>{ev.status}</strong>
           </div>
-        )}
+          {ev.totalScore != null && (
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ color: 'var(--kbt-text-3)', fontSize: '0.68rem', fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Total Score</span>
+              <div className="kbt-score-value" style={{ fontSize: '3rem', lineHeight: 1 }}>{ev.totalScore.toFixed(2)}</div>
+            </div>
+          )}
+        </div>
       </section>
 
       {!isReadOnly && (
@@ -165,6 +173,21 @@ export default function EvaluationFormPage() {
           </button>
         </div>
       )}
+
+      <div className="amw-corporate-strip">
+        <div>
+          <ShieldCheck size={15} />
+          <span>Access limited by role</span>
+        </div>
+        <div>
+          <ScrollText size={15} />
+          <span>Comments retained as corporate record</span>
+        </div>
+        <div>
+          <FileCheck2 size={15} />
+          <span>Submit confirms review checkpoint</span>
+        </div>
+      </div>
 
       <div style={{ display: 'flex', gap: 16 }}>
         <nav style={{ width: 190, flexShrink: 0 }}>

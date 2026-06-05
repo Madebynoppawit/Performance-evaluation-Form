@@ -10,10 +10,10 @@ interface Props {
 
 const SCORE_STYLES: Record<number, { bg: string; color: string; border: string; label: string }> = {
   1: { bg: 'rgba(237,28,36,0.15)',  color: 'var(--kbt-error)',   border: 'rgba(237,28,36,0.3)',  label: 'Unsatisfactory' },
-  2: { bg: 'rgba(245,158,11,0.15)', color: 'var(--kbt-warning)', border: 'rgba(245,158,11,0.3)', label: 'Needs Improvement' },
+  2: { bg: 'rgba(237,28,36,0.1)',   color: 'var(--amw-red)',     border: 'rgba(237,28,36,0.24)', label: 'Needs Improvement' },
   3: { bg: 'rgba(10,110,209,0.15)', color: 'var(--sap-blue)',    border: 'rgba(10,110,209,0.3)', label: 'Meets Expectation' },
-  4: { bg: 'rgba(34,197,94,0.15)',  color: 'var(--kbt-success)', border: 'rgba(34,197,94,0.3)',  label: 'Exceeds Expectation' },
-  5: { bg: 'rgba(0,168,107,0.15)',  color: 'var(--kbt-success)', border: 'rgba(0,168,107,0.3)',  label: 'Role Model' },
+  4: { bg: 'rgba(129,196,255,0.15)', color: 'var(--m-light-blue)', border: 'rgba(129,196,255,0.3)', label: 'Exceeds Expectation' },
+  5: { bg: 'rgba(22,88,142,0.18)',  color: 'var(--m-light-blue)', border: 'rgba(129,196,255,0.34)', label: 'Role Model' },
 }
 
 export default function CompetencySection({ position, scores, readOnly, onChange }: Props) {
@@ -47,12 +47,12 @@ export default function CompetencySection({ position, scores, readOnly, onChange
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '8px 14px',
-          background: 'rgba(34,197,94,0.06)',
-          border: '1px solid rgba(34,197,94,0.16)',
+          background: 'rgba(10,110,209,0.06)',
+          border: '1px solid rgba(129,196,255,0.16)',
           borderRadius: 8,
         }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)' }}>Average Score:</span>
-          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: 'var(--kbt-success)', fontSize: '1rem' }}>{avg}</span>
+          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: 'var(--amw-red)', fontSize: '1rem' }}>{avg}</span>
           <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)' }}>/ 5.00</span>
         </div>
       )}
