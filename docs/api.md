@@ -15,7 +15,7 @@ Authorization: Bearer <token>
 
 ### POST /auth/login
 ```json
-{ "email": "admin@company.com", "password": "password123" }
+{ "email": "admin@amw-ems.com", "password": "password123" }
 ```
 Response: `{ user, token }`
 

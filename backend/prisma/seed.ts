@@ -8,10 +8,10 @@ async function main() {
 
   // ─── Users ───────────────────────────────────────────────────────────────
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@company.com' },
+    where: { email: 'admin@amw-ems.com' },
     update: {},
     create: {
-      email:      'admin@company.com',
+      email:      'admin@amw-ems.com',
       name:       'อนุชา พงษ์ดี',
       password:   hash,
       role:       Role.ADMIN,
@@ -21,10 +21,10 @@ async function main() {
   })
 
   const director = await prisma.user.upsert({
-    where: { email: 'director@company.com' },
+    where: { email: 'director@amw-ems.com' },
     update: {},
     create: {
-      email:      'director@company.com',
+      email:      'director@amw-ems.com',
       name:       'วรรณา สุขสวัสดิ์',
       password:   hash,
       role:       Role.ADMIN,
@@ -34,7 +34,7 @@ async function main() {
   })
 
   const directorEngineering = await prisma.user.upsert({
-    where: { email: 'k.keng@company.com' },
+    where: { email: 'k.keng@amw-ems.com' },
     update: {
       name:       'K.Keng',
       role:       Role.ADMIN,
@@ -42,7 +42,7 @@ async function main() {
       department: 'Engineering',
     },
     create: {
-      email:      'k.keng@company.com',
+      email:      'k.keng@amw-ems.com',
       name:       'K.Keng',
       password:   hash,
       role:       Role.ADMIN,
@@ -52,10 +52,10 @@ async function main() {
   })
 
   const manager1 = await prisma.user.upsert({
-    where: { email: 'manager.eng@company.com' },
+    where: { email: 'manager.eng@amw-ems.com' },
     update: {},
     create: {
-      email:      'manager.eng@company.com',
+      email:      'manager.eng@amw-ems.com',
       name:       'สมชาย ใจดี',
       password:   hash,
       role:       Role.MANAGER,
@@ -66,10 +66,10 @@ async function main() {
   })
 
   const manager2 = await prisma.user.upsert({
-    where: { email: 'manager.hr@company.com' },
+    where: { email: 'manager.hr@amw-ems.com' },
     update: {},
     create: {
-      email:      'manager.hr@company.com',
+      email:      'manager.hr@amw-ems.com',
       name:       'นภัส รุ่งเรือง',
       password:   hash,
       role:       Role.MANAGER,
@@ -80,10 +80,10 @@ async function main() {
   })
 
   const officer1 = await prisma.user.upsert({
-    where: { email: 'officer1@company.com' },
+    where: { email: 'officer1@amw-ems.com' },
     update: {},
     create: {
-      email:      'officer1@company.com',
+      email:      'officer1@amw-ems.com',
       name:       'สมหญิง รักงาน',
       password:   hash,
       role:       Role.EMPLOYEE,
@@ -94,10 +94,10 @@ async function main() {
   })
 
   const officer2 = await prisma.user.upsert({
-    where: { email: 'officer2@company.com' },
+    where: { email: 'officer2@amw-ems.com' },
     update: {},
     create: {
-      email:      'officer2@company.com',
+      email:      'officer2@amw-ems.com',
       name:       'ธนพล ศรีสมบัติ',
       password:   hash,
       role:       Role.EMPLOYEE,
@@ -108,10 +108,10 @@ async function main() {
   })
 
   const supervisor1 = await prisma.user.upsert({
-    where: { email: 'supervisor1@company.com' },
+    where: { email: 'supervisor1@amw-ems.com' },
     update: {},
     create: {
-      email:      'supervisor1@company.com',
+      email:      'supervisor1@amw-ems.com',
       name:       'กานต์ พัฒนากิจ',
       password:   hash,
       role:       Role.EMPLOYEE,
@@ -122,10 +122,10 @@ async function main() {
   })
 
   const supervisor2 = await prisma.user.upsert({
-    where: { email: 'supervisor2@company.com' },
+    where: { email: 'supervisor2@amw-ems.com' },
     update: {},
     create: {
-      email:      'supervisor2@company.com',
+      email:      'supervisor2@amw-ems.com',
       name:       'พิมพ์ใจ วงค์สุวรรณ',
       password:   hash,
       role:       Role.EMPLOYEE,
@@ -136,10 +136,10 @@ async function main() {
   })
 
   const staff1 = await prisma.user.upsert({
-    where: { email: 'staff1@company.com' },
+    where: { email: 'staff1@amw-ems.com' },
     update: {},
     create: {
-      email:      'staff1@company.com',
+      email:      'staff1@amw-ems.com',
       name:       'วิชัย มุ่งมั่น',
       password:   hash,
       role:       Role.EMPLOYEE,
@@ -150,10 +150,10 @@ async function main() {
   })
 
   const staff2 = await prisma.user.upsert({
-    where: { email: 'staff2@company.com' },
+    where: { email: 'staff2@amw-ems.com' },
     update: {},
     create: {
-      email:      'staff2@company.com',
+      email:      'staff2@amw-ems.com',
       name:       'นิภา ตั้งใจดี',
       password:   hash,
       role:       Role.EMPLOYEE,

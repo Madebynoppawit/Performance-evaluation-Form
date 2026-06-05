@@ -60,17 +60,31 @@ describe('API integration', () => {
   it('rejects login with wrong password', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'admin@company.com', password: 'definitely-wrong' })
+      .send({ email: 'admin@amw-ems.com', password: 'definitely-wrong' })
     assert.equal(res.status, 401)
   })
 
   it('logs in an admin and returns a token + user', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'admin@company.com', password: PASSWORD })
+      .send({ email: 'ADMIN@AMW-EMS.COM', password: PASSWORD })
     assert.equal(res.status, 200)
     assert.ok(res.body.token, 'expected a JWT token')
     assert.equal(res.body.user.role, 'ADMIN')
+  })
+
+  it('rejects public registration outside the company email domain', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({
+        email: 'someone@gmail.com',
+        password: PASSWORD,
+        name: 'External User',
+        department: 'External',
+      })
+
+    assert.equal(res.status, 400)
+    assert.ok(res.body.errors.email)
   })
 
   it('requires authentication for protected routes', async () => {
@@ -79,7 +93,7 @@ describe('API integration', () => {
   })
 
   it('lists templates for an authenticated admin', async () => {
-    const token = await loginAs('admin@company.com')
+    const token = await loginAs('admin@amw-ems.com')
     const res = await request(app)
       .get('/api/templates')
       .set('Authorization', `Bearer ${token}`)
@@ -90,7 +104,7 @@ describe('API integration', () => {
   it('forbids a non-admin from creating templates (RBAC)', async () => {
     const login = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'officer1@company.com', password: PASSWORD })
+      .send({ email: 'officer1@amw-ems.com', password: PASSWORD })
     assert.equal(login.status, 200)
     assert.notEqual(login.body.user.role, 'ADMIN')
 
@@ -102,7 +116,7 @@ describe('API integration', () => {
   })
 
   it('rejects invalid acknowledgement signer types', async () => {
-    const token = await loginAs('admin@company.com')
+    const token = await loginAs('admin@amw-ems.com')
     const evaluationId = await firstEvaluationId(token)
 
     const res = await request(app)
@@ -115,7 +129,7 @@ describe('API integration', () => {
   })
 
   it('prevents evaluatees from signing director acknowledgement', async () => {
-    const token = await loginAs('officer1@company.com')
+    const token = await loginAs('officer1@amw-ems.com')
     const evaluationId = await firstEvaluationId(token)
 
     const res = await request(app)

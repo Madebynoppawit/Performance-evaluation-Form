@@ -2,9 +2,10 @@ import { Response, NextFunction } from 'express'
 import { z } from 'zod'
 import { AuthRequest } from '../middleware/auth'
 import * as userService from '../services/userService'
+import { companyEmailSchema } from '../utils/companyEmail'
 
 const createSchema = z.object({
-  email:      z.string().email(),
+  email:      companyEmailSchema,
   name:       z.string().min(1),
   password:   z.string().min(6),
   role:       z.enum(['ADMIN', 'MANAGER', 'EMPLOYEE']),

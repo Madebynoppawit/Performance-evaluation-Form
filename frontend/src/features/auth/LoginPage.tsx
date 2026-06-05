@@ -8,7 +8,10 @@ import ThemeToggle from '@/components/ThemeToggle'
 import { useAuthStore } from './authStore'
 
 const schema = z.object({
-  email: z.string().email('Invalid email address'),
+  email: z
+    .string()
+    .email('Invalid email address')
+    .refine((email) => email.toLowerCase().endsWith('@amw-ems.com'), 'Use your @amw-ems.com email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 })
 type FormData = z.infer<typeof schema>
@@ -121,7 +124,7 @@ export default function LoginPage() {
                   type="email"
                   className="kbt-input"
                   style={{ paddingLeft: 36 }}
-                  placeholder="user@company.com"
+                  placeholder="user@amw-ems.com"
                   autoComplete="email"
                 />
               </div>
@@ -169,10 +172,10 @@ export default function LoginPage() {
               Demo Access
             </p>
             {[
-              { role: 'Admin', email: 'admin@company.com' },
-              { role: 'Director', email: 'k.keng@company.com' },
-              { role: 'Manager', email: 'manager.eng@company.com' },
-              { role: 'Officer', email: 'officer1@company.com' },
+              { role: 'Admin', email: 'admin@amw-ems.com' },
+              { role: 'Director', email: 'k.keng@amw-ems.com' },
+              { role: 'Manager', email: 'manager.eng@amw-ems.com' },
+              { role: 'Officer', email: 'officer1@amw-ems.com' },
             ].map(({ role, email }) => (
               <div key={email} style={{
                 display: 'flex',

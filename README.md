@@ -183,9 +183,9 @@ Open **http://localhost:5173**
 
 | Role | Email | Password |
 |---|---|---|
-| Administrator | `admin@company.com` | `P@ssw0rd!` |
-| Manager | `manager.eng@company.com` | `P@ssw0rd!` |
-| Employee | `officer1@company.com` | `P@ssw0rd!` |
+| Administrator | `admin@amw-ems.com` | `P@ssw0rd!` |
+| Manager | `manager.eng@amw-ems.com` | `P@ssw0rd!` |
+| Employee | `officer1@amw-ems.com` | `P@ssw0rd!` |
 
 ---
 

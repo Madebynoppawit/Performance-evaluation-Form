@@ -29,6 +29,7 @@ const schema = z.object({
   JWT_SECRET: z.string().min(1, 'JWT_SECRET is required'),
   JWT_EXPIRES_IN: z.string().default('7d'),
   ALLOW_PUBLIC_REGISTRATION: boolEnv,
+  COMPANY_EMAIL_DOMAIN: z.string().trim().min(1).default('amw-ems.com'),
 
   /* Accept CLIENT_URL (single) or CORS_ORIGINS (list); both feed the allowlist. */
   CLIENT_URL: z.string().url().default('http://localhost:5173'),

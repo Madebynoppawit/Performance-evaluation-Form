@@ -3,14 +3,15 @@ import { z } from 'zod'
 import * as authService from '../services/authService'
 import { AuthRequest } from '../middleware/auth'
 import { env } from '../config/env'
+import { companyEmailSchema } from '../utils/companyEmail'
 
 const loginSchema = z.object({
-  email:    z.string().email(),
+  email:    z.string().email().transform((email) => email.trim().toLowerCase()),
   password: z.string().min(1),
 })
 
 const registerSchema = z.object({
-  email:      z.string().email(),
+  email:      companyEmailSchema,
   password:   z.string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
