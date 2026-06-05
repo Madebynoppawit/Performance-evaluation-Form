@@ -119,17 +119,34 @@ cd ../frontend && npm install
 ### 2. Environment
 
 ```bash
-# Backend
+# Backend — see .env.example for all variables (grouped & documented)
 cp .env.example backend/.env
-# Edit backend/.env — set DATABASE_URL and JWT_SECRET
+
+# Frontend (optional — only needed to override the API base URL)
+cp frontend/.env.example frontend/.env.local
 ```
 
-```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/performance_eval"
-JWT_SECRET="your-random-256-bit-secret-here"
-PORT=3001
-CLIENT_URL=http://localhost:5173
+Backend config is **validated at startup** (`backend/src/config/env.ts`): the
+server refuses to boot on invalid config and prints exactly which variables are
+wrong. In `NODE_ENV=production` it also rejects a weak/placeholder `JWT_SECRET`.
+
+Generate a strong secret:
+
+```bash
+openssl rand -base64 48
 ```
+
+Minimum required in `backend/.env`:
+
+```env
+NODE_ENV=development
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/performance_eval"
+JWT_SECRET="<openssl rand -base64 48>"
+```
+
+Everything else (`PORT`, `JWT_EXPIRES_IN`, `BCRYPT_ROUNDS`, `CLIENT_URL` /
+`CORS_ORIGINS`, `RATE_LIMIT_*`, `LOG_LEVEL`) has sensible defaults — see
+`.env.example`.
 
 ### 3. Start PostgreSQL
 

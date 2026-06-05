@@ -1,3 +1,5 @@
+/* env must load first — it calls dotenv before any module reads process.env. */
+import { env } from './config/env'
 import express from 'express'
 import cors from 'cors'
 import { errorHandler } from './middleware/errorHandler'
@@ -10,28 +12,15 @@ import reportRoutes from './routes/reports'
 import dashboardRoutes from './routes/dashboard'
 import userRoutes from './routes/users'
 
-/* ── Env validation ─────────────────────────────────────────────────────── */
-const REQUIRED = ['DATABASE_URL', 'JWT_SECRET']
-const missing  = REQUIRED.filter(k => !process.env[k])
-if (missing.length) {
-  console.error(`[startup] Missing required env vars: ${missing.join(', ')}`)
-  process.exit(1)
-}
-if (
-  process.env.JWT_SECRET === 'dev-secret' ||
-  process.env.JWT_SECRET?.includes('change-this')
-) {
-  console.warn('[startup] ⚠️  WARNING: Insecure JWT_SECRET detected — change before production!')
-}
+const APP_VERSION = '0.1.0'
 
-const app  = express()
-const PORT = process.env.PORT ?? 3001
+const app = express()
 
-app.use(cors({ origin: process.env.CLIENT_URL ?? 'http://localhost:5173' }))
-app.use(express.json())
+app.use(cors({ origin: env.corsOrigins, credentials: true }))
+app.use(express.json({ limit: '1mb' }))
 
 const healthPayload = (_req: express.Request, res: express.Response) =>
-  res.json({ status: 'ok', version: '0.1.0', ts: new Date().toISOString() })
+  res.json({ status: 'ok', version: APP_VERSION, env: env.NODE_ENV, ts: new Date().toISOString() })
 
 app.get('/health',     healthPayload)
 app.get('/api/health', healthPayload)
@@ -46,6 +35,7 @@ app.use('/api/users', userRoutes)
 
 app.use(errorHandler)
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`)
+app.listen(env.PORT, () => {
+  console.log(`[server] AMW Command v${APP_VERSION} · ${env.NODE_ENV} · http://localhost:${env.PORT}`)
+  console.log(`[server] CORS allowlist: ${env.corsOrigins.join(', ')}`)
 })
