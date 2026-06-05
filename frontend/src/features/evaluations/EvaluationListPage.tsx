@@ -81,7 +81,7 @@ export default function EvaluationListPage() {
               style={{ paddingLeft: 32, width: 220, height: 32, fontSize: '0.8125rem' }}
             />
           </div>
-          <button onClick={() => refetch()} disabled={isFetching} className="kbt-btn-ghost" style={{ width: 32, padding: 0 }}>
+          <button onClick={() => refetch()} disabled={isFetching} className="kbt-btn-ghost" style={{ width: 32, padding: 0 }} aria-label="Refresh evaluations" title="Refresh">
             <RefreshCw size={13} style={isFetching ? { animation: 'spin 1s linear infinite' } : {}} />
           </button>
         </div>

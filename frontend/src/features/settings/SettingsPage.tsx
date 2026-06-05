@@ -78,7 +78,7 @@ export default function SettingsPage() {
                       <strong>{item.label}</strong>
                       <span>{item.value}</span>
                     </div>
-                    <button type="button" aria-label={`Configure ${item.label}`}>Edit</button>
+                    <button type="button" disabled aria-label={`Configure ${item.label} (coming soon)`} title="Coming soon">Soon</button>
                   </div>
                 )
               })}

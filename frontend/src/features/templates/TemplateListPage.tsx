@@ -54,7 +54,7 @@ export default function TemplateListPage() {
         <div className="kbt-toolbar">
           <span className="kbt-toolbar-title">Template Library ({data?.length ?? 0})</span>
           <div className="kbt-spacer" />
-          <button onClick={() => refetch()} disabled={isFetching} className="kbt-btn-ghost" style={{ width: 32, padding: 0 }}>
+          <button onClick={() => refetch()} disabled={isFetching} className="kbt-btn-ghost" style={{ width: 32, padding: 0 }} aria-label="Refresh templates" title="Refresh">
             <RefreshCw size={13} style={isFetching ? { animation: 'spin 1s linear infinite' } : {}} />
           </button>
         </div>

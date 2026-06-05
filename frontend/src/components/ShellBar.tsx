@@ -84,7 +84,7 @@ export default function ShellBar() {
         }}>
           <img src="/amw-logo.png" alt="AMW" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+        <div className="amw-shell-brand" style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
           <span style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--shell-text)', letterSpacing: '0.01em' }}>
             AMW
           </span>
@@ -94,7 +94,7 @@ export default function ShellBar() {
         </div>
       </div>
 
-      <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
+      <div className="amw-shell-divider" style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
 
       {/* Command palette trigger */}
       <div className="amw-search-wrap">
@@ -125,8 +125,8 @@ export default function ShellBar() {
             <div className="amw-notification-popover" role="dialog" aria-label="Notifications">
               <div className="amw-popover-head">
                 <div>
-                  <span>Notifications</span>
-                  <strong>3 active updates</strong>
+                  <span>Notifications <em className="amw-sample-tag">Sample</em></span>
+                  <strong>Preview data</strong>
                 </div>
                 <button type="button" className="amw-popover-close" onClick={() => setNotificationOpen(false)} aria-label="Close notifications">
                   <X size={14} />
@@ -182,7 +182,7 @@ export default function ShellBar() {
             }}>
               {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
             </div>
-            <span style={{ fontSize: '0.8125rem', color: 'var(--shell-text-2)', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span className="amw-shell-username" style={{ fontSize: '0.8125rem', color: 'var(--shell-text-2)', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {user?.name}
             </span>
             <ChevronDown size={12} color="var(--shell-text-2)" />

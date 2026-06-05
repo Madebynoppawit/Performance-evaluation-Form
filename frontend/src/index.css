@@ -3142,6 +3142,13 @@ body,
     font-weight: 850;
     cursor: pointer;
   }
+  .amw-settings-row button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    background: var(--control-bg);
+    color: var(--kbt-text-3);
+    border-color: var(--kbt-border);
+  }
 
   /* ── Lazy route fallback ────────────────────────────────────────────────── */
   .amw-route-fallback {
@@ -4273,4 +4280,37 @@ body,
     scroll-behavior: auto !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* ── Compact header (phones) ─────────────────────────────────────────────────
+   Drop non-essential chrome so the header never overflows on small screens.
+   Keeps: logo, command trigger (collapses), notifications, user avatar. */
+@media (max-width: 640px) {
+  .kbt-header {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .amw-shell-brand,
+  .amw-shell-divider,
+  .amw-shell-username,
+  .kbt-header .kbt-theme-switch {
+    display: none;
+  }
+}
+
+/* "Sample"/preview tag for mock data surfaces */
+.amw-sample-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-style: normal;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lambo-gold);
+  background: rgba(216, 160, 22, 0.12);
+  border: 1px solid rgba(216, 160, 22, 0.3);
+  vertical-align: middle;
 }
