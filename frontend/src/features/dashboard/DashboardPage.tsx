@@ -7,6 +7,8 @@ import api from '@/lib/api'
 import { getTypeLabel } from '@/lib/utils'
 import type { Evaluation } from '@/types'
 import DashboardAnalytics from './DashboardAnalytics'
+import GettingStarted from './GettingStarted'
+import EmptyState from '@/components/EmptyState'
 
 interface DashboardStats {
   totalEvaluations: number
@@ -210,6 +212,8 @@ export default function DashboardPage() {
         </div>
       </section>
 
+      <GettingStarted canManage={isAdmin || isManager} />
+
       <div className="kbt-metric-grid kbt-metric-grid-4">
         {metricCards.map((card, i) => (
           <MetricCard key={card.label} {...card} delay={i * 0.09} />
@@ -243,7 +247,13 @@ export default function DashboardPage() {
             </Link>
           </div>
           {!recent.length ? (
-            <div className="kbt-empty-panel">No evaluations yet</div>
+            <EmptyState
+              compact
+              icon={ClipboardList}
+              title="No evaluations yet"
+              description="Once reviews are assigned and scored, they'll appear here with status and scores."
+              action={isAdmin || isManager ? { label: 'Create evaluation', to: '/evaluations' } : undefined}
+            />
           ) : (
             <table className="kbt-table">
               <thead>

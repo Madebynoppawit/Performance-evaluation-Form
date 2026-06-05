@@ -3125,6 +3125,185 @@ body,
     cursor: pointer;
   }
 
+  /* ── Empty State ────────────────────────────────────────────────────────── */
+  .amw-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 52px 24px;
+    gap: 6px;
+  }
+  .amw-empty--compact { padding: 36px 20px; }
+
+  .amw-empty-orb {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-bottom: 14px;
+    color: var(--sap-blue);
+    background: radial-gradient(circle at 50% 40%, rgba(10,110,209,0.18), rgba(10,110,209,0.04) 70%);
+    border: 1px solid rgba(10,110,209,0.22);
+  }
+  .amw-empty--compact .amw-empty-orb { width: 60px; height: 60px; }
+  .amw-empty-ring {
+    position: absolute;
+    inset: -1px;
+    border-radius: 50%;
+    border: 1px solid rgba(10,110,209,0.28);
+    animation: empty-pulse 2.6s ease-out infinite;
+  }
+  .amw-empty-ring--2 { animation-delay: 1.3s; }
+
+  .amw-empty strong {
+    color: var(--kbt-text);
+    font-size: 1.02rem;
+    font-weight: 850;
+  }
+  .amw-empty-desc {
+    max-width: 380px;
+    color: var(--kbt-text-3);
+    font-size: 0.84rem;
+    line-height: 1.6;
+  }
+
+  /* ── Onboarding checklist ───────────────────────────────────────────────── */
+  .amw-onboard {
+    border: 1px solid rgba(10,110,209,0.2);
+    border-radius: 16px;
+    padding: 20px;
+    background:
+      linear-gradient(135deg, rgba(10,110,209,0.1), transparent 46%),
+      linear-gradient(180deg, color-mix(in srgb, var(--kbt-card) 96%, #ffffff 4%), var(--kbt-card));
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.05) inset,
+      0 18px 44px rgba(3,11,22,0.14),
+      0 0 0 1px rgba(10,110,209,0.06);
+    position: relative;
+    overflow: hidden;
+  }
+  .amw-onboard::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 2px;
+    background: var(--brand-line);
+  }
+  .amw-onboard-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .amw-onboard-title { display: flex; align-items: center; gap: 12px; }
+  .amw-onboard-badge {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    background: var(--brand-gradient);
+    box-shadow: 0 10px 22px rgba(10,110,209,0.24), var(--glow-blue);
+    flex-shrink: 0;
+  }
+  .amw-onboard-title span {
+    display: block;
+    color: var(--sap-blue);
+    font-size: 0.66rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .amw-onboard-title strong {
+    display: block;
+    margin-top: 2px;
+    color: var(--kbt-text);
+    font-size: 1.05rem;
+    font-weight: 900;
+  }
+  .amw-onboard-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+  }
+  .amw-onboard-progress > span {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--kbt-text-3);
+  }
+
+  .amw-onboard-steps {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .amw-onboard-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 14px;
+    border: 1px solid var(--kbt-border);
+    border-radius: 12px;
+    background: var(--control-bg);
+    text-decoration: none;
+    transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+    animation: slide-up 0.4s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .amw-onboard-step:hover {
+    transform: translateY(-2px);
+    border-color: rgba(10,110,209,0.34);
+    background: var(--control-hover);
+    box-shadow: 0 12px 28px rgba(3,11,22,0.12);
+  }
+  .amw-onboard-check {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--kbt-surface);
+    border: 1px solid var(--kbt-border);
+    color: var(--kbt-text-3);
+    transition: all 0.16s ease;
+  }
+  .amw-onboard-step.done .amw-onboard-check {
+    background: rgba(34,197,94,0.14);
+    border-color: rgba(34,197,94,0.4);
+    color: #22c55e;
+  }
+  .amw-onboard-step-body { flex: 1; min-width: 0; }
+  .amw-onboard-step-body strong {
+    display: block;
+    color: var(--kbt-text);
+    font-size: 0.84rem;
+    font-weight: 750;
+  }
+  .amw-onboard-step.done .amw-onboard-step-body strong {
+    color: var(--kbt-text-3);
+    text-decoration: line-through;
+    text-decoration-color: rgba(34,197,94,0.5);
+  }
+  .amw-onboard-step-body span {
+    display: block;
+    margin-top: 2px;
+    color: var(--kbt-text-3);
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+  .amw-onboard-arrow { color: var(--sap-blue); flex-shrink: 0; }
+
   /* ── Dashboard Analytics ────────────────────────────────────────────────── */
   .amw-analytics-grid {
     display: grid;
@@ -3366,7 +3545,8 @@ body,
   }
 
   @media (max-width: 960px) {
-    .amw-analytics-grid {
+    .amw-analytics-grid,
+    .amw-onboard-steps {
       grid-template-columns: 1fr;
     }
     .amw-app-main {
@@ -3578,6 +3758,10 @@ body,
 @keyframes cmdk-in {
   from { opacity: 0; transform: translateY(-12px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0)     scale(1); }
+}
+@keyframes empty-pulse {
+  0%   { transform: scale(1);    opacity: 0.7; }
+  100% { transform: scale(1.5);  opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

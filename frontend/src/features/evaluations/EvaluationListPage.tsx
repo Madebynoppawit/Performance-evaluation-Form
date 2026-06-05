@@ -6,6 +6,7 @@ import api from '@/lib/api'
 import type { Evaluation } from '@/types'
 import { formatDate, getTypeLabel } from '@/lib/utils'
 import { SkeletonMetricCard, SkeletonTableRows } from '@/components/Skeleton'
+import EmptyState from '@/components/EmptyState'
 
 const STATUS: Record<string, { cls: string; label: string }> = {
   DRAFT: { cls: 'kbt-badge-neutral', label: 'Draft' },
@@ -88,11 +89,13 @@ export default function EvaluationListPage() {
         {isLoading ? (
           <table className="kbt-table"><tbody><SkeletonTableRows rows={6} cols={8} /></tbody></table>
         ) : !filtered.length ? (
-          <div className="kbt-empty-panel">
-            <TrendingUp size={24} />
-            <strong>No evaluations found</strong>
-            <span>Try another search term or create a new evaluation workflow.</span>
-          </div>
+          <EmptyState
+            icon={search ? Search : TrendingUp}
+            title={search ? 'No matching evaluations' : 'No evaluations yet'}
+            description={search
+              ? 'Try another search term, cycle name, or employee.'
+              : 'Active review workflows will show here with ownership, status, and scores.'}
+          />
         ) : (
           <table className="kbt-table">
             <thead>
