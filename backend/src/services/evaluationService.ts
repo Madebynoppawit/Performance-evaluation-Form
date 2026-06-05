@@ -1,6 +1,20 @@
 import { prisma } from '../lib/prisma'
 import { EvaluationStatus } from '@prisma/client'
 
+/**
+ * Weighted-average total score across scored rating answers.
+ * Returns null when there are no scored rating answers or zero total weight.
+ * Pure (no I/O) so it can be unit-tested directly.
+ */
+export function calculateTotalScore(
+  answers: { type: string; score: number | null; weight: number }[]
+): number | null {
+  const rated = answers.filter(a => a.type === 'rating' && a.score != null)
+  const totalWeight = rated.reduce((sum, a) => sum + a.weight, 0)
+  if (rated.length === 0 || totalWeight === 0) return null
+  return rated.reduce((sum, a) => sum + (a.score ?? 0) * a.weight, 0) / totalWeight
+}
+
 const EVALUATION_INCLUDE = {
   cycle: {
     include: {
@@ -73,12 +87,9 @@ export async function submitEvaluation(evaluationId: string, answers: Record<str
     include: { answers: { include: { question: true } } },
   })
 
-  const ratingAnswers = evaluation.answers.filter((a) => a.question.type === 'rating' && a.score != null)
-  const totalScore =
-    ratingAnswers.length > 0
-      ? ratingAnswers.reduce((sum, a) => sum + (a.score ?? 0) * a.question.weight, 0) /
-        ratingAnswers.reduce((sum, a) => sum + a.question.weight, 0)
-      : null
+  const totalScore = calculateTotalScore(
+    evaluation.answers.map(a => ({ type: a.question.type, score: a.score, weight: a.question.weight }))
+  )
 
   return prisma.evaluation.update({
     where: { id: evaluationId },

@@ -1,8 +1,11 @@
 import { config as loadDotenv } from 'dotenv'
 import { z } from 'zod'
 
-/* Load .env into process.env (no-op if vars already set by the platform). */
+/* Load .env into process.env (no-op if vars already set by the platform).
+   Under NODE_ENV=test, .env.test (committed, dummy values) takes precedence so
+   the suite boots without a real .env in CI. */
 loadDotenv()
+if (process.env.NODE_ENV === 'test') loadDotenv({ path: '.env.test', override: true })
 
 const NODE_ENVS = ['development', 'test', 'production'] as const
 

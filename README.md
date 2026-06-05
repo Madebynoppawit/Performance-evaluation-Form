@@ -237,6 +237,34 @@ Performance-evaluation-Form/
 
 ## Changelog
 
+### v0.1.0 - 2026-06-05
+
+Initial CEO-ready product release for the AMW Performance Evaluation System.
+
+#### Product
+- Premium dark UI design system with animated cards, shimmer buttons, glass toasts, and responsive dashboard views
+- Dashboard with KPI cards, sparklines, trend badges, completion metrics, and report-ready summaries
+- End-to-end evaluation workflow covering goals, competency, attendance, comments, salary summary, and acknowledgement
+- Template, cycle, user, report, and evaluation modules wired through the React frontend and Express REST API
+
+#### API & Security
+- Express REST API with JWT bearer authentication, role-aware routing, and Prisma-backed PostgreSQL persistence
+- Evaluation access is scoped server-side so non-admin users can only read or modify evaluations where they are the evaluatee or evaluator
+- Template API validation now matches the Prisma/frontend contract for `THREE_SIXTY` evaluation types and lowercase question types
+- Auth rate limiting is enabled for login/register endpoints
+- `/health` and `/api/health` endpoints are available for monitoring
+
+#### Testing & Quality
+- Backend unit tests added for evaluation scoring, attendance scoring, competency scoring, goal scoring, and evaluation access rules
+- Frontend unit tests added for score tiers, label helpers, score formatting, and competency selection by position
+- `npm test -w backend` and `npm test -w frontend` are available as workspace test commands
+- Build validation passes for both backend and frontend
+
+#### Release Notes
+- Frontend package version: `0.1.0`
+- Backend package version: `0.1.0`
+- Architecture: modular monolith with React frontend, Express REST API backend, and PostgreSQL database
+
 ### v0.1.0 — 2026-06-04
 - ✨ Premium dark UI design system (animated cards, shimmer buttons, glass toasts)
 - 🏠 Dashboard with count-up KPI cards, sparklines, and trend badges

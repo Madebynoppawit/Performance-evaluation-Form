@@ -22,5 +22,6 @@ export const SCORE_TIERS: ScoreTier[] = [
 ]
 
 export function scoreTier(score: number): ScoreTier {
+  if (score < SCORE_TIERS[0].min) return SCORE_TIERS[0]
   return SCORE_TIERS.find(t => score >= t.min && score < t.max) ?? SCORE_TIERS[SCORE_TIERS.length - 1]
 }

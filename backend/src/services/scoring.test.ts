@@ -3,6 +3,7 @@ import { describe, it } from 'node:test'
 import { calculateAttendanceScores } from './attendanceService'
 import { calculateCompetencyScore } from './competencyService'
 import { calculateGoalScore } from './goalService'
+import { calculateTotalScore } from './evaluationService'
 
 describe('scoring services', () => {
   it('calculates weighted goal scores from completed entries only', () => {
@@ -52,5 +53,35 @@ describe('scoring services', () => {
       disciplinaryScore: undefined,
       attendanceAvgScore: undefined,
     })
+  })
+})
+
+describe('calculateTotalScore', () => {
+  it('computes a weighted average across scored rating answers', () => {
+    const total = calculateTotalScore([
+      { type: 'rating', score: 5, weight: 70 },
+      { type: 'rating', score: 3, weight: 30 },
+    ])
+    assert.equal(total, 4.4)
+  })
+
+  it('ignores non-rating questions and unscored answers', () => {
+    const total = calculateTotalScore([
+      { type: 'rating', score: 5, weight: 70 },
+      { type: 'rating', score: 3, weight: 30 },
+      { type: 'text', score: 1, weight: 100 },
+      { type: 'rating', score: null, weight: 50 },
+    ])
+    assert.equal(total, 4.4)
+  })
+
+  it('returns null when there are no scored rating answers', () => {
+    assert.equal(calculateTotalScore([]), null)
+    assert.equal(calculateTotalScore([{ type: 'text', score: 5, weight: 10 }]), null)
+    assert.equal(calculateTotalScore([{ type: 'rating', score: null, weight: 10 }]), null)
+  })
+
+  it('returns null when total weight is zero', () => {
+    assert.equal(calculateTotalScore([{ type: 'rating', score: 5, weight: 0 }]), null)
   })
 })
