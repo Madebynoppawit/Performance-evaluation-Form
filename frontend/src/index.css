@@ -4314,3 +4314,52 @@ body,
   border: 1px solid rgba(216, 160, 22, 0.3);
   vertical-align: middle;
 }
+
+/* ── Micro-interactions ──────────────────────────────────────────────────────
+   Top-level (post-@layer) so the active state wins over hover transforms. */
+
+/* Tactile press feedback — every interactive surface dips on press, springs
+   back on release (release uses each element's own transition). */
+.kbt-btn:not(:disabled):active,
+.kbt-btn-primary:not(:disabled):active,
+.kbt-btn-outline:not(:disabled):active,
+.kbt-btn-ghost:not(:disabled):active,
+.kbt-btn-danger:not(:disabled):active,
+.kbt-btn-report:not(:disabled):active,
+.kbt-icon-button:active,
+.kbt-action-row:active,
+.kbt-nav-item:active,
+.amw-cmdk-item:active,
+.kbt-theme-option:active,
+.amw-lang-switch button:active,
+.amw-onboard-step:active {
+  transform: translateY(1px) scale(0.985);
+  transition-duration: 0.06s;
+}
+
+/* Icon buttons: gentle scale-up on hover for a livelier feel */
+.kbt-icon-button:hover {
+  transform: translateY(-1px) scale(1.05);
+}
+
+/* Toast close button hover */
+.amw-toast-close:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #eaf2ff !important;
+}
+
+/* Toast auto-dismiss countdown bar (4s, matches ToastProvider timeout) */
+.amw-toast-countdown {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  transform-origin: left center;
+  opacity: 0.7;
+  animation: toast-countdown 4s linear forwards;
+}
+@keyframes toast-countdown {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}

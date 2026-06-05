@@ -91,7 +91,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 <p style={{ fontSize: '0.875rem', fontWeight: 700, color: '#eaf2ff', letterSpacing: '0.01em' }}>{t.title}</p>
                 {t.message && <p style={{ fontSize: '0.75rem', color: '#a8b7cc', marginTop: 3, lineHeight: 1.5 }}>{t.message}</p>}
               </div>
-              <button onClick={() => remove(t.id)} style={{
+              <button onClick={() => remove(t.id)} className="amw-toast-close" style={{
                 background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
                 borderRadius: 6, cursor: 'pointer', color: '#6b7a90', padding: '3px 4px',
                 flexShrink: 0, transition: 'all 0.14s',
@@ -99,6 +99,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               }}>
                 <X size={12} />
               </button>
+              {/* Auto-dismiss countdown */}
+              <span className="amw-toast-countdown" style={{ background: s.accent }} />
             </div>
           )
         })}
