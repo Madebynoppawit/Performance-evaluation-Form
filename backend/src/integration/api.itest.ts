@@ -22,6 +22,27 @@ describe('API integration', () => {
     assert.equal(res.body.status, 'ok')
   })
 
+  it('sets production security headers', async () => {
+    const res = await request(app).get('/health')
+
+    assert.equal(res.headers['x-powered-by'], undefined)
+    assert.equal(res.headers['x-content-type-options'], 'nosniff')
+    assert.equal(res.headers['x-frame-options'], 'SAMEORIGIN')
+    assert.ok(res.headers['content-security-policy'])
+  })
+
+  it('returns JSON for unknown routes', async () => {
+    const res = await request(app).get('/api/not-a-real-route')
+
+    assert.equal(res.status, 404)
+    assert.equal(res.type, 'application/json')
+    assert.deepEqual(res.body, {
+      message: 'Route not found',
+      method: 'GET',
+      path: '/api/not-a-real-route',
+    })
+  })
+
   it('rejects login with wrong password', async () => {
     const res = await request(app)
       .post('/api/auth/login')

@@ -2,8 +2,10 @@
 import { env } from './config/env'
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
 import { errorHandler } from './middleware/errorHandler'
-import { authLimiter } from './middleware/rateLimiter'
+import { notFoundHandler } from './middleware/notFound'
+import { apiLimiter, authLimiter } from './middleware/rateLimiter'
 import authRoutes from './routes/auth'
 import evaluationRoutes from './routes/evaluations'
 import templateRoutes from './routes/templates'
@@ -19,6 +21,8 @@ export const APP_VERSION = '0.1.0'
 export function createApp() {
   const app = express()
 
+  app.disable('x-powered-by')
+  app.use(helmet())
   app.use(cors({ origin: env.corsOrigins, credentials: true }))
   app.use(express.json({ limit: '1mb' }))
 
@@ -28,6 +32,7 @@ export function createApp() {
   app.get('/health',     healthPayload)
   app.get('/api/health', healthPayload)
 
+  app.use('/api', apiLimiter)
   app.use('/api/auth', authLimiter, authRoutes)
   app.use('/api/evaluations', evaluationRoutes)
   app.use('/api/templates', templateRoutes)
@@ -36,6 +41,7 @@ export function createApp() {
   app.use('/api/dashboard', dashboardRoutes)
   app.use('/api/users', userRoutes)
 
+  app.use(notFoundHandler)
   app.use(errorHandler)
 
   return app

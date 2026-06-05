@@ -29,6 +29,8 @@ const schema = z.object({
 
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(15 * 60 * 1000),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(20),
+  API_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(15 * 60 * 1000),
+  API_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
 
   BCRYPT_ROUNDS: z.coerce.number().int().min(8).max(15).default(10),
 
