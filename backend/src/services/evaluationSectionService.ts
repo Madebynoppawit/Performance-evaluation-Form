@@ -2,9 +2,19 @@ import { prisma } from '../lib/prisma'
 import { calculateGoalScore } from './goalService'
 import { calculateCompetencyScore } from './competencyService'
 
+type SignerType = 'employee' | 'evaluator' | 'director'
+type SectionUser = { userId: string; role: string }
+type NullableText = string | null
+
+function forbiddenError() {
+  const err = new Error('Forbidden') as Error & { status: number }
+  err.status = 403
+  return err
+}
+
 export async function upsertComment(
   evaluationId: string,
-  data: { strengths?: string; improvements?: string; requiredSkills?: string }
+  data: { strengths?: NullableText; improvements?: NullableText; requiredSkills?: NullableText }
 ) {
   return prisma.evaluationComment.upsert({
     where: { evaluationId },
@@ -16,32 +26,54 @@ export async function upsertComment(
 export async function upsertSalarySummary(
   evaluationId: string,
   data: {
-    oldSalary?: number
-    newSalary?: number
-    bonus?: number
-    bonusDeduction?: number
-    bonusPolicy?: string
-    effectiveDate?: string
+    oldSalary?: number | null
+    newSalary?: number | null
+    bonus?: number | null
+    bonusDeduction?: number | null
+    bonusPolicy?: NullableText
+    effectiveDate?: string | null
   }
 ) {
+  const effectiveDate =
+    data.effectiveDate === undefined
+      ? undefined
+      : data.effectiveDate === null
+        ? null
+        : new Date(data.effectiveDate)
+
   return prisma.salarySummary.upsert({
     where: { evaluationId },
     create: {
       evaluationId,
       ...data,
-      effectiveDate: data.effectiveDate ? new Date(data.effectiveDate) : undefined,
+      effectiveDate,
     },
     update: {
       ...data,
-      effectiveDate: data.effectiveDate ? new Date(data.effectiveDate) : undefined,
+      effectiveDate,
     },
   })
 }
 
 export async function signAcknowledgement(
   evaluationId: string,
-  signerType: 'employee' | 'evaluator' | 'director'
+  signerType: SignerType,
+  user: SectionUser
 ) {
+  const evaluation = await prisma.evaluation.findUniqueOrThrow({
+    where: { id: evaluationId },
+    select: { evaluateeId: true, evaluatorId: true },
+  })
+
+  const canSign =
+    user.role === 'ADMIN' ||
+    (signerType === 'employee' && evaluation.evaluateeId === user.userId) ||
+    (signerType === 'evaluator' && evaluation.evaluatorId === user.userId)
+
+  if (!canSign) {
+    throw forbiddenError()
+  }
+
   const now = new Date()
   const fieldMap = {
     employee: { employeeSignedAt: now },

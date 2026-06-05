@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import { z } from 'zod'
 import * as authService from '../services/authService'
 import { AuthRequest } from '../middleware/auth'
+import { env } from '../config/env'
 
 const loginSchema = z.object({
   email:    z.string().email(),
@@ -34,6 +35,11 @@ export async function login(req: Request, res: Response, next: NextFunction) {
 
 export async function register(req: Request, res: Response, next: NextFunction) {
   try {
+    if (!env.allowPublicRegistration) {
+      res.status(403).json({ message: 'Public registration is disabled' })
+      return
+    }
+
     const body = registerSchema.parse(req.body)
     const result = await authService.register(body)
     res.status(201).json(result)

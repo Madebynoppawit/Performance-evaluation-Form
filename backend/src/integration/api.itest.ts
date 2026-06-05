@@ -11,6 +11,20 @@ import { prisma } from '../lib/prisma'
 const app = createApp()
 const PASSWORD = 'P@ssw0rd!'
 
+async function loginAs(email: string) {
+  const res = await request(app).post('/api/auth/login').send({ email, password: PASSWORD })
+  assert.equal(res.status, 200)
+  return res.body.token as string
+}
+
+async function firstEvaluationId(token: string) {
+  const res = await request(app).get('/api/evaluations').set('Authorization', `Bearer ${token}`)
+  assert.equal(res.status, 200)
+  assert.ok(Array.isArray(res.body))
+  assert.ok(res.body.length > 0, 'expected seeded evaluations')
+  return res.body[0].id as string
+}
+
 describe('API integration', () => {
   after(async () => {
     await prisma.$disconnect()
@@ -65,12 +79,10 @@ describe('API integration', () => {
   })
 
   it('lists templates for an authenticated admin', async () => {
-    const login = await request(app)
-      .post('/api/auth/login')
-      .send({ email: 'admin@company.com', password: PASSWORD })
+    const token = await loginAs('admin@company.com')
     const res = await request(app)
       .get('/api/templates')
-      .set('Authorization', `Bearer ${login.body.token}`)
+      .set('Authorization', `Bearer ${token}`)
     assert.equal(res.status, 200)
     assert.ok(Array.isArray(res.body))
   })
@@ -86,6 +98,31 @@ describe('API integration', () => {
       .post('/api/templates')
       .set('Authorization', `Bearer ${login.body.token}`)
       .send({ name: 'Should be blocked', type: 'SELF' })
+    assert.equal(res.status, 403)
+  })
+
+  it('rejects invalid acknowledgement signer types', async () => {
+    const token = await loginAs('admin@company.com')
+    const evaluationId = await firstEvaluationId(token)
+
+    const res = await request(app)
+      .post(`/api/evaluations/${evaluationId}/acknowledge`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ signerType: 'board' })
+
+    assert.equal(res.status, 400)
+    assert.ok(res.body.errors.signerType)
+  })
+
+  it('prevents evaluatees from signing director acknowledgement', async () => {
+    const token = await loginAs('officer1@company.com')
+    const evaluationId = await firstEvaluationId(token)
+
+    const res = await request(app)
+      .post(`/api/evaluations/${evaluationId}/acknowledge`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ signerType: 'director' })
+
     assert.equal(res.status, 403)
   })
 })

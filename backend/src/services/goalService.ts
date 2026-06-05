@@ -3,18 +3,18 @@ import { prisma } from '../lib/prisma'
 export interface GoalEntryInput {
   id?: string
   goal: string
-  goalDescription?: string
+  goalDescription?: string | null
   weight: number
-  targetRating5?: string
-  targetRating4?: string
-  targetRating3?: string
-  targetRating2?: string
-  targetRating1?: string
-  result?: string
-  evaluationScore?: number
-  employeeComment?: string
-  superiorComment?: string
-  order: number
+  targetRating5?: string | null
+  targetRating4?: string | null
+  targetRating3?: string | null
+  targetRating2?: string | null
+  targetRating1?: string | null
+  result?: string | null
+  evaluationScore?: number | null
+  employeeComment?: string | null
+  superiorComment?: string | null
+  order?: number
 }
 
 export async function upsertGoalEntries(evaluationId: string, entries: GoalEntryInput[]) {

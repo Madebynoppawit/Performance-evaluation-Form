@@ -24,9 +24,9 @@ function calcDisciplinaryScore(level: string): number {
 }
 
 export function calculateAttendanceScores(data: {
-  leaveActualDays?: number
-  lateActualTimes?: number
-  disciplinaryLevel?: string
+  leaveActualDays?: number | null
+  lateActualTimes?: number | null
+  disciplinaryLevel?: string | null
 }) {
   const leaveScore = data.leaveActualDays != null ? calcLeaveScore(data.leaveActualDays) : undefined
   const lateScore = data.lateActualTimes != null ? calcLateScore(data.lateActualTimes) : undefined
@@ -42,9 +42,9 @@ export function calculateAttendanceScores(data: {
 export async function upsertAttendanceScore(
   evaluationId: string,
   data: {
-    leaveActualDays?: number
-    lateActualTimes?: number
-    disciplinaryLevel?: string
+    leaveActualDays?: number | null
+    lateActualTimes?: number | null
+    disciplinaryLevel?: string | null
   }
 ) {
   const { leaveScore, lateScore, disciplinaryScore, attendanceAvgScore } = calculateAttendanceScores(data)

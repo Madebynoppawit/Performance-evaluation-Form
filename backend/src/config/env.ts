@@ -14,6 +14,12 @@ const csv = z
   .string()
   .transform(s => s.split(',').map(o => o.trim()).filter(Boolean))
 
+const boolEnv = z.preprocess((value) => {
+  if (value == null || value === '') return undefined
+  if (typeof value === 'string') return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase())
+  return value
+}, z.boolean().optional())
+
 const schema = z.object({
   NODE_ENV: z.enum(NODE_ENVS).default('development'),
   PORT: z.coerce.number().int().positive().default(3001),
@@ -22,6 +28,7 @@ const schema = z.object({
 
   JWT_SECRET: z.string().min(1, 'JWT_SECRET is required'),
   JWT_EXPIRES_IN: z.string().default('7d'),
+  ALLOW_PUBLIC_REGISTRATION: boolEnv,
 
   /* Accept CLIENT_URL (single) or CORS_ORIGINS (list); both feed the allowlist. */
   CLIENT_URL: z.string().url().default('http://localhost:5173'),
@@ -76,9 +83,11 @@ if (isProd) {
 
 /* Final CORS allowlist: explicit list wins, else the single client URL. */
 const corsOrigins = raw.CORS_ORIGINS?.length ? raw.CORS_ORIGINS : [raw.CLIENT_URL]
+const allowPublicRegistration = raw.ALLOW_PUBLIC_REGISTRATION ?? !isProd
 
 export const env = {
   ...raw,
+  allowPublicRegistration,
   corsOrigins,
   isProd,
   isDev: raw.NODE_ENV === 'development',

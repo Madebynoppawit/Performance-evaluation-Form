@@ -12,11 +12,18 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Stable vendor chunks → long-term browser caching
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'charts': ['recharts'],
-          'query': ['@tanstack/react-query'],
+        manualChunks(id) {
+          // Stable vendor chunks for long-term browser caching.
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) {
+            return 'react-vendor'
+          }
+          if (id.includes('node_modules/recharts')) {
+            return 'charts'
+          }
+          if (id.includes('node_modules/@tanstack/react-query')) {
+            return 'query'
+          }
+          return undefined
         },
       },
     },
