@@ -8,12 +8,14 @@ import { formatDate, getTypeLabel } from '@/lib/utils'
 import type { Template } from '@/types'
 import { SkeletonTableRows } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 
 export default function TemplateListPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const { isAdmin } = useAuth()
   const [deleteTarget, setDeleteTarget] = useState<Template | null>(null)
+  const modalRef = useFocusTrap<HTMLDivElement>(!!deleteTarget, () => setDeleteTarget(null))
 
   const { data, isLoading, refetch, isFetching } = useQuery<Template[]>({
     queryKey: ['templates'],
@@ -131,8 +133,8 @@ export default function TemplateListPage() {
         )}
       </div>
       {deleteTarget && (
-        <div className="kbt-modal-backdrop">
-          <div className="kbt-modal">
+        <div className="kbt-modal-backdrop" onMouseDown={() => setDeleteTarget(null)}>
+          <div className="kbt-modal" ref={modalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Delete template" onMouseDown={e => e.stopPropagation()}>
             <div className="kbt-modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(237,28,36,0.12)', border: '1px solid rgba(237,28,36,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

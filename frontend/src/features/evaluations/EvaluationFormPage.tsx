@@ -205,7 +205,7 @@ export default function EvaluationFormPage() {
             <div className="kbt-card">
               <div className="kbt-card-header"><span className="kbt-card-title">01 · Employee Information</span></div>
               <div className="kbt-card-body">
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '16px 32px' }}>
+                <div className="amw-grid-2" style={{ gap: '16px 32px' }}>
                   {[
                     ['Employee', ev.evaluatee?.name],
                     ['Evaluator', ev.evaluator?.name],

@@ -10,6 +10,7 @@ import { formatDate } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { SkeletonTableRows } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 
 const STATUS: Record<string, { cls: string; label: string }> = {
   UPCOMING: { cls: 'kbt-badge-info', label: 'Upcoming' },
@@ -33,6 +34,7 @@ export default function CycleListPage() {
   const qc = useQueryClient()
   const { isAdmin } = useAuth()
   const [showDialog, setShowDialog] = useState(false)
+  const modalRef = useFocusTrap<HTMLDivElement>(showDialog, () => setShowDialog(false))
 
   const { data: cycles, isLoading } = useQuery<Cycle[]>({
     queryKey: ['cycles'],
@@ -116,8 +118,8 @@ export default function CycleListPage() {
       </div>
 
       {showDialog && (
-        <div className="kbt-modal-backdrop">
-          <div className="kbt-modal">
+        <div className="kbt-modal-backdrop" onMouseDown={() => setShowDialog(false)}>
+          <div className="kbt-modal" ref={modalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Create evaluation cycle" onMouseDown={e => e.stopPropagation()}>
             <div className="kbt-modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div className="kbt-metric-icon"><Calendar size={14} color="var(--sap-blue)" /></div>

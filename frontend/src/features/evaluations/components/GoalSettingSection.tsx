@@ -92,7 +92,7 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
             )}
           </div>
 
-          <div style={{ padding: 14, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="amw-grid-2" style={{ padding: 14, gap: 12 }}>
             <div>
               <label className="kbt-label kbt-label-required">a. Goal</label>
               <input value={goal.goal} onChange={e => update(idx, 'goal', e.target.value)} disabled={readOnly} className="kbt-input" placeholder="Goal title" />

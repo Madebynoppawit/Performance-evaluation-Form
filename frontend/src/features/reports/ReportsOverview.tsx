@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Award, Building2, CheckCircle2, Gauge, TrendingDown, TrendingUp, Users } from 'lucide-react'
 import api from '@/lib/api'
 import type { Evaluation } from '@/types'
+import { scoreTier } from '@/lib/score'
 
 interface ReportSummary {
   totalEvaluations: number
@@ -14,14 +15,6 @@ interface Props {
 }
 
 const medal = ['#f9ce5c', '#cfd8e3', '#d8a016']
-
-function scoreColor(score: number) {
-  if (score >= 4.5) return '#22c55e'
-  if (score >= 3.5) return '#81c4ff'
-  if (score >= 2.5) return '#0a6ed1'
-  if (score >= 1.5) return '#f59e0b'
-  return '#ed1c24'
-}
 
 function Gauge100({ pct }: { pct: number }) {
   const r = 52
@@ -142,7 +135,7 @@ export default function ReportsOverview({ summaries }: Props) {
                     <span className="kbt-score-value">{d.avg.toFixed(2)}</span>
                   </div>
                   <div className="amw-leader-track">
-                    <div className="amw-leader-fill" style={{ width: `${(d.avg / 5) * 100}%`, background: scoreColor(d.avg) }} />
+                    <div className="amw-leader-fill" style={{ width: `${(d.avg / 5) * 100}%`, background: scoreTier(d.avg).color }} />
                   </div>
                   <span className="amw-leader-count">{d.count} scored</span>
                 </div>

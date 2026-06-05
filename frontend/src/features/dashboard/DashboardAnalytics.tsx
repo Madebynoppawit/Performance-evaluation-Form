@@ -2,18 +2,11 @@ import { useMemo } from 'react'
 import { Area, AreaChart, Bar, BarChart, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Activity, BarChart3, TrendingUp } from 'lucide-react'
 import type { Evaluation } from '@/types'
+import { SCORE_TIERS } from '@/lib/score'
 
 interface Props {
   evaluations: Evaluation[]
 }
-
-const BANDS = [
-  { key: '1.0–1.9', label: 'Unsatisfactory',    min: 0,   max: 2,    color: '#ed1c24' },
-  { key: '2.0–2.9', label: 'Needs Improvement', min: 2,   max: 3,    color: '#f59e0b' },
-  { key: '3.0–3.9', label: 'Meets',             min: 3,   max: 4,    color: '#0a6ed1' },
-  { key: '4.0–4.4', label: 'Exceeds',           min: 4,   max: 4.5,  color: '#81c4ff' },
-  { key: '4.5–5.0', label: 'Role Model',        min: 4.5, max: 5.01, color: '#22c55e' },
-]
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
   DRAFT:       { label: 'Draft',       color: 'rgba(168,183,204,0.5)' },
@@ -57,9 +50,10 @@ export default function DashboardAnalytics({ evaluations }: Props) {
     : 0
 
   const distribution = useMemo(
-    () => BANDS.map(b => ({
-      ...b,
-      count: scored.filter(e => e.totalScore! >= b.min && e.totalScore! < b.max).length,
+    () => SCORE_TIERS.map(t => ({
+      key: t.range,
+      color: t.color,
+      count: scored.filter(e => e.totalScore! >= t.min && e.totalScore! < t.max).length,
     })),
     [scored]
   )

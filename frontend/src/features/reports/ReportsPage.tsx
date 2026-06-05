@@ -5,6 +5,7 @@ import api from '@/lib/api'
 import { SkeletonReport } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
 import ReportsOverview from './ReportsOverview'
+import { scoreTier } from '@/lib/score'
 
 interface ReportSummary {
   cycleId: string
@@ -25,12 +26,10 @@ interface CustomTooltipProps {
   payload?: TooltipPayload[]
 }
 
-const scoreLabel = (score: number) =>
-  score >= 4.5 ? { label: 'Role Model', cls: 'kbt-badge-success' }
-  : score >= 3.5 ? { label: 'Exceeds Expectation', cls: 'kbt-badge-success' }
-  : score >= 2.5 ? { label: 'Meets Expectation', cls: 'kbt-badge-info' }
-  : score >= 1.5 ? { label: 'Needs Improvement', cls: 'kbt-badge-warning' }
-  : { label: 'Unsatisfactory', cls: 'kbt-badge-error' }
+const scoreLabel = (score: number) => {
+  const t = scoreTier(score)
+  return { label: t.label, cls: t.cls }
+}
 
 function CustomTooltip({ active, payload }: CustomTooltipProps) {
   if (!active || !payload?.length) return null

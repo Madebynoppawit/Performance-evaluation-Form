@@ -23,6 +23,22 @@ function calcDisciplinaryScore(level: string): number {
   return 1
 }
 
+export function calculateAttendanceScores(data: {
+  leaveActualDays?: number
+  lateActualTimes?: number
+  disciplinaryLevel?: string
+}) {
+  const leaveScore = data.leaveActualDays != null ? calcLeaveScore(data.leaveActualDays) : undefined
+  const lateScore = data.lateActualTimes != null ? calcLateScore(data.lateActualTimes) : undefined
+  const disciplinaryScore =
+    data.disciplinaryLevel != null ? calcDisciplinaryScore(data.disciplinaryLevel) : undefined
+
+  const scores = [leaveScore, lateScore, disciplinaryScore].filter((s) => s != null) as number[]
+  const attendanceAvgScore = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : undefined
+
+  return { leaveScore, lateScore, disciplinaryScore, attendanceAvgScore }
+}
+
 export async function upsertAttendanceScore(
   evaluationId: string,
   data: {
@@ -31,13 +47,7 @@ export async function upsertAttendanceScore(
     disciplinaryLevel?: string
   }
 ) {
-  const leaveScore = data.leaveActualDays != null ? calcLeaveScore(data.leaveActualDays) : undefined
-  const lateScore = data.lateActualTimes != null ? calcLateScore(data.lateActualTimes) : undefined
-  const disciplinaryScore =
-    data.disciplinaryLevel != null ? calcDisciplinaryScore(data.disciplinaryLevel) : undefined
-
-  const scores = [leaveScore, lateScore, disciplinaryScore].filter((s) => s != null) as number[]
-  const attendanceAvgScore = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : undefined
+  const { leaveScore, lateScore, disciplinaryScore, attendanceAvgScore } = calculateAttendanceScores(data)
 
   return prisma.attendanceScore.upsert({
     where: { evaluationId },

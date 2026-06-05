@@ -3,9 +3,8 @@ import { z } from 'zod'
 import { AuthRequest } from '../middleware/auth'
 import * as templateService from '../services/templateService'
 
-const EvalType    = z.enum(['SELF', 'MANAGER', 'PEER', 'SUBORDINATE'])
-const SectionType = z.enum(['COMPETENCY', 'ATTENDANCE', 'GOAL_SETTING', 'SALARY_SUMMARY', 'COMMENT', 'ACKNOWLEDGEMENT'])
-const QuestionType = z.enum(['RATING', 'TEXT', 'YES_NO'])
+const EvalType = z.enum(['SELF', 'MANAGER', 'PEER', 'THREE_SIXTY'])
+const QuestionType = z.enum(['rating', 'text', 'multiple_choice'])
 
 const createTemplateSchema = z.object({
   name:        z.string().min(1, 'Name is required').max(120),
@@ -13,8 +12,9 @@ const createTemplateSchema = z.object({
   description: z.string().max(500).optional(),
 })
 
+const updateTemplateSchema = createTemplateSchema.partial()
+
 const sectionSchema = z.object({
-  type:        SectionType,
   title:       z.string().min(1).max(120),
   weight:      z.number().min(0).max(100),
   order:       z.number().int().min(0),
@@ -27,6 +27,7 @@ const questionSchema = z.object({
   weight:   z.number().min(0).max(10).default(1.0),
   order:    z.number().int().min(0),
   required: z.boolean().default(true),
+  options:  z.array(z.string()).optional(),
 })
 
 export async function list(_req: AuthRequest, res: Response, next: NextFunction) {
@@ -54,7 +55,8 @@ export async function create(req: AuthRequest, res: Response, next: NextFunction
 
 export async function update(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    res.json(await templateService.updateTemplate(req.params.id, req.body))
+    const body = updateTemplateSchema.parse(req.body)
+    res.json(await templateService.updateTemplate(req.params.id, body))
   } catch (err) {
     next(err)
   }

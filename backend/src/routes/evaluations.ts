@@ -9,22 +9,22 @@ import {
   saveSalary,
   acknowledge,
 } from '../controllers/evaluationSectionController'
-import { authenticate, requireRole } from '../middleware/auth'
+import { authenticate, authorizeEvaluationAccess, requireRole } from '../middleware/auth'
 
 const router = Router()
 
 router.use(authenticate)
 
 router.get('/', list)
-router.get('/:id', getFullEvaluation)
-router.patch('/:id/answers', saveAnswers)
-router.patch('/:id/submit', submit)
+router.get('/:id', authorizeEvaluationAccess, getFullEvaluation)
+router.patch('/:id/answers', authorizeEvaluationAccess, saveAnswers)
+router.patch('/:id/submit', authorizeEvaluationAccess, submit)
 
-router.patch('/:id/goals', saveGoals)
-router.patch('/:id/competency', saveCompetency)
-router.patch('/:id/attendance', saveAttendance)
-router.patch('/:id/comment', saveComment)
-router.patch('/:id/salary', requireRole('ADMIN', 'MANAGER'), saveSalary)
-router.post('/:id/acknowledge', acknowledge)
+router.patch('/:id/goals', authorizeEvaluationAccess, saveGoals)
+router.patch('/:id/competency', authorizeEvaluationAccess, saveCompetency)
+router.patch('/:id/attendance', authorizeEvaluationAccess, saveAttendance)
+router.patch('/:id/comment', authorizeEvaluationAccess, saveComment)
+router.patch('/:id/salary', authorizeEvaluationAccess, requireRole('ADMIN', 'MANAGER'), saveSalary)
+router.post('/:id/acknowledge', authorizeEvaluationAccess, acknowledge)
 
 export default router

@@ -3137,6 +3137,12 @@ body,
     cursor: pointer;
   }
 
+  /* ── Generic 2-col field grid (collapses on mobile) ─────────────────────── */
+  .amw-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   /* ── Dashboard bottom row ───────────────────────────────────────────────── */
   .amw-dash-bottom {
     display: grid;
@@ -3880,7 +3886,8 @@ body,
     .amw-guide-grid,
     .amw-reports-split,
     .amw-reports-kpis,
-    .amw-dash-bottom {
+    .amw-dash-bottom,
+    .amw-grid-2 {
       grid-template-columns: 1fr;
     }
     .amw-reports-hero {
