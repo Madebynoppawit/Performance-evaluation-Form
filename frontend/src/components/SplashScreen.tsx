@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 /* ── Boot log content ───────────────────────────────────────────────────── */
-const LOG: { t: string; msg: string; type: 'kern'|'info'|'amw'|'ok'|'blank'|'title'|'login' }[] = [
+const LOG: { t: string; msg: string; type: 'kern'|'info'|'amw'|'ok'|'blank'|'title'|'login'|'law'|'lawbox' }[] = [
   { t:'[    0.000000]', msg:'Booting AMW Command v0.1.0-gpe (Grand Prix Edition)', type:'kern' },
   { t:'[    0.001423]', msg:'BIOS: UEFI 2.80 · Atelier AMW · Signed-off: Paris', type:'info' },
   { t:'[    0.018234]', msg:'CPU: AMW Octacore Performance @ 4.200GHz, 32T', type:'info' },
@@ -36,14 +36,35 @@ const LOG: { t: string; msg: string; type: 'kern'|'info'|'amw'|'ok'|'blank'|'tit
   { t:'[    2.999012]', msg:'SECURITY: Rate limiter 20req/15min · Armed', type:'info' },
   { t:'[    3.100123]', msg:'SECURITY: ErrorBoundary · React crash guard OK', type:'info' },
   { t:'[    3.211234]', msg:'', type:'blank' },
-  { t:'[    3.322345]', msg:'[  OK  ] Started AMW Performance Engine', type:'ok' },
-  { t:'[    3.433456]', msg:'[  OK  ] Started Authentication Service', type:'ok' },
-  { t:'[    3.544567]', msg:'[  OK  ] Started Evaluation Runtime', type:'ok' },
-  { t:'[    3.655678]', msg:'[  OK  ] Started Report Analytics', type:'ok' },
-  { t:'[    3.766789]', msg:'[  OK  ] Reached target Grand Prix Ready', type:'ok' },
-  { t:'[    3.877890]', msg:'', type:'blank' },
-  { t:'[    3.988901]', msg:'AMW Command v0.1.0 · Grand Prix Edition', type:'title' },
-  { t:'[    4.000000]', msg:'Atelier AMW · Paris · Monaco · Le Mans', type:'title' },
+  { t:'[    3.322345]', msg:'LAW: Initializing legal compliance layer...', type:'law' },
+  { t:'[    3.433456]', msg:'LAW: PDPA B.E.2562 · Data controller registered', type:'law' },
+  { t:'[    3.544567]', msg:'LAW: GDPR Art.5 · Data minimisation · Active', type:'law' },
+  { t:'[    3.655678]', msg:'LAW: Consent management · Opt-in required · OK', type:'law' },
+  { t:'[    3.766789]', msg:'LAW: Right to erasure handler · Operational', type:'law' },
+  { t:'[    3.877890]', msg:'LAW: Audit trail · 90-day retention · Immutable', type:'law' },
+  { t:'[    3.988901]', msg:'LAW: NDA enforcement layer · Armed', type:'law' },
+  { t:'[    4.000012]', msg:'LAW: Data classification: CONFIDENTIAL · Set', type:'law' },
+  { t:'[    4.111123]', msg:'LAW: Cross-border transfer safeguard · Active', type:'law' },
+  { t:'[    4.222234]', msg:'', type:'blank' },
+  { t:'', msg:'╔══════════════════════════════════════════════════════════╗', type:'lawbox' },
+  { t:'', msg:'║  ⚖  LEGAL NOTICE — AUTHORIZED PERSONNEL ONLY            ║', type:'lawbox' },
+  { t:'', msg:'║                                                          ║', type:'lawbox' },
+  { t:'', msg:'║  This system processes personal data in accordance with  ║', type:'lawbox' },
+  { t:'', msg:'║  PDPA B.E.2562 (Thailand) and GDPR (EU) 2016/679.       ║', type:'lawbox' },
+  { t:'', msg:'║  Unauthorized access is a criminal offense.              ║', type:'lawbox' },
+  { t:'', msg:'║  All sessions are monitored, recorded, and auditable.    ║', type:'lawbox' },
+  { t:'', msg:'║  By proceeding you accept AMW Terms of Use v2.1.        ║', type:'lawbox' },
+  { t:'', msg:'╚══════════════════════════════════════════════════════════╝', type:'lawbox' },
+  { t:'[    4.333345]', msg:'', type:'blank' },
+  { t:'[    4.444456]', msg:'[  OK  ] Started AMW Performance Engine', type:'ok' },
+  { t:'[    4.555567]', msg:'[  OK  ] Started Authentication Service', type:'ok' },
+  { t:'[    4.666678]', msg:'[  OK  ] Started Evaluation Runtime', type:'ok' },
+  { t:'[    4.777789]', msg:'[  OK  ] Started Report Analytics', type:'ok' },
+  { t:'[    4.888890]', msg:'[  OK  ] Started Legal Compliance Layer', type:'ok' },
+  { t:'[    4.999901]', msg:'[  OK  ] Reached target Grand Prix Ready', type:'ok' },
+  { t:'[    5.111012]', msg:'', type:'blank' },
+  { t:'[    5.222123]', msg:'AMW Command v0.1.0 · Grand Prix Edition', type:'title' },
+  { t:'[    5.333234]', msg:'Atelier AMW · Paris · Monaco · Le Mans', type:'title' },
   { t:'            ', msg:'', type:'blank' },
   { t:'amw login:', msg:' ', type:'login' },
 ]
@@ -64,7 +85,7 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
   const [fadeOut,  setFadeOut]  = useState(false)
   const termRef = useRef<HTMLDivElement>(null)
 
-  /* Main timeline — 30 s total */
+  /* Main timeline - 5 s total */
   useEffect(() => {
     /* Phase 1 animation steps */
     const ts = [
@@ -75,18 +96,17 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
       setTimeout(() => setPhaseIdx(2),   1900),
       setTimeout(() => setStep(4),       2100),
     ]
-    /* Transition to terminal at 3 s */
-    const t_term = setTimeout(() => setShowTerm(true), 3000)
+    /* Transition to terminal at 2.2 s */
+    const t_term = setTimeout(() => setShowTerm(true), 2200)
 
-    /* Append log lines every 640 ms starting at 3 200 ms
-       44 lines × 640 ms = 28 160 ms + 3 200 ms = 31 360 ms — trim back */
+    /* Append log lines quickly enough to finish within the 5 s reload screen. */
     const logTimers = LOG.map((line, i) =>
-      setTimeout(() => setLogLines(prev => [...prev, line]), 3200 + i * 630)
+      setTimeout(() => setLogLines(prev => [...prev, line]), 2350 + i * 42)
     )
 
-    /* Fade + done at 30 s */
-    const t_fade = setTimeout(() => setFadeOut(true), 29000)
-    const t_done = setTimeout(onDone,                 30000)
+    /* Fade + done at 5 s */
+    const t_fade = setTimeout(() => setFadeOut(true), 4500)
+    const t_done = setTimeout(onDone,                 5000)
 
     return () => {
       [...ts, t_term, t_fade, t_done, ...logTimers].forEach(clearTimeout)
@@ -142,13 +162,13 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
       <div style={{ position:'absolute', top:0, left:0, right:0, display:'flex', flexDirection:'column', opacity: step >= 1 ? 1 : 0, transition:'opacity 0.5s ease 0.2s' }}>
         <div style={{ height:2, background:'#0032a0', opacity:0.85 }} />
         <div style={{ height:2, background:'#f0f0f0', opacity:0.5  }} />
-        <div style={{ height:2, background:'#e10600', opacity:0.9  }} />
+        <div style={{ height:2, background:'#ed1c24', opacity:0.9  }} />
       </div>
 
       {/* Speed lines */}
       {step === 1 && <>
-        <div style={{ position:'absolute', top:'38%', left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,#e10600,#ff4444,#e10600,transparent)', animation:'speed-blast 0.45s ease-out forwards' }} />
-        <div style={{ position:'absolute', top:'62%', left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,#e10600,#ff4444,#e10600,transparent)', animation:'speed-blast 0.45s ease-out 0.06s forwards' }} />
+        <div style={{ position:'absolute', top:'38%', left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,#292552,#81c4ff,#ed1c24,transparent)', animation:'speed-blast 0.45s ease-out forwards' }} />
+        <div style={{ position:'absolute', top:'62%', left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,#292552,#81c4ff,#ed1c24,transparent)', animation:'speed-blast 0.45s ease-out 0.06s forwards' }} />
       </>}
 
       {/* Ambient glow */}
@@ -170,15 +190,15 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
           ].map((pos,i) => (
             <div key={i} style={{
               position:'absolute', ...pos, width:16, height:16,
-              borderTop:    i<2  ? '2px solid #e10600' : 'none',
-              borderBottom: i>=2 ? '2px solid #e10600' : 'none',
-              borderLeft:   i%2===0 ? '2px solid #e10600' : 'none',
-              borderRight:  i%2===1 ? '2px solid #e10600' : 'none',
+              borderTop:    i<2  ? '2px solid #ed1c24' : 'none',
+              borderBottom: i>=2 ? '2px solid #ed1c24' : 'none',
+              borderLeft:   i%2===0 ? '2px solid #ed1c24' : 'none',
+              borderRight:  i%2===1 ? '2px solid #ed1c24' : 'none',
               opacity: step>=1?1:0, transition:`opacity 0.3s ease ${0.1+i*0.05}s`,
             }} />
           ))}
-          <div style={{ position:'absolute', left:-20, top:'15%', width:3, height:'70%', background:'linear-gradient(to bottom,transparent,#e10600,transparent)', opacity:step>=1?1:0, transition:'opacity 0.4s ease 0.3s' }} />
-          <div style={{ position:'absolute', right:-20, top:'15%', width:3, height:'70%', background:'linear-gradient(to bottom,transparent,#e10600,transparent)', opacity:step>=1?1:0, transition:'opacity 0.4s ease 0.3s' }} />
+          <div style={{ position:'absolute', left:-20, top:'15%', width:3, height:'70%', background:'linear-gradient(to bottom,transparent,#ed1c24,transparent)', opacity:step>=1?1:0, transition:'opacity 0.4s ease 0.3s' }} />
+          <div style={{ position:'absolute', right:-20, top:'15%', width:3, height:'70%', background:'linear-gradient(to bottom,transparent,#ed1c24,transparent)', opacity:step>=1?1:0, transition:'opacity 0.4s ease 0.3s' }} />
           <div style={{ width:192, height:80, background:'linear-gradient(160deg,#ffffff,#f0f0f0)', borderRadius:4, padding:'10px 16px', display:'flex', alignItems:'center', justifyContent:'center', animation:step>=1?'red-glow-pulse 2.8s ease infinite':'none', boxShadow:'0 0 40px rgba(225,6,0,0.25),0 0 80px rgba(225,6,0,0.1),0 2px 0 rgba(255,255,255,0.9) inset,0 20px 50px rgba(0,0,0,0.7)' }}>
             <img src="/amw-logo.png" alt="AMW" style={{ width:'100%', height:'100%', objectFit:'contain' }} />
           </div>
@@ -186,10 +206,10 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
 
         <div style={{ fontFamily:'"Inter",sans-serif', fontSize:'clamp(1.4rem,3vw,2rem)', fontWeight:800, letterSpacing:'0.38em', color:'#ececec', textShadow:'0 0 30px rgba(225,6,0,0.35)', minHeight:'2.4rem', display:'flex', alignItems:'center', opacity:step>=2?1:0, transition:'opacity 0.4s ease' }}>
           {TITLE.slice(0, chars)}
-          {chars < TITLE.length && step >= 2 && <span style={{ animation:'cursor-blink 0.6s ease infinite', marginLeft:3, color:'#e10600' }}>|</span>}
+          {chars < TITLE.length && step >= 2 && <span style={{ animation:'cursor-blink 0.6s ease infinite', marginLeft:3, color:'#ed1c24' }}>|</span>}
         </div>
 
-        <div style={{ width:step>=2?300:0, height:1, margin:'12px 0', background:'linear-gradient(90deg,transparent,#e10600 30%,#c9a84c 50%,#e10600 70%,transparent)', boxShadow:'0 0 8px rgba(225,6,0,0.5)', transition:'width 0.6s cubic-bezier(0.4,0,0.2,1) 0.4s' }} />
+        <div style={{ width:step>=2?300:0, height:1, margin:'12px 0', background:'linear-gradient(90deg,transparent,#292552 24%,#81c4ff 50%,#ed1c24 76%,transparent)', boxShadow:'0 0 8px rgba(237,28,36,0.42)', transition:'width 0.6s cubic-bezier(0.4,0,0.2,1) 0.4s' }} />
 
         <p style={{ fontFamily:'"Inter",sans-serif', fontSize:'0.68rem', fontWeight:500, letterSpacing:'0.22em', textTransform:'uppercase', color:'rgba(201,168,76,0.8)', marginBottom:28, marginTop:4, opacity:step>=2?1:0, transition:'opacity 0.5s ease 0.6s' }}>
           Engineered for Performance · Paris · Monaco
@@ -205,9 +225,9 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
             })}
             <defs>
               <linearGradient id="rpmGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%"   stopColor="#e10600" />
-                <stop offset="60%"  stopColor="#e10600" />
-                <stop offset="100%" stopColor="#c9a84c" />
+                <stop offset="0%"   stopColor="#81c4ff" />
+                <stop offset="60%"  stopColor="#0a6ed1" />
+                <stop offset="100%" stopColor="#ed1c24" />
               </linearGradient>
             </defs>
           </svg>
@@ -219,8 +239,8 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
         </div>
 
         <div style={{ marginTop:16, fontFamily:'"JetBrains Mono",monospace', fontSize:'0.62rem', letterSpacing:'0.14em', display:'flex', alignItems:'center', gap:8, opacity:step>=3?1:0, transition:'opacity 0.3s ease' }}>
-          <span style={{ width:6, height:6, borderRadius:'50%', background:phaseIdx===2?'#22c55e':phaseIdx===1?'#f59e0b':'#e10600', boxShadow:phaseIdx===2?'0 0 8px #22c55e':phaseIdx===1?'0 0 8px #f59e0b':'0 0 8px #e10600', transition:'all 0.3s ease', animation:'dot-pulse 1s ease infinite' }} />
-          <span style={{ color:phaseIdx===2?'#22c55e':'rgba(236,236,236,0.65)', transition:'color 0.3s ease' }}>{F1_PHASES[phaseIdx]}</span>
+          <span style={{ width:6, height:6, borderRadius:'50%', background:phaseIdx===2?'#81c4ff':phaseIdx===1?'#0a6ed1':'#ed1c24', boxShadow:phaseIdx===2?'0 0 8px #81c4ff':phaseIdx===1?'0 0 8px #0a6ed1':'0 0 8px #ed1c24', transition:'all 0.3s ease', animation:'dot-pulse 1s ease infinite' }} />
+          <span style={{ color:phaseIdx===2?'#81c4ff':'rgba(236,236,236,0.65)', transition:'color 0.3s ease' }}>{F1_PHASES[phaseIdx]}</span>
         </div>
       </div>
 
@@ -236,7 +256,7 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
         {/* Terminal title bar */}
         <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14, paddingBottom:10, borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ display:'flex', gap:6 }}>
-            {['#e10600','#f59e0b','#22c55e'].map((c,i) => <div key={i} style={{ width:10, height:10, borderRadius:'50%', background:c, opacity:0.8 }} />)}
+            {['#ed1c24','#0a6ed1','#81c4ff'].map((c,i) => <div key={i} style={{ width:10, height:10, borderRadius:'50%', background:c, opacity:0.8 }} />)}
           </div>
           <span style={{ fontFamily:'"JetBrains Mono",monospace', fontSize:'0.65rem', color:'rgba(255,255,255,0.3)', letterSpacing:'0.1em' }}>
             amw-command — boot log · Grand Prix Edition
@@ -249,15 +269,35 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
             const isLast  = i === logLines.length - 1
             const opacity = 0.35 + (i / Math.max(logLines.length - 1, 1)) * 0.65
 
-            let tColor   = 'rgba(74,222,128,0.35)'
-            let msgColor = 'rgba(74,222,128,0.75)'
+            let tColor   = 'rgba(129,196,255,0.35)'
+            let msgColor = 'rgba(129,196,255,0.75)'
 
-            if (line.type === 'ok')    { tColor = 'rgba(74,222,128,0.35)'; msgColor = '#22c55e' }
-            if (line.type === 'amw')   { tColor = 'rgba(201,168,76,0.35)'; msgColor = 'rgba(201,168,76,0.9)' }
+            if (line.type === 'ok')    { tColor = 'rgba(129,196,255,0.35)'; msgColor = '#81c4ff' }
+            if (line.type === 'amw')   { tColor = 'rgba(237,28,36,0.35)'; msgColor = '#ed1c24' }
             if (line.type === 'kern')  { tColor = 'rgba(255,255,255,0.25)'; msgColor = 'rgba(255,255,255,0.65)' }
-            if (line.type === 'title') { tColor = 'rgba(201,168,76,0.4)';  msgColor = '#f5f5f5' }
+            if (line.type === 'title') { tColor = 'rgba(129,196,255,0.4)';  msgColor = '#f5f5f5' }
             if (line.type === 'login') { tColor = 'rgba(255,255,255,0.5)'; msgColor = '#ffffff' }
+            if (line.type === 'law')   { tColor = 'rgba(216,160,22,0.35)'; msgColor = 'rgba(216,160,22,0.92)' }
             if (line.type === 'blank') return <div key={i} style={{ height:'0.9rem' }} />
+
+            /* Legal-notice ASCII box — full-width, no timestamp column */
+            if (line.type === 'lawbox') {
+              const isHeading = line.msg.includes('LEGAL NOTICE')
+              return (
+                <div key={i} style={{ lineHeight:'1.5', opacity }}>
+                  <span style={{
+                    fontFamily:'"JetBrains Mono",monospace',
+                    fontSize:'0.68rem',
+                    whiteSpace:'pre',
+                    color: isHeading ? '#d8a016' : 'rgba(216,160,22,0.78)',
+                    fontWeight: isHeading ? 700 : 400,
+                    textShadow: isHeading ? '0 0 12px rgba(216,160,22,0.45)' : 'none',
+                  }}>
+                    {line.msg}
+                  </span>
+                </div>
+              )
+            }
 
             return (
               <div key={i} style={{ display:'flex', gap:14, lineHeight:'1.75', opacity }}>
@@ -267,7 +307,7 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
                 <span style={{ fontFamily:'"JetBrains Mono",monospace', fontSize:'0.68rem', color:msgColor }}>
                   {line.msg}
                   {isLast && line.type === 'login' && (
-                    <span style={{ animation:'cursor-blink 0.8s ease infinite', color:'#22c55e' }}>█</span>
+                    <span style={{ animation:'cursor-blink 0.8s ease infinite', color:'#81c4ff' }}>█</span>
                   )}
                 </span>
               </div>
@@ -278,7 +318,7 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
 
       {/* Tricolor bottom */}
       <div style={{ position:'absolute', bottom:0, left:0, right:0, display:'flex', flexDirection:'column', opacity:step>=1?1:0, transition:'opacity 0.5s ease 0.8s' }}>
-        <div style={{ height:2, background:'#e10600', opacity:0.9 }} />
+        <div style={{ height:2, background:'#ed1c24', opacity:0.9 }} />
         <div style={{ height:2, background:'#f0f0f0', opacity:0.5 }} />
         <div style={{ height:2, background:'#0032a0', opacity:0.85 }} />
       </div>
