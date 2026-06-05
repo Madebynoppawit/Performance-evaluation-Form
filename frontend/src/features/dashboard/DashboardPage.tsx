@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ArrowUpRight, BarChart2, BookOpen, CheckCircle2, ClipboardList, FileCheck2, LayoutTemplate, Plus, RefreshCw, Scale, ShieldCheck, TrendingUp, Users } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import api from '@/lib/api'
@@ -106,6 +106,7 @@ const STATUS_LBL: Record<string, string> = {
 
 export default function DashboardPage() {
   const { user, isAdmin, isManager } = useAuth()
+  const navigate = useNavigate()
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
@@ -267,7 +268,7 @@ export default function DashboardPage() {
               </thead>
               <tbody>
                 {recent.map(ev => (
-                  <tr key={ev.id} onClick={() => { window.location.href = `/evaluations/${ev.id}` }}>
+                  <tr key={ev.id} onClick={() => navigate(`/evaluations/${ev.id}`)}>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <div className="amw-step-index" style={{ width: 30, height: 30, borderRadius: 8, fontSize: '0.68rem' }}>
