@@ -3156,6 +3156,61 @@ body,
     border-color: var(--kbt-border);
   }
 
+  /* Interactive settings controls (toggle / select / static) */
+  .amw-settings-control {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .amw-settings-static {
+    white-space: nowrap;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 850;
+    letter-spacing: 0.02em;
+    color: var(--sap-blue);
+    background: rgba(10,110,209,0.08);
+    border: 1px solid rgba(10,110,209,0.16);
+  }
+  .amw-settings-select {
+    min-width: 150px;
+    height: 34px;
+    font-size: 0.8rem;
+  }
+  .amw-settings-control .amw-switch {
+    width: 44px;
+    height: 24px;
+    min-height: 24px;
+    padding: 0;
+    border-radius: 999px;
+    border: 1px solid var(--kbt-border);
+    background: rgba(120,130,150,0.42);
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.18s ease, border-color 0.18s ease;
+  }
+  .amw-settings-control .amw-switch.on {
+    background: var(--sap-blue);
+    border-color: transparent;
+  }
+  .amw-switch-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.35);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .amw-settings-control .amw-switch.on .amw-switch-thumb {
+    transform: translateX(20px);
+  }
+
   /* ── Lazy route fallback ────────────────────────────────────────────────── */
   .amw-route-fallback {
     display: flex;
