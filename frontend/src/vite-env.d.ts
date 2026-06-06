@@ -9,6 +9,8 @@ interface ImportMetaEnv {
   readonly VITE_APP_VERSION?: string
   /** Sentry DSN. When set, error monitoring activates; otherwise dormant. */
   readonly VITE_SENTRY_DSN?: string
+  /** Deployment environment label shown in the governance bar (PROD | UAT | DEV). */
+  readonly VITE_APP_ENV?: string
 }
 
 interface ImportMeta {

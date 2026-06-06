@@ -4652,6 +4652,56 @@ body,
   background: rgba(34,197,94,0.10);
 }
 
+.amw-corp-chip--comply {
+  color: var(--m-purple, #b794e6);
+  border-color: rgba(155,120,200,0.30);
+  background: rgba(107,63,160,0.14);
+}
+
+/* Left cluster: env badge + breadcrumb + reference */
+.amw-corp-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Environment badge */
+.amw-corp-env {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  border: 1px solid var(--kbt-border);
+}
+.amw-corp-env-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+.amw-corp-env--prod {
+  color: #22c55e;
+  border-color: rgba(34,197,94,0.34);
+  background: rgba(34,197,94,0.12);
+}
+.amw-corp-env--uat {
+  color: var(--lambo-gold);
+  border-color: rgba(230,199,106,0.34);
+  background: rgba(230,199,106,0.12);
+}
+.amw-corp-env--dev {
+  color: var(--m-light-blue);
+  border-color: rgba(129,196,255,0.34);
+  background: rgba(10,110,209,0.14);
+}
+
 /* Document reference next to the breadcrumb */
 .amw-corp-ref {
   flex-shrink: 0;
