@@ -59,6 +59,9 @@ export default function AccountPage() {
   const [photo, setPhoto] = useState<string | null>(null)
   const [photoLayout, setPhotoLayout] = useState<PhotoLayout>(defaultPhotoLayout)
   const [layoutOpen, setLayoutOpen] = useState(false)
+  const profileKey = useMemo(() => `amw-account-profile:${user?.id ?? 'guest'}`, [user?.id])
+  const [details, setDetails] = useState({ displayName: '', phone: '', bio: '' })
+  const [savedFlash, setSavedFlash] = useState(false)
   const initials = user?.name
     ?.split(' ')
     .map(part => part[0])
@@ -71,6 +74,17 @@ export default function AccountPage() {
     const savedLayout = localStorage.getItem(layoutStorageKey)
     setPhotoLayout(savedLayout ? { ...defaultPhotoLayout, ...JSON.parse(savedLayout) } : defaultPhotoLayout)
   }, [storageKey, layoutStorageKey])
+
+  useEffect(() => {
+    const saved = localStorage.getItem(profileKey)
+    setDetails(saved ? JSON.parse(saved) : { displayName: user?.name ?? '', phone: '', bio: '' })
+  }, [profileKey, user?.name])
+
+  function saveDetails() {
+    localStorage.setItem(profileKey, JSON.stringify(details))
+    setSavedFlash(true)
+    setTimeout(() => setSavedFlash(false), 2000)
+  }
 
   function updatePhotoLayout(next: Partial<PhotoLayout>) {
     const updated = { ...photoLayout, ...next }
@@ -233,6 +247,38 @@ export default function AccountPage() {
           <span>User Identity</span>
           <strong>Account Owner</strong>
           <em>Verified Person</em>
+        </div>
+      </section>
+
+      <section className="kbt-card amw-account-panel">
+        <div className="amw-account-panel-head">
+          <div>
+            <span>Editable</span>
+            <strong>Personal Details</strong>
+          </div>
+          <button type="button" className="kbt-btn-primary" onClick={saveDetails} style={{ height: 34 }}>
+            {savedFlash ? <><CheckCircle2 size={14} /> Saved</> : 'Save changes'}
+          </button>
+        </div>
+        <div className="amw-account-edit-grid">
+          <label className="amw-account-edit-field">
+            <span className="kbt-label">Display name</span>
+            <input className="kbt-input" value={details.displayName}
+              onChange={e => setDetails(d => ({ ...d, displayName: e.target.value }))}
+              placeholder={user?.name ?? 'Your name'} />
+          </label>
+          <label className="amw-account-edit-field">
+            <span className="kbt-label">Contact number</span>
+            <input className="kbt-input" value={details.phone}
+              onChange={e => setDetails(d => ({ ...d, phone: e.target.value }))}
+              placeholder="+66 ..." />
+          </label>
+          <label className="amw-account-edit-field amw-account-edit-full">
+            <span className="kbt-label">Bio / title</span>
+            <textarea className="kbt-textarea" rows={2} value={details.bio}
+              onChange={e => setDetails(d => ({ ...d, bio: e.target.value }))}
+              placeholder="Short bio or job title — saved on this device" />
+          </label>
         </div>
       </section>
 
