@@ -15,11 +15,11 @@ export default function ThemeToggle() {
         aria-pressed={!isLight}
       >
         <span className="kbt-theme-thumb" />
-        <span className={`kbt-theme-option${isLight ? ' active' : ''}`}>
-          <Sun size={13} /> Light
+        <span className={`kbt-theme-option${isLight ? ' active' : ''}`} aria-hidden="true">
+          <Sun size={14} />
         </span>
-        <span className={`kbt-theme-option${!isLight ? ' active' : ''}`}>
-          <Moon size={13} /> Dark
+        <span className={`kbt-theme-option${!isLight ? ' active' : ''}`} aria-hidden="true">
+          <Moon size={14} />
         </span>
       </button>
     </div>
