@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { BarChart2, CheckCircle2, TrendingUp, Users } from 'lucide-react'
+import { BarChart2, CheckCircle2, Download, KeyRound, ShieldCheck, TrendingUp, Users } from 'lucide-react'
 import api from '@/lib/api'
 import { SkeletonReport } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
 import ReportsOverview from './ReportsOverview'
 import { scoreTier } from '@/lib/score'
 import { chartColor, chartMargin, chartStroke, chartTick } from '@/lib/chartTheme'
+import { useAuth } from '@/hooks/useAuth'
 
 interface ReportSummary {
   cycleId: string
@@ -15,6 +16,19 @@ interface ReportSummary {
   totalEvaluations: number
   completedEvaluations: number
   byDepartment: { department: string; averageScore: number }[]
+}
+
+interface AuditEvent {
+  id: string
+  eventType: string
+  actorRole?: string | null
+  requestId?: string | null
+  method?: string | null
+  path?: string | null
+  statusCode?: number | null
+  targetType?: string | null
+  targetId?: string | null
+  createdAt: string
 }
 
 interface TooltipPayload {
@@ -45,10 +59,19 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 }
 
 export default function ReportsPage() {
+  const { isAdmin } = useAuth()
   const { data, isLoading } = useQuery<ReportSummary[]>({
     queryKey: ['reports'],
     queryFn: () => api.get('/reports/summary').then(r => r.data),
   })
+  const { data: auditEvents, isLoading: auditLoading } = useQuery<AuditEvent[]>({
+    queryKey: ['reports', 'audit-events'],
+    queryFn: () => api.get('/reports/audit-events').then(r => r.data),
+    enabled: isAdmin,
+  })
+  const exportEvents = auditEvents?.filter((event) => event.eventType.includes('export')).length ?? 0
+  const failedLoginEvents = auditEvents?.filter((event) => event.eventType === 'auth_login_failed').length ?? 0
+  const mutationEvents = auditEvents?.filter((event) => event.eventType === 'http_mutation').length ?? 0
 
   return (
     <div className="kbt-page">
@@ -76,6 +99,79 @@ export default function ReportsPage() {
       ) : (
         <div className="amw-stack">
           <ReportsOverview summaries={data} />
+
+          {isAdmin && (
+            <section className="kbt-card">
+              <div className="kbt-card-header">
+                <span className="kbt-card-title amw-card-title-inline">
+                  <ShieldCheck size={15} color="var(--sap-blue)" /> Audit Control Center
+                </span>
+                <span className="amw-card-meta">latest 100 events</span>
+              </div>
+              <div className="kbt-card-body">
+                <div className="kbt-metric-grid kbt-metric-grid-3">
+                  {[
+                    { label: 'Mutations', value: mutationEvents, icon: <ShieldCheck size={14} color="var(--sap-blue)" /> },
+                    { label: 'Exports', value: exportEvents, icon: <Download size={14} color="var(--amw-red)" /> },
+                    { label: 'Failed Login', value: failedLoginEvents, icon: <KeyRound size={14} color="var(--kbt-warning)" /> },
+                  ].map((metric) => (
+                    <div key={metric.label} className="kbt-metric amw-report-metric">
+                      <div className="kbt-metric-head amw-report-metric-head">
+                        <span>{metric.label}</span>
+                        <div className="kbt-metric-icon">{metric.icon}</div>
+                      </div>
+                      <strong>{auditLoading ? '-' : metric.value}</strong>
+                    </div>
+                  ))}
+                </div>
+
+                {auditLoading ? (
+                  <div className="amw-loading-panel" style={{ marginTop: 14 }}>Loading audit events...</div>
+                ) : !auditEvents?.length ? (
+                  <EmptyState
+                    compact
+                    icon={ShieldCheck}
+                    title="No audit events yet"
+                    description="Login, export, and mutating API events will appear here after they are recorded."
+                  />
+                ) : (
+                  <div style={{ overflowX: 'auto', marginTop: 14 }}>
+                    <table className="kbt-table">
+                      <thead>
+                        <tr>
+                          <th>Event</th>
+                          <th>Actor</th>
+                          <th>Target</th>
+                          <th>Status</th>
+                          <th>Request</th>
+                          <th>Created</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {auditEvents.slice(0, 8).map((event) => (
+                          <tr key={event.id}>
+                            <td>
+                              <strong>{event.eventType}</strong>
+                              <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.7rem', marginTop: 2 }}>{event.method ?? '-'} {event.path ?? '-'}</p>
+                            </td>
+                            <td>{event.actorRole ?? 'System'}</td>
+                            <td>{event.targetType ? `${event.targetType}: ${event.targetId ?? '-'}` : '-'}</td>
+                            <td>
+                              <span className={event.statusCode && event.statusCode >= 400 ? 'kbt-badge-warning' : 'kbt-badge-success'}>
+                                {event.statusCode ?? '-'}
+                              </span>
+                            </td>
+                            <td style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem', color: 'var(--kbt-text-3)' }}>{event.requestId ?? '-'}</td>
+                            <td>{new Date(event.createdAt).toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
 
           <div className="kbt-section-title amw-section-title-compact">Cycle Breakdown</div>
 

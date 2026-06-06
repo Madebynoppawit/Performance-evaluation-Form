@@ -44,17 +44,17 @@ export default function CommandPalette() {
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
-  const listRef  = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
 
   const commands = useMemo<Command[]>(() => {
     const close = () => setOpen(false)
     const goto = (to: string) => () => { close(); navigate(to) }
     const list: Command[] = [
-      { id: 'nav-dashboard', label: 'Dashboard',   hint: 'Overview cockpit',     group: 'Navigate', icon: LayoutDashboard, keywords: 'home overview', run: goto('/') },
-      { id: 'nav-eval',      label: 'Evaluations',  hint: 'Review workflow',      group: 'Navigate', icon: ClipboardList,   keywords: 'review forms', run: goto('/evaluations') },
-      { id: 'nav-templates', label: 'Templates',    hint: 'Form builder',         group: 'Navigate', icon: LayoutTemplate,  keywords: 'blueprint', run: goto('/templates') },
-      { id: 'nav-cycles',    label: 'Cycles',       hint: 'Review periods',       group: 'Navigate', icon: RefreshCw,       keywords: 'periods schedule', run: goto('/cycles') },
-      { id: 'nav-reports',   label: 'Reports',      hint: 'Performance BI',       group: 'Navigate', icon: BarChart2,       keywords: 'analytics charts', run: goto('/reports') },
+      { id: 'nav-dashboard', label: 'Dashboard', hint: 'Overview cockpit', group: 'Navigate', icon: LayoutDashboard, keywords: 'home overview', run: goto('/') },
+      { id: 'nav-eval', label: 'Evaluations', hint: 'Review workflow', group: 'Navigate', icon: ClipboardList, keywords: 'review forms', run: goto('/evaluations') },
+      { id: 'nav-templates', label: 'Templates', hint: 'Form builder', group: 'Navigate', icon: LayoutTemplate, keywords: 'blueprint', run: goto('/templates') },
+      { id: 'nav-cycles', label: 'Cycles', hint: 'Review periods', group: 'Navigate', icon: RefreshCw, keywords: 'periods schedule', run: goto('/cycles') },
+      { id: 'nav-reports', label: 'Reports', hint: 'Performance BI', group: 'Navigate', icon: BarChart2, keywords: 'analytics charts', run: goto('/reports') },
       ...(isManager
         ? [{ id: 'act-new-eval', label: 'New Evaluation', hint: 'Start a review', group: 'Actions' as Group, icon: Plus, keywords: 'create add new evaluation', run: goto('/evaluations') }]
         : []),
@@ -64,10 +64,10 @@ export default function CommandPalette() {
             { id: 'act-new-cycle', label: 'New Cycle', hint: 'Open a review period', group: 'Actions' as Group, icon: RefreshCw, keywords: 'create add cycle period', run: goto('/cycles') },
           ]
         : []),
-      { id: 'act-theme', label: theme === 'dark' ? 'Switch to Light theme' : 'Switch to Dark theme', group: 'Appearance', icon: theme === 'dark' ? Sun : Moon, keywords: 'dark light mode appearance', shortcut: '⌘T', run: () => { toggleTheme() } },
-      { id: 'nav-guide',    label: 'Guidelines', hint: 'TH · EN · FR user guide', group: 'Account', icon: BookOpen, keywords: 'help guide manual docs language thai french คู่มือ guide', run: goto('/guidelines') },
-      { id: 'nav-account',  label: 'Account',  hint: 'User access',  group: 'Account', icon: UserRound, keywords: 'profile me', run: goto('/account') },
-      { id: 'nav-settings', label: 'Settings', hint: 'Preferences',  group: 'Account', icon: Settings,  keywords: 'preferences config', run: goto('/settings') },
+      { id: 'act-theme', label: theme === 'dark' ? 'Switch to Light theme' : 'Switch to Dark theme', group: 'Appearance', icon: theme === 'dark' ? Sun : Moon, keywords: 'dark light mode appearance', shortcut: 'Ctrl+T', run: () => { toggleTheme() } },
+      { id: 'nav-guide', label: 'Guidelines', hint: 'TH / EN / FR user guide', group: 'Account', icon: BookOpen, keywords: 'help guide manual docs language thai french guide', run: goto('/guidelines') },
+      { id: 'nav-account', label: 'Account', hint: 'User access', group: 'Account', icon: UserRound, keywords: 'profile me', run: goto('/account') },
+      { id: 'nav-settings', label: 'Settings', hint: 'Preferences', group: 'Account', icon: Settings, keywords: 'preferences config', run: goto('/settings') },
       { id: 'act-signout', label: 'Sign out', group: 'Account', icon: LogOut, keywords: 'logout exit leave', run: () => { close(); logout(); navigate('/login') } },
     ]
     return list
@@ -81,7 +81,6 @@ export default function CommandPalette() {
     )
   }, [query, commands])
 
-  /* Grouped, preserving order */
   const grouped = useMemo(() => {
     const order: Group[] = ['Navigate', 'Actions', 'Appearance', 'Account']
     return order
@@ -89,10 +88,8 @@ export default function CommandPalette() {
       .filter(g => g.items.length > 0)
   }, [results])
 
-  /* Flat list maps to global index for keyboard nav */
   const flat = useMemo(() => grouped.flatMap(g => g.items), [grouped])
 
-  /* Global ⌘K / Ctrl+K + ⌘T */
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey
@@ -104,7 +101,6 @@ export default function CommandPalette() {
     return () => window.removeEventListener('keydown', handler)
   }, [toggle, toggleTheme, setOpen])
 
-  /* Reset + focus on open */
   useEffect(() => {
     if (open) {
       setQuery('')
@@ -113,12 +109,10 @@ export default function CommandPalette() {
     }
   }, [open])
 
-  /* Clamp active when results shrink */
   useEffect(() => {
     setActive(a => Math.min(a, Math.max(flat.length - 1, 0)))
   }, [flat.length])
 
-  /* Keep active item in view */
   useEffect(() => {
     if (!listRef.current) return
     const el = listRef.current.querySelector<HTMLElement>(`[data-idx="${active}"]`)
@@ -128,6 +122,7 @@ export default function CommandPalette() {
   if (!open) return null
 
   function onKeyDown(e: React.KeyboardEvent) {
+    if (flat.length === 0) return
     if (e.key === 'ArrowDown') { e.preventDefault(); setActive(a => (a + 1) % flat.length) }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(a => (a - 1 + flat.length) % flat.length) }
     else if (e.key === 'Enter') { e.preventDefault(); flat[active]?.run() }
@@ -138,7 +133,6 @@ export default function CommandPalette() {
   return (
     <div className="amw-cmdk-backdrop" onMouseDown={() => setOpen(false)}>
       <div className="amw-cmdk" onMouseDown={e => e.stopPropagation()} role="dialog" aria-label="Command palette">
-        {/* Input */}
         <div className="amw-cmdk-input">
           <Search size={18} />
           <input
@@ -146,13 +140,12 @@ export default function CommandPalette() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Type a command or search…"
+            placeholder="Type a command or search..."
             aria-label="Command palette search"
           />
           <span className="kbt-kbd">ESC</span>
         </div>
 
-        {/* Results */}
         <div className="amw-cmdk-list" ref={listRef}>
           {flat.length === 0 && (
             <div className="amw-cmdk-empty">
@@ -193,10 +186,9 @@ export default function CommandPalette() {
           ))}
         </div>
 
-        {/* Footer */}
         <div className="amw-cmdk-footer">
-          <span><kbd className="kbt-kbd">↑</kbd><kbd className="kbt-kbd">↓</kbd> navigate</span>
-          <span><kbd className="kbt-kbd">↵</kbd> select</span>
+          <span><kbd className="kbt-kbd">up</kbd><kbd className="kbt-kbd">down</kbd> navigate</span>
+          <span><kbd className="kbt-kbd">enter</kbd> select</span>
           <span><kbd className="kbt-kbd">esc</kbd> close</span>
           <span className="amw-cmdk-brand"><ArrowRight size={11} /> AMW Command</span>
         </div>

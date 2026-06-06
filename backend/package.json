@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
+    "lint": "tsc --noEmit",
     "test": "cross-env NODE_ENV=test tsx --test \"src/**/*.test.ts\"",
     "test:watch": "cross-env NODE_ENV=test tsx --test --watch \"src/**/*.test.ts\"",
     "test:integration": "cross-env NODE_ENV=test tsx --test \"src/**/*.itest.ts\"",

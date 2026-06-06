@@ -76,6 +76,12 @@ if (isProd) {
     console.error('[env] Generate one with:  openssl rand -base64 48\n')
     process.exit(1)
   }
+
+  const wildcardCors = (raw.CORS_ORIGINS ?? [raw.CLIENT_URL]).some(origin => origin === '*')
+  if (wildcardCors) {
+    console.error('[env] FATAL: CORS wildcard is not allowed in production.')
+    process.exit(1)
+  }
 } else {
   if (raw.JWT_SECRET === 'dev-secret' || raw.JWT_SECRET.includes('change-this')) {
     console.warn('[env] ⚠️  Insecure JWT_SECRET (dev only). Set a strong value before deploying.')

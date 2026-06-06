@@ -14,6 +14,7 @@ import AttendanceSection from './components/AttendanceSection'
 import CommentSection from './components/CommentSection'
 import SalarySummarySection from './components/SalarySummarySection'
 import AcknowledgementSection from './components/AcknowledgementSection'
+import EvaluationExportMenu from './components/EvaluationExportMenu'
 
 const STATUS: Record<string, { cls: string; label: string }> = {
   DRAFT: { cls: 'kbt-badge-neutral', label: 'Draft' },
@@ -161,8 +162,10 @@ export default function EvaluationFormPage() {
         </div>
       </section>
 
-      {!isReadOnly && (
-        <div className="kbt-card" style={{ padding: 14, display: 'flex', gap: 8, alignItems: 'center' }}>
+      <div className="kbt-card" style={{ padding: 14, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <EvaluationExportMenu evaluationId={ev.id} employeeName={ev.evaluatee?.name} />
+        {!isReadOnly && (
+          <>
           <button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="kbt-btn-outline">
             {saveMutation.isPending ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={13} />}
             {saveMutation.isPending ? 'Saving...' : saved ? 'Saved' : 'Save Draft'}
@@ -171,8 +174,9 @@ export default function EvaluationFormPage() {
             {submitMutation.isPending ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={13} />}
             {submitMutation.isPending ? 'Submitting...' : 'Submit'}
           </button>
-        </div>
-      )}
+          </>
+        )}
+      </div>
 
       <div className="amw-corporate-strip">
         <div>

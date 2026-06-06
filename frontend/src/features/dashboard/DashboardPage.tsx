@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowUpRight, BarChart2, BookOpen, CheckCircle2, ClipboardList, FileCheck2, LayoutTemplate, Plus, RefreshCw, Scale, ShieldCheck, TrendingUp, Users } from 'lucide-react'
+import { Activity, AlertTriangle, ArrowUpRight, BarChart2, BookOpen, CalendarClock, CheckCircle2, ClipboardList, FileCheck2, Gauge, LayoutTemplate, Plus, RefreshCw, Send, ShieldCheck, TrendingUp, Users } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import api from '@/lib/api'
 import { getTypeLabel } from '@/lib/utils'
@@ -17,6 +17,20 @@ interface DashboardStats {
   averageScore: number | null
   totalUsers: number
   activeCycles: number
+}
+
+interface HealthStatus {
+  status: 'ok' | 'degraded'
+  version: string
+  env: string
+  checkedAt: string
+  latencyMs: number
+  requestId?: string
+  services?: {
+    api?: 'ok' | 'degraded'
+    auth?: 'ok' | 'degraded'
+    database?: 'ok' | 'degraded'
+  }
 }
 
 /* ── Count-up hook ─────────────────────────────────────────────────────────── */
@@ -120,9 +134,9 @@ export default function DashboardPage() {
     queryFn: () => api.get('/evaluations').then(r => r.data),
   })
 
-  const { data: health, isError: healthDown } = useQuery<{ status: string; version: string }>({
+  const { data: health, isError: healthDown } = useQuery<HealthStatus>({
     queryKey: ['health'],
-    queryFn: () => api.get('/health').then(r => r.data),
+    queryFn: () => api.get('/health', { validateStatus: status => status < 600 }).then(r => r.data),
     refetchInterval: 30_000,
     retry: 1,
   })
@@ -131,6 +145,36 @@ export default function DashboardPage() {
   const completionPct = stats && stats.totalEvaluations > 0
     ? Math.round((stats.completedEvaluations / stats.totalEvaluations) * 100)
     : 0
+  const executiveInsights = useMemo(() => {
+    const list = evaluations ?? []
+    const now = Date.now()
+    const open = list.filter(e => e.status !== 'REVIEWED' && e.status !== 'CLOSED')
+    const stale = open.filter(e => now - new Date(e.updatedAt).getTime() > 3 * 24 * 60 * 60 * 1000)
+    const activeCycles = list
+      .map(e => e.cycle)
+      .filter((cycle): cycle is NonNullable<Evaluation['cycle']> => !!cycle && cycle.status === 'ACTIVE')
+      .sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime())
+    const deadline = activeCycles[0]
+    const daysLeft = deadline
+      ? Math.max(0, Math.ceil((new Date(deadline.endDate).getTime() - now) / (24 * 60 * 60 * 1000)))
+      : null
+    const departmentPending = open.reduce<Record<string, number>>((acc, e) => {
+      const department = e.evaluatee?.department || 'Unassigned'
+      acc[department] = (acc[department] ?? 0) + 1
+      return acc
+    }, {})
+    const riskiestDepartment = Object.entries(departmentPending).sort((a, b) => b[1] - a[1])[0]
+
+    return {
+      openCount: open.length,
+      staleCount: stale.length,
+      deadlineName: deadline?.name ?? 'No active cycle',
+      daysLeft,
+      riskiestDepartment: riskiestDepartment
+        ? { name: riskiestDepartment[0], count: riskiestDepartment[1] }
+        : null,
+    }
+  }, [evaluations])
 
   const metricCards: MetricCardProps[] = [
     {
@@ -194,11 +238,35 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="amw-hero-actions amw-corporate-stack">
-          <div className="amw-corporate-seal">
-            <Scale size={26} />
-            <span>Legal Tech Record</span>
-            <strong>AMW-PEF</strong>
-            <small>Audit Node 01</small>
+          <div className="amw-hero-intel-panel" style={{ '--pct': `${completionPct}%` } as CSSProperties}>
+            <div className="amw-hero-intel-head">
+              <span>Review Pulse</span>
+              <strong>{healthDown ? 'Offline' : 'Live'}</strong>
+            </div>
+            <div className="amw-hero-intel-body">
+              <div className="amw-hero-gauge">
+                <Gauge size={24} />
+                <strong>{completionPct}%</strong>
+                <span>complete</span>
+              </div>
+              <div className="amw-hero-intel-list">
+                <div>
+                  <Activity size={14} />
+                  <span>Pending decisions</span>
+                  <strong>{stats?.pendingEvaluations ?? 0}</strong>
+                </div>
+                <div>
+                  <ShieldCheck size={14} />
+                  <span>Governance state</span>
+                  <strong>Controlled</strong>
+                </div>
+                <div>
+                  <TrendingUp size={14} />
+                  <span>Average score</span>
+                  <strong>{stats?.averageScore != null ? stats.averageScore.toFixed(2) : '-'}</strong>
+                </div>
+              </div>
+            </div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {(isAdmin || isManager) && (
@@ -236,6 +304,41 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      <section className="amw-exec-strip kbt-animate-up">
+        <div className="amw-exec-insight">
+          <CalendarClock size={18} />
+          <div>
+            <span>Cycle deadline</span>
+            <strong>{executiveInsights.deadlineName}</strong>
+          </div>
+          <em>{executiveInsights.daysLeft == null ? 'n/a' : `${executiveInsights.daysLeft}d`}</em>
+        </div>
+        <div className="amw-exec-insight">
+          <AlertTriangle size={18} />
+          <div>
+            <span>Highest pending risk</span>
+            <strong>{executiveInsights.riskiestDepartment?.name ?? 'No pending risk'}</strong>
+          </div>
+          <em>{executiveInsights.riskiestDepartment?.count ?? 0}</em>
+        </div>
+        <div className="amw-exec-insight">
+          <Activity size={18} />
+          <div>
+            <span>Stale reviews</span>
+            <strong>Updated over 3 days ago</strong>
+          </div>
+          <em>{executiveInsights.staleCount}</em>
+        </div>
+        <div className="amw-exec-actions">
+          <Link to="/evaluations" className="kbt-btn-outline">
+            <Send size={14} /> Review pending
+          </Link>
+          <Link to="/reports" className="kbt-btn-report">
+            <BarChart2 size={14} /> Board report
+          </Link>
+        </div>
+      </section>
 
       {!!evaluations?.length && <DashboardAnalytics evaluations={evaluations} />}
 
@@ -348,9 +451,9 @@ export default function DashboardPage() {
             </div>
             <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                { label: 'API Server',    up: !healthDown && health?.status === 'ok' },
-                { label: 'Database',      up: !healthDown && health?.status === 'ok' },
-                { label: 'Auth Service',  up: !healthDown && health?.status === 'ok' },
+                { label: 'API Server',    up: health ? !healthDown && health.services?.api === 'ok' : null },
+                { label: 'Database',      up: health ? !healthDown && health.services?.database === 'ok' : null },
+                { label: 'Auth Service',  up: health ? !healthDown && health.services?.auth === 'ok' : null },
               ].map(({ label, up }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)', fontWeight: 700 }}>{label}</span>
@@ -361,6 +464,15 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ))}
+              <div className="amw-health-meta">
+                <span>Latency <strong>{health?.latencyMs ?? '-'}ms</strong></span>
+                <span>Checked <strong>{health?.checkedAt ? new Date(health.checkedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</strong></span>
+              </div>
+              {health?.requestId && (
+                <div className="amw-health-request" title={health.requestId}>
+                  req {health.requestId}
+                </div>
+              )}
             </div>
           </div>
         </div>

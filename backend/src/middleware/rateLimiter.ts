@@ -6,7 +6,7 @@ export const apiLimiter = rateLimit({
   max: env.API_RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: 'Too many requests, please try again later.' },
+  message: { message: 'Too many requests. Please try again later.' },
 })
 
 export const authLimiter = rateLimit({
@@ -14,5 +14,5 @@ export const authLimiter = rateLimit({
   max: env.RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: 'พยายามเข้าสู่ระบบมากเกินไป กรุณาลองใหม่ใน 15 นาที' },
+  message: { message: 'Too many sign-in attempts. Please try again later.' },
 })

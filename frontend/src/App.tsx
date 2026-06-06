@@ -23,7 +23,8 @@ const NotFoundPage        = lazy(() => import('@/pages/NotFoundPage'))
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token)
-  return token ? <>{children}</> : <Navigate to="/login" replace />
+  const isSessionValid = useAuthStore((s) => s.isSessionValid)
+  return token && isSessionValid() ? <>{children}</> : <Navigate to="/login" replace />
 }
 
 export default function App() {

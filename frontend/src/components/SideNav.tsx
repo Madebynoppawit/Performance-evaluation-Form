@@ -10,12 +10,14 @@ const workspaceNav = [
 ]
 
 const userNav = [
-  { to: '/guidelines', label: 'Guidelines', sublabel: 'TH · EN · FR', icon: BookOpen },
+  { to: '/guidelines', label: 'Guidelines', sublabel: 'TH / EN / FR', icon: BookOpen },
   { to: '/account', label: 'Account', sublabel: 'User access', icon: UserRound },
   { to: '/settings', label: 'Settings', sublabel: 'Preferences', icon: Settings },
 ]
 
-function NavItem({ to, label, sublabel, icon: Icon, end }: typeof workspaceNav[number]) {
+type NavItemProps = typeof workspaceNav[number]
+
+function NavItem({ to, label, sublabel, icon: Icon, end }: NavItemProps) {
   return (
     <NavLink
       to={to}
@@ -88,7 +90,7 @@ export default function SideNav() {
           boxShadow: '0 0 24px rgba(10,110,209,0.06)',
         }}>
           <p style={{ fontSize: '0.6rem', color: 'var(--kbt-text-3)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 800 }}>
-            v0.1.0 · AMW Command
+            v0.1.0 / AMW Command
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 9 }}>
             <span className="kbt-dot-live" />

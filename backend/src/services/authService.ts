@@ -4,10 +4,10 @@ import { signToken } from '../utils/jwt'
 
 export async function login(email: string, password: string) {
   const user = await prisma.user.findUnique({ where: { email } })
-  if (!user) throw new Error('ไม่พบผู้ใช้')
+  if (!user) throw new Error('Invalid credentials')
 
   const valid = await comparePassword(password, user.password)
-  if (!valid) throw new Error('รหัสผ่านไม่ถูกต้อง')
+  if (!valid) throw new Error('Invalid credentials')
 
   const token = signToken({ userId: user.id, role: user.role })
   const { password: _, ...safeUser } = user
@@ -21,7 +21,7 @@ export async function register(data: {
   department?: string
 }) {
   const exists = await prisma.user.findUnique({ where: { email: data.email } })
-  if (exists) throw new Error('อีเมลนี้มีอยู่ในระบบแล้ว')
+  if (exists) throw new Error('Email is already registered')
 
   const password = await hashPassword(data.password)
   const user = await prisma.user.create({ data: { ...data, password } })

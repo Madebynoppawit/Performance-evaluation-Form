@@ -36,13 +36,34 @@ describe('API integration', () => {
     assert.equal(res.body.status, 'ok')
   })
 
+  it('GET /api/ready returns dependency readiness', async () => {
+    const res = await request(app).get('/api/ready')
+
+    assert.equal(res.status, 200)
+    assert.equal(res.body.status, 'ok')
+    assert.equal(res.body.services.api, 'ok')
+    assert.equal(res.body.services.auth, 'ok')
+    assert.equal(res.body.services.database, 'ok')
+    assert.ok(res.body.requestId)
+  })
+
   it('sets production security headers', async () => {
     const res = await request(app).get('/health')
 
     assert.equal(res.headers['x-powered-by'], undefined)
     assert.equal(res.headers['x-content-type-options'], 'nosniff')
-    assert.equal(res.headers['x-frame-options'], 'SAMEORIGIN')
-    assert.ok(res.headers['content-security-policy'])
+    assert.match(res.headers['content-security-policy'], /frame-ancestors 'none'/)
+    assert.match(res.headers['content-security-policy'], /object-src 'none'/)
+  })
+
+  it('adds no-store and request id headers to API responses', async () => {
+    const res = await request(app)
+      .get('/api/not-a-real-route')
+      .set('X-Request-Id', 'itest-request-123')
+
+    assert.equal(res.headers['x-request-id'], 'itest-request-123')
+    assert.equal(res.headers['cache-control'], 'no-store, no-cache, must-revalidate, private')
+    assert.equal(res.headers.pragma, 'no-cache')
   })
 
   it('returns JSON for unknown routes', async () => {
@@ -50,11 +71,10 @@ describe('API integration', () => {
 
     assert.equal(res.status, 404)
     assert.equal(res.type, 'application/json')
-    assert.deepEqual(res.body, {
-      message: 'Route not found',
-      method: 'GET',
-      path: '/api/not-a-real-route',
-    })
+    assert.equal(res.body.message, 'Route not found')
+    assert.equal(res.body.method, 'GET')
+    assert.equal(res.body.path, '/api/not-a-real-route')
+    assert.ok(res.body.requestId)
   })
 
   it('rejects login with wrong password', async () => {
@@ -102,17 +122,81 @@ describe('API integration', () => {
   })
 
   it('forbids a non-admin from creating templates (RBAC)', async () => {
-    const login = await request(app)
-      .post('/api/auth/login')
-      .send({ email: 'officer1@amw-ems.com', password: PASSWORD })
-    assert.equal(login.status, 200)
-    assert.notEqual(login.body.user.role, 'ADMIN')
+    const token = await loginAs('officer1@amw-ems.com')
 
     const res = await request(app)
       .post('/api/templates')
-      .set('Authorization', `Bearer ${login.body.token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send({ name: 'Should be blocked', type: 'SELF' })
     assert.equal(res.status, 403)
+  })
+
+  it('allows managers to view reports but denies employees (RBAC)', async () => {
+    const managerToken = await loginAs('manager.eng@amw-ems.com')
+    const employeeToken = await loginAs('officer1@amw-ems.com')
+
+    const manager = await request(app)
+      .get('/api/reports/summary')
+      .set('Authorization', `Bearer ${managerToken}`)
+    assert.equal(manager.status, 200)
+
+    const employee = await request(app)
+      .get('/api/reports/summary')
+      .set('Authorization', `Bearer ${employeeToken}`)
+    assert.equal(employee.status, 403)
+  })
+
+  it('denies managers access to admin-only user management (RBAC)', async () => {
+    const managerToken = await loginAs('manager.eng@amw-ems.com')
+    const res = await request(app)
+      .get('/api/users')
+      .set('Authorization', `Bearer ${managerToken}`)
+
+    assert.equal(res.status, 403)
+  })
+
+  it('allows managers to create cycles but not change cycle status (RBAC)', async () => {
+    const adminToken = await loginAs('admin@amw-ems.com')
+    const managerToken = await loginAs('manager.eng@amw-ems.com')
+
+    const templates = await request(app)
+      .get('/api/templates')
+      .set('Authorization', `Bearer ${adminToken}`)
+    assert.equal(templates.status, 200)
+    assert.ok(templates.body.length > 0)
+
+    const create = await request(app)
+      .post('/api/cycles')
+      .set('Authorization', `Bearer ${managerToken}`)
+      .send({
+        name: `RBAC Smoke ${Date.now()}`,
+        templateId: templates.body[0].id,
+        startDate: '2026-01-01',
+        endDate: '2026-12-31',
+      })
+    assert.equal(create.status, 201)
+
+    const status = await request(app)
+      .patch(`/api/cycles/${create.body.id}/status`)
+      .set('Authorization', `Bearer ${managerToken}`)
+      .send({ status: 'CLOSED' })
+    assert.equal(status.status, 403)
+  })
+
+  it('exports an accessible evaluation as CSV', async () => {
+    const token = await loginAs('admin@amw-ems.com')
+    const evaluationId = await firstEvaluationId(token)
+
+    const res = await request(app)
+      .get(`/api/reports/evaluations/${evaluationId}/export`)
+      .set('Authorization', `Bearer ${token}`)
+
+    assert.equal(res.status, 200)
+    assert.match(res.headers['content-type'], /text\/csv/)
+    assert.match(res.headers['content-disposition'], /attachment; filename="evaluation-/)
+    assert.match(res.text, /"Section","Field","Value"/)
+    assert.match(res.text, /"Evaluation","ID"/)
+    assert.match(res.text, /"Scores","Total Score"/)
   })
 
   it('rejects invalid acknowledgement signer types', async () => {

@@ -72,7 +72,7 @@ export default function ShellBar() {
   }
 
   return (
-    <header className="kbt-header" style={{ boxShadow: '0 1px 0 rgba(255,255,255,0.04)' }}>
+    <header className="kbt-header">
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <div style={{
           width: 104, height: 38,
@@ -100,7 +100,7 @@ export default function ShellBar() {
       <div className="amw-search-wrap">
         <button type="button" className="kbt-command" onClick={() => openPalette(true)} aria-haspopup="dialog" aria-label="Open command palette">
           <Search size={16} />
-          <span>Search or jump to…</span>
+          <span>Search or jump to...</span>
           <span className="kbt-kbd">CTRL K</span>
         </button>
       </div>

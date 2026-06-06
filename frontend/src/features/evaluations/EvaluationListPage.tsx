@@ -7,6 +7,7 @@ import type { Evaluation } from '@/types'
 import { formatDate, getTypeLabel } from '@/lib/utils'
 import { SkeletonMetricCard, SkeletonTableRows } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
+import EvaluationExportMenu from './components/EvaluationExportMenu'
 
 const STATUS: Record<string, { cls: string; label: string }> = {
   DRAFT: { cls: 'kbt-badge-neutral', label: 'Draft' },
@@ -129,9 +130,12 @@ export default function EvaluationListPage() {
                   </td>
                   <td style={{ color: 'var(--kbt-text-3)', fontSize: '0.8125rem' }}>{formatDate(ev.updatedAt)}</td>
                   <td>
-                    <Link to={`/evaluations/${ev.id}`} className="kbt-btn-ghost" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem', gap: 4 }}>
-                      Open <ArrowUpRight size={11} />
-                    </Link>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+                      <EvaluationExportMenu compact evaluationId={ev.id} employeeName={ev.evaluatee?.name} />
+                      <Link to={`/evaluations/${ev.id}`} className="kbt-btn-ghost" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem', gap: 4 }}>
+                        Open <ArrowUpRight size={11} />
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}

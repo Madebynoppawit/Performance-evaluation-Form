@@ -57,9 +57,34 @@ model User {
 
   evaluationsAsEvaluatee Evaluation[] @relation("Evaluatee")
   evaluationsAsEvaluator Evaluation[] @relation("Evaluator")
+  auditEvents             AuditEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model AuditEvent {
+  id          String   @id @default(cuid())
+  eventType   String
+  actorId     String?
+  actorRole   Role?
+  requestId   String?
+  method      String?
+  path        String?
+  statusCode  Int?
+  targetType  String?
+  targetId    String?
+  metadata    Json?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([eventType, createdAt])
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId])
+  @@index([requestId])
 }
 
 model Template {

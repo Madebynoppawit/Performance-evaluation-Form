@@ -16,21 +16,21 @@ export function canAccessEvaluation(
 export function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
   const header = req.headers.authorization
   if (!header?.startsWith('Bearer ')) {
-    res.status(401).json({ message: 'ไม่ได้รับอนุญาต' })
+    res.status(401).json({ message: 'Unauthorized', requestId: req.requestId })
     return
   }
   try {
     req.user = verifyToken(header.slice(7))
     next()
   } catch {
-    res.status(401).json({ message: 'Token ไม่ถูกต้องหรือหมดอายุ' })
+    res.status(401).json({ message: 'Invalid or expired token', requestId: req.requestId })
   }
 }
 
 export function requireRole(...roles: string[]) {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user || !roles.includes(req.user.role)) {
-      res.status(403).json({ message: 'ไม่มีสิทธิ์เข้าถึง' })
+      res.status(403).json({ message: 'Forbidden', requestId: req.requestId })
       return
     }
     next()
@@ -39,7 +39,7 @@ export function requireRole(...roles: string[]) {
 
 export async function authorizeEvaluationAccess(req: AuthRequest, res: Response, next: NextFunction) {
   if (!req.user) {
-    res.status(401).json({ message: 'Unauthorized' })
+    res.status(401).json({ message: 'Unauthorized', requestId: req.requestId })
     return
   }
 
@@ -55,12 +55,12 @@ export async function authorizeEvaluationAccess(req: AuthRequest, res: Response,
     })
 
     if (!evaluation) {
-      res.status(404).json({ message: 'Evaluation not found' })
+      res.status(404).json({ message: 'Evaluation not found', requestId: req.requestId })
       return
     }
 
     if (!canAccessEvaluation(req.user, evaluation)) {
-      res.status(403).json({ message: 'Forbidden' })
+      res.status(403).json({ message: 'Forbidden', requestId: req.requestId })
       return
     }
 

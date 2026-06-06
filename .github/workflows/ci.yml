@@ -6,14 +6,28 @@ on:
   pull_request:
     branches: [main]
 
-# Cancel superseded runs on the same ref
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   ci:
-    name: Lint · Test · Build
+    name: Lint / Test / Build / Audit
     runs-on: ubuntu-latest
 
     steps:
@@ -32,14 +46,22 @@ jobs:
       - name: Generate Prisma client
         run: npm run db:generate -w backend
         env:
-          # generate only reads the schema; a dummy URL satisfies the datasource
           DATABASE_URL: postgresql://user:pass@localhost:5432/db
 
-      - name: Lint (frontend)
-        run: npm run lint -w frontend
+      - name: Security audit
+        run: npm audit --audit-level=high
+
+      - name: Lint (backend + frontend)
+        run: npm run lint
 
       - name: Test (backend + frontend)
         run: npm test
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Frontend E2E smoke
+        run: npm run test:e2e -w frontend
 
       - name: Build (backend + frontend)
         run: npm run build
