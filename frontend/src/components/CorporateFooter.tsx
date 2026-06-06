@@ -15,9 +15,11 @@ export default function CorporateFooter() {
         <span className="amw-corp-footer-dot" />
         <span className="amw-corp-footer-meta">Classification: Confidential</span>
         <span className="amw-corp-footer-dot" />
+        <span className="amw-corp-footer-meta">Retention: 7 years</span>
+        <span className="amw-corp-footer-dot" />
         <span className="amw-corp-footer-audit"><FileCheck2 size={12} /> Activity audited</span>
         <span className="amw-corp-footer-dot" />
-        <span className="amw-corp-footer-meta">v{APP_VERSION}</span>
+        <span className="amw-corp-footer-meta">Ref AMW-PEF/2026 · v{APP_VERSION}</span>
       </span>
     </footer>
   )

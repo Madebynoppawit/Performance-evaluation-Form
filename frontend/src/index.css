@@ -4646,6 +4646,39 @@ body,
   background: rgba(10,110,209,0.11);
 }
 
+.amw-corp-chip--cert {
+  color: var(--kbt-success);
+  border-color: rgba(34,197,94,0.28);
+  background: rgba(34,197,94,0.10);
+}
+
+/* Document reference next to the breadcrumb */
+.amw-corp-ref {
+  flex-shrink: 0;
+  margin-left: 4px;
+  padding: 2px 8px;
+  border-left: 1px solid var(--kbt-border);
+  color: var(--kbt-text-3) !important;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  overflow: visible !important;
+}
+
+/* Live data-freshness indicator */
+.amw-corp-synced {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--kbt-text-3);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 /* ── Corporate document footer ──────────────────────────────────────────── */
 .amw-corp-footer {
   margin-top: 28px;
