@@ -2952,6 +2952,35 @@ body,
   }
   .amw-account-edit-field .kbt-label { margin: 0; }
   .amw-account-edit-full { grid-column: 1 / -1; }
+
+  /* Inline table rename */
+  .amw-inline-edit {
+    height: 30px;
+    padding: 4px 8px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    max-width: 240px;
+  }
+  .amw-inline-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--kbt-text-3);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.14s ease, color 0.14s ease, background 0.14s ease;
+  }
+  .kbt-table tbody tr:hover .amw-inline-edit-btn { opacity: 1; }
+  .amw-inline-edit-btn:hover {
+    color: var(--sap-blue);
+    background: rgba(10,110,209,0.1);
+    border-color: rgba(10,110,209,0.2);
+  }
   .amw-account-panel {
     padding: 18px;
   }

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
-import { AlertTriangle, LayoutTemplate, Plus, RefreshCw, Trash2, X } from 'lucide-react'
+import { AlertTriangle, LayoutTemplate, Pencil, Plus, RefreshCw, Trash2, X } from 'lucide-react'
 import api from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 import { formatDate, getTypeLabel } from '@/lib/utils'
@@ -17,6 +17,25 @@ export default function TemplateListPage() {
   const { isAdmin } = useAuth()
   const [deleteTarget, setDeleteTarget] = useState<Template | null>(null)
   const modalRef = useFocusTrap<HTMLDivElement>(!!deleteTarget, () => setDeleteTarget(null))
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [draftName, setDraftName] = useState('')
+
+  const renameMutation = useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) => api.patch(`/templates/${id}`, { name }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['templates'] }),
+  })
+
+  function startEdit(t: Template) {
+    setEditingId(t.id)
+    setDraftName(t.name)
+  }
+  function commitEdit() {
+    const name = draftName.trim()
+    if (editingId && name && name !== data?.find(t => t.id === editingId)?.name) {
+      renameMutation.mutate({ id: editingId, name })
+    }
+    setEditingId(null)
+  }
 
   const { data, isLoading, refetch, isFetching } = useQuery<Template[]>({
     queryKey: ['templates'],
@@ -100,14 +119,42 @@ export default function TemplateListPage() {
                       }}>
                         <LayoutTemplate size={14} color="#0a6ed1" />
                       </div>
-                      <Link
-                        to={`/templates/${template.id}`}
-                        style={{ fontWeight: 700, color: 'var(--kbt-text)', textDecoration: 'none' }}
-                        onMouseEnter={e => (e.currentTarget.style.color = '#0a6ed1')}
-                        onMouseLeave={e => (e.currentTarget.style.color = 'var(--kbt-text)')}
-                      >
-                        {template.name}
-                      </Link>
+                      {editingId === template.id ? (
+                        <input
+                          autoFocus
+                          className="kbt-input amw-inline-edit"
+                          value={draftName}
+                          onChange={e => setDraftName(e.target.value)}
+                          onBlur={commitEdit}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') commitEdit()
+                            if (e.key === 'Escape') setEditingId(null)
+                          }}
+                          aria-label="Template name"
+                        />
+                      ) : (
+                        <>
+                          <Link
+                            to={`/templates/${template.id}`}
+                            style={{ fontWeight: 700, color: 'var(--kbt-text)', textDecoration: 'none' }}
+                            onMouseEnter={e => (e.currentTarget.style.color = '#0a6ed1')}
+                            onMouseLeave={e => (e.currentTarget.style.color = 'var(--kbt-text)')}
+                          >
+                            {template.name}
+                          </Link>
+                          {isAdmin && (
+                            <button
+                              type="button"
+                              className="amw-inline-edit-btn"
+                              onClick={() => startEdit(template)}
+                              aria-label={`Rename ${template.name}`}
+                              title="Rename"
+                            >
+                              <Pencil size={12} />
+                            </button>
+                          )}
+                        </>
+                      )}
                     </div>
                   </td>
                   <td style={{ color: 'var(--kbt-text-2)' }}>{template.description ?? '-'}</td>
