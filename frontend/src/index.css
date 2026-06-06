@@ -4487,16 +4487,17 @@ body,
    area. Sits above the black shell base, below the sidebar/main (z-index 1). */
 .amw-aurora {
   position: fixed;
-  inset: 0;
+  inset: -10%;
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
   background:
-    radial-gradient(40% 46% at 16% 16%, rgba(10, 110, 209, 0.20), transparent 70%),
-    radial-gradient(34% 42% at 84% 10%, rgba(41, 37, 82, 0.26),  transparent 70%),
-    radial-gradient(46% 52% at 74% 86%, rgba(231, 34, 46, 0.12),  transparent 72%),
-    radial-gradient(30% 38% at 36% 82%, rgba(129, 196, 255, 0.12), transparent 72%);
-  animation: aurora-drift 30s ease-in-out infinite alternate;
+    radial-gradient(45% 50% at 14% 14%, rgba(10, 110, 209, 0.40), transparent 68%),
+    radial-gradient(40% 46% at 86% 8%,  rgba(64, 56, 138, 0.42), transparent 68%),
+    radial-gradient(50% 56% at 78% 88%, rgba(231, 34, 46, 0.22),  transparent 70%),
+    radial-gradient(36% 42% at 32% 84%, rgba(129, 196, 255, 0.26), transparent 70%);
+  filter: blur(8px);
+  animation: aurora-drift 26s ease-in-out infinite alternate;
 }
 :root[data-theme='light'] .amw-aurora {
   background:
