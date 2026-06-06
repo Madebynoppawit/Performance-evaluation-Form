@@ -1,4 +1,4 @@
-import { Bell, Eye, Languages, LockKeyhole, Monitor, Moon, ShieldCheck, Sun, UserCog } from 'lucide-react'
+import { Bell, Eye, Languages, LockKeyhole, Monitor, ShieldCheck, UserCog } from 'lucide-react'
 import ThemeToggle from '@/components/ThemeToggle'
 
 const settingGroups = [
@@ -49,15 +49,7 @@ export default function SettingsPage() {
           <p>Simple settings for daily users without exposing administrator tools.</p>
         </div>
         <div className="amw-settings-theme">
-          <div>
-            <Sun size={17} />
-            <span>Light</span>
-          </div>
           <ThemeToggle />
-          <div>
-            <Moon size={17} />
-            <span>Dark</span>
-          </div>
         </div>
       </section>
 
