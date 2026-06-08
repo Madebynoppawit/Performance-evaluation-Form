@@ -1,5 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react'
 import type { GoalEntry } from '@/types'
+import { useT } from '@/i18n/languageContext'
 
 interface Props {
   goals: GoalEntry[]
@@ -14,6 +15,7 @@ const emptyGoal = (): GoalEntry => ({
 })
 
 export default function GoalSettingSection({ goals, readOnly, onChange }: Props) {
+  const t = useT()
   function update(i: number, field: keyof GoalEntry, value: string | number | null) {
     onChange(goals.map((g, idx) => idx === i ? { ...g, [field]: value } : g))
   }
@@ -26,13 +28,13 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <div style={{ display: 'flex', gap: 16, fontSize: '0.75rem' }}>
-          <span style={{ color: '#6b7a90' }}>Goals: <span style={{ color: '#a8b7cc', fontWeight: 600 }}>{goals.length}/5</span></span>
+          <span style={{ color: '#6b7a90' }}>{t('gs.goals')}: <span style={{ color: '#a8b7cc', fontWeight: 600 }}>{goals.length}/5</span></span>
           <span style={{ color: '#6b7a90' }}>
-            Total weight:{' '}
+            {t('gs.totalWeight')}:{' '}
             <span style={{ fontFamily: 'monospace', fontWeight: 700, color: weightOk ? 'var(--m-light-blue)' : 'var(--amw-red)' }}>
               {totalWeight}%
             </span>
-            {!weightOk && goals.length > 0 && <span style={{ color: 'var(--amw-red)' }}> (should be 100%)</span>}
+            {!weightOk && goals.length > 0 && <span style={{ color: 'var(--amw-red)' }}> {t('gs.shouldBe100')}</span>}
           </span>
         </div>
         <div style={{ flex: 1 }} />
@@ -42,7 +44,7 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
             className="kbt-btn-outline"
             style={{ height: 30, padding: '0 12px', fontSize: '0.75rem', gap: 5 }}
           >
-            <Plus size={12} /> Add Goal
+            <Plus size={12} /> {t('gs.addGoal')}
           </button>
         )}
       </div>
@@ -55,7 +57,7 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
           color: '#6b7a90', fontSize: '0.875rem',
         }}>
           <Plus size={24} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
-          No goals yet - click Add Goal to start
+          {t('gs.empty')}
         </div>
       )}
 
@@ -80,7 +82,7 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
               {String(idx + 1).padStart(2, '0')}
             </span>
             <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: goal.goal ? '#a8b7cc' : '#6b7a90', flex: 1 }}>
-              {goal.goal || `Goal ${idx + 1}`}
+              {goal.goal || `${t('gs.goal')} ${idx + 1}`}
             </span>
             {!readOnly && (
               <button onClick={() => onChange(goals.filter((_, i) => i !== idx).map((g, i) => ({ ...g, order: i + 1 })))}
@@ -94,20 +96,20 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
 
           <div className="amw-grid-2" style={{ padding: 14, gap: 12 }}>
             <div>
-              <label className="kbt-label kbt-label-required">a. Goal</label>
-              <input value={goal.goal} onChange={e => update(idx, 'goal', e.target.value)} disabled={readOnly} className="kbt-input" placeholder="Goal title" />
+              <label className="kbt-label kbt-label-required">{t('gs.aGoal')}</label>
+              <input value={goal.goal} onChange={e => update(idx, 'goal', e.target.value)} disabled={readOnly} className="kbt-input" placeholder={t('gs.phGoal')} />
             </div>
             <div>
-              <label className="kbt-label kbt-label-required">c. Weight (%)</label>
+              <label className="kbt-label kbt-label-required">{t('gs.cWeight')}</label>
               <input type="number" value={goal.weight} onChange={e => update(idx, 'weight', Number(e.target.value))} disabled={readOnly} min={0} max={100} className="kbt-input" />
             </div>
             <div style={{ gridColumn: '1/-1' }}>
-              <label className="kbt-label">b. Goal Description</label>
-              <textarea value={goal.goalDescription ?? ''} rows={2} onChange={e => update(idx, 'goalDescription', e.target.value)} disabled={readOnly} className="kbt-textarea" placeholder="Describe the goal..." />
+              <label className="kbt-label">{t('gs.bDesc')}</label>
+              <textarea value={goal.goalDescription ?? ''} rows={2} onChange={e => update(idx, 'goalDescription', e.target.value)} disabled={readOnly} className="kbt-textarea" placeholder={t('gs.phDesc')} />
             </div>
 
             <div style={{ gridColumn: '1/-1' }}>
-              <label className="kbt-label">d. Target per Rating</label>
+              <label className="kbt-label">{t('gs.dTarget')}</label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
                 {([5, 4, 3, 2, 1] as const).map((r) => (
                   <div key={r}>
@@ -123,6 +125,10 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
                       </span>
                     </div>
                     <input
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      step="any"
                       value={(goal[`targetRating${r}` as keyof GoalEntry] as string) ?? ''}
                       onChange={e => update(idx, `targetRating${r}` as keyof GoalEntry, e.target.value)}
                       disabled={readOnly} className="kbt-input" style={{ textAlign: 'center', padding: '0 4px' }} placeholder="0" />
@@ -132,22 +138,22 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
             </div>
 
             <div>
-              <label className="kbt-label">e. Result</label>
-              <input value={goal.result ?? ''} onChange={e => update(idx, 'result', e.target.value)} disabled={readOnly} className="kbt-input" placeholder="Actual result" />
+              <label className="kbt-label">{t('gs.eResult')}</label>
+              <input value={goal.result ?? ''} onChange={e => update(idx, 'result', e.target.value)} disabled={readOnly} className="kbt-input" placeholder={t('gs.phResult')} />
             </div>
             <div>
-              <label className="kbt-label">f. Evaluation Score</label>
+              <label className="kbt-label">{t('gs.fScore')}</label>
               <select value={goal.evaluationScore ?? ''} onChange={e => update(idx, 'evaluationScore', e.target.value ? Number(e.target.value) : null)} disabled={readOnly} className="kbt-select">
-                <option value="">Select</option>
+                <option value="">{t('gs.select')}</option>
                 {[5, 4, 3, 2, 1].map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div>
-              <label className="kbt-label">g. Employee Comment</label>
+              <label className="kbt-label">{t('gs.gEmp')}</label>
               <textarea value={goal.employeeComment ?? ''} rows={2} onChange={e => update(idx, 'employeeComment', e.target.value)} disabled={readOnly} className="kbt-textarea" />
             </div>
             <div>
-              <label className="kbt-label">h. Superior Comment</label>
+              <label className="kbt-label">{t('gs.hSup')}</label>
               <textarea value={goal.superiorComment ?? ''} rows={2} onChange={e => update(idx, 'superiorComment', e.target.value)} disabled={readOnly} className="kbt-textarea" />
             </div>
           </div>

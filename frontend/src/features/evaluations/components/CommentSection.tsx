@@ -1,4 +1,6 @@
 import type { EvaluationComment } from '@/types'
+import { useT } from '@/i18n/languageContext'
+import type { TranslationKey } from '@/i18n/translations'
 
 interface Props {
   data: EvaluationComment
@@ -6,25 +8,26 @@ interface Props {
   onChange: (data: EvaluationComment) => void
 }
 
-const FIELDS = [
-  { key: 'strengths' as const, label: 'a. Strengths', placeholder: 'Summarize strengths, standout behaviors, and delivered impact.' },
-  { key: 'improvements' as const, label: 'b. Areas for Improvement', placeholder: 'Describe opportunities, risks, and improvement focus areas.' },
-  { key: 'requiredSkills' as const, label: 'c. Required Skills', placeholder: 'List skills, knowledge, or support needed for the next cycle.' },
+const FIELDS: { key: 'strengths' | 'improvements' | 'requiredSkills'; labelKey: TranslationKey; phKey: TranslationKey }[] = [
+  { key: 'strengths', labelKey: 'cm.aStrengths', phKey: 'cm.phStrengths' },
+  { key: 'improvements', labelKey: 'cm.bImprove', phKey: 'cm.phImprove' },
+  { key: 'requiredSkills', labelKey: 'cm.cSkills', phKey: 'cm.phSkills' },
 ]
 
 export default function CommentSection({ data, readOnly, onChange }: Props) {
+  const t = useT()
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {FIELDS.map(({ key, label, placeholder }) => (
+      {FIELDS.map(({ key, labelKey, phKey }) => (
         <div key={key}>
-          <label className="kbt-label">{label}</label>
+          <label className="kbt-label">{t(labelKey)}</label>
           <textarea
             value={data[key] ?? ''}
             onChange={(e) => onChange({ ...data, [key]: e.target.value })}
             disabled={readOnly}
             rows={4}
             className="kbt-textarea"
-            placeholder={placeholder}
+            placeholder={t(phKey)}
           />
         </div>
       ))}

@@ -1,4 +1,5 @@
 import type { SalarySummary } from '@/types'
+import { useT } from '@/i18n/languageContext'
 
 interface Props {
   data: SalarySummary
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export default function SalarySummarySection({ data, readOnly, onChange }: Props) {
+  const t = useT()
   function update<K extends keyof SalarySummary>(field: K, value: SalarySummary[K]) {
     onChange({ ...data, [field]: value })
   }
@@ -19,11 +21,11 @@ export default function SalarySummarySection({ data, readOnly, onChange }: Props
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div className="amw-field-grid">
         <div>
-          <label className="kbt-label">Old Salary</label>
+          <label className="kbt-label">{t('sal.oldSalary')}</label>
           <input type="number" value={data.oldSalary ?? ''} onChange={e => update('oldSalary', e.target.value ? Number(e.target.value) : null)} disabled={readOnly} className="kbt-input" placeholder="0.00" />
         </div>
         <div>
-          <label className="kbt-label">New Salary</label>
+          <label className="kbt-label">{t('sal.newSalary')}</label>
           <input type="number" value={data.newSalary ?? ''} onChange={e => update('newSalary', e.target.value ? Number(e.target.value) : null)} disabled={readOnly} className="kbt-input" placeholder="0.00" />
         </div>
       </div>
@@ -31,7 +33,7 @@ export default function SalarySummarySection({ data, readOnly, onChange }: Props
       {diff != null && (
         <div className="kbt-summary-total">
           <div>
-            <strong>Increase</strong>
+            <strong>{t('sal.increase')}</strong>
             <span>THB {fmt(diff)}</span>
           </div>
           <span className="kbt-score-value">{pct}%</span>
@@ -40,19 +42,19 @@ export default function SalarySummarySection({ data, readOnly, onChange }: Props
 
       <div className="amw-field-grid">
         <div>
-          <label className="kbt-label">Bonus</label>
+          <label className="kbt-label">{t('sal.bonus')}</label>
           <input type="number" value={data.bonus ?? ''} onChange={e => update('bonus', e.target.value ? Number(e.target.value) : null)} disabled={readOnly} className="kbt-input" placeholder="0.00" />
         </div>
         <div>
-          <label className="kbt-label">Bonus Deduction</label>
+          <label className="kbt-label">{t('sal.bonusDeduction')}</label>
           <input type="number" value={data.bonusDeduction ?? ''} onChange={e => update('bonusDeduction', e.target.value ? Number(e.target.value) : null)} disabled={readOnly} className="kbt-input" placeholder="0.00" />
         </div>
         <div>
-          <label className="kbt-label">Policy Reference</label>
+          <label className="kbt-label">{t('sal.policyRef')}</label>
           <input value={data.bonusPolicy ?? ''} onChange={e => update('bonusPolicy', e.target.value)} disabled={readOnly} className="kbt-input" placeholder="HR-Policy-2026" />
         </div>
         <div>
-          <label className="kbt-label">Effective Date</label>
+          <label className="kbt-label">{t('sal.effectiveDate')}</label>
           <input type="date" value={data.effectiveDate?.substring(0, 10) ?? ''} onChange={e => update('effectiveDate', e.target.value || null)} disabled={readOnly} className="kbt-input" />
         </div>
       </div>

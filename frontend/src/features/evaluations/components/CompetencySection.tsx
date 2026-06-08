@@ -1,5 +1,6 @@
 import type { CompetencyScore, Position } from '@/types'
 import { getCompetenciesForPosition } from '../constants/competency'
+import { useT } from '@/i18n/languageContext'
 
 interface Props {
   position?: Position
@@ -17,6 +18,7 @@ const SCORE_STYLES: Record<number, { bg: string; color: string; border: string; 
 }
 
 export default function CompetencySection({ position, scores, readOnly, onChange }: Props) {
+  const t = useT()
   const competencies = position ? getCompetenciesForPosition(position) : []
 
   function getScore(id: string) { return scores.find(s => s.competencyId === id)?.score ?? null }
@@ -31,7 +33,7 @@ export default function CompetencySection({ position, scores, readOnly, onChange
   if (!position) {
     return (
       <div className="kbt-msg-info" style={{ fontSize: '0.8125rem' }}>
-        No position assigned — competency scoring is unavailable.
+        {t('cs.noPosition')}
       </div>
     )
   }
@@ -51,7 +53,7 @@ export default function CompetencySection({ position, scores, readOnly, onChange
           border: '1px solid rgba(129,196,255,0.16)',
           borderRadius: 8,
         }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)' }}>Average Score:</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)' }}>{t('cs.avgScore')}</span>
           <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: 'var(--amw-red)', fontSize: '1rem' }}>{avg}</span>
           <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)' }}>/ 5.00</span>
         </div>
@@ -66,9 +68,9 @@ export default function CompetencySection({ position, scores, readOnly, onChange
           borderRadius: '6px 6px 0 0',
           border: '1px solid var(--kbt-border)',
         }}>
-          <span style={{ fontSize: '0.625rem', fontWeight: 700, color: 'var(--kbt-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Competency</span>
-          <span style={{ fontSize: '0.625rem', fontWeight: 700, color: 'var(--kbt-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Description</span>
-          <span style={{ fontSize: '0.625rem', fontWeight: 700, color: 'var(--kbt-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center', width: 160 }}>Rating (1–5)</span>
+          <span style={{ fontSize: '0.625rem', fontWeight: 700, color: 'var(--kbt-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('cs.competency')}</span>
+          <span style={{ fontSize: '0.625rem', fontWeight: 700, color: 'var(--kbt-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('cs.description')}</span>
+          <span style={{ fontSize: '0.625rem', fontWeight: 700, color: 'var(--kbt-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center', width: 160 }}>{t('cs.rating')}</span>
         </div>
 
         {competencies.map((c, idx) => {
