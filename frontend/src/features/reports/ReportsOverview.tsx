@@ -5,6 +5,7 @@ import api from '@/lib/api'
 import type { Evaluation } from '@/types'
 import { scoreTier } from '@/lib/score'
 import { chartColor, chartMotion, performerTone } from '@/lib/chartTheme'
+import { useT } from '@/i18n/languageContext'
 
 interface ReportSummary {
   totalEvaluations: number
@@ -48,6 +49,7 @@ function Gauge100({ pct }: { pct: number }) {
 }
 
 export default function ReportsOverview({ summaries }: Props) {
+  const t = useT()
   const { data: evaluations } = useQuery<Evaluation[]>({
     queryKey: ['evaluations'],
     queryFn: () => api.get('/evaluations').then(r => r.data),
@@ -82,10 +84,10 @@ export default function ReportsOverview({ summaries }: Props) {
   const attention = ranked.slice(-5).reverse().filter(e => !top.includes(e))
 
   const kpis = [
-    { label: 'Overall Avg Score', value: avgScore ? avgScore.toFixed(2) : '—', icon: Gauge, color: 'var(--lambo-gold)', mono: true },
-    { label: 'Total Reviews', value: String(totalReviews), icon: Users, color: 'var(--sap-blue)' },
-    { label: 'Completed', value: String(completed), icon: CheckCircle2, color: 'var(--kbt-success)' },
-    { label: 'Departments', value: String(departments.length), icon: Building2, color: 'var(--m-light-blue)' },
+    { label: t('rp.overallAvg'), value: avgScore ? avgScore.toFixed(2) : '—', icon: Gauge, color: 'var(--lambo-gold)', mono: true },
+    { label: t('rp.totalReviews'), value: String(totalReviews), icon: Users, color: 'var(--sap-blue)' },
+    { label: t('rp.completed'), value: String(completed), icon: CheckCircle2, color: 'var(--kbt-success)' },
+    { label: t('rp.departments'), value: String(departments.length), icon: Building2, color: 'var(--m-light-blue)' },
   ]
 
   if (!scored.length && !totalReviews) return null
@@ -110,7 +112,7 @@ export default function ReportsOverview({ summaries }: Props) {
         </div>
         <div className="amw-reports-gauge-wrap">
           <Gauge100 pct={completionPct} />
-          <p>{completed} of {totalReviews} reviews submitted</p>
+          <p>{completed} {t('common.of')} {totalReviews} {t('rp.reviewsSubmitted')}</p>
         </div>
       </div>
 
@@ -119,9 +121,9 @@ export default function ReportsOverview({ summaries }: Props) {
         <div className="kbt-card">
           <div className="kbt-card-header">
             <span className="kbt-card-title amw-card-title-inline">
-              <Award size={15} color={chartColor.gold} /> Department Leaderboard
+              <Award size={15} color={chartColor.gold} /> {t('rp.deptLeaderboard')}
             </span>
-            <span className="amw-card-meta">avg score</span>
+            <span className="amw-card-meta">{t('rp.avgScoreMeta')}</span>
           </div>
           <div className="amw-leaderboard">
             {departments.length ? departments.map((d, i) => (
@@ -137,10 +139,10 @@ export default function ReportsOverview({ summaries }: Props) {
                   <div className="amw-leader-track">
                     <div className="amw-leader-fill" style={{ width: `${(d.avg / 5) * 100}%`, background: scoreTier(d.avg).color }} />
                   </div>
-                  <span className="amw-leader-count">{d.count} scored</span>
+                  <span className="amw-leader-count">{d.count} {t('rp.scored')}</span>
                 </div>
               </div>
-            )) : <div className="amw-analytics-empty"><Building2 size={20} /><span>No scored evaluations yet</span></div>}
+            )) : <div className="amw-analytics-empty"><Building2 size={20} /><span>{t('rp.noScored')}</span></div>}
           </div>
         </div>
 
@@ -148,18 +150,18 @@ export default function ReportsOverview({ summaries }: Props) {
         <div className="kbt-card">
           <div className="kbt-card-header">
             <span className="kbt-card-title amw-card-title-inline">
-              <TrendingUp size={15} color={chartColor.success} /> Performers
+              <TrendingUp size={15} color={chartColor.success} /> {t('rp.performers')}
             </span>
           </div>
           <div className="amw-performers">
             {top.length > 0 && (
               <>
-                <p className="amw-performers-label"><TrendingUp size={12} color={chartColor.success} /> Top performers</p>
+                <p className="amw-performers-label"><TrendingUp size={12} color={chartColor.success} /> {t('rp.topPerformers')}</p>
                 {top.map(e => (
                   <div key={e.id} className="amw-performer-row">
                     <span className="amw-performer-avatar" style={{ background: performerTone.top }}>{e.evaluatee?.name?.charAt(0) ?? '?'}</span>
                     <div>
-                      <strong>{e.evaluatee?.name ?? 'Unknown'}</strong>
+                      <strong>{e.evaluatee?.name ?? t('rp.unknown')}</strong>
                       <span>{e.evaluatee?.department ?? '—'}</span>
                     </div>
                     <span className="kbt-score-value">{e.totalScore!.toFixed(2)}</span>
@@ -169,12 +171,12 @@ export default function ReportsOverview({ summaries }: Props) {
             )}
             {attention.length > 0 && (
               <>
-                <p className="amw-performers-label amw-performers-label-spaced"><TrendingDown size={12} color={chartColor.warning} /> Needs attention</p>
+                <p className="amw-performers-label amw-performers-label-spaced"><TrendingDown size={12} color={chartColor.warning} /> {t('rp.needsAttention')}</p>
                 {attention.map(e => (
                   <div key={e.id} className="amw-performer-row">
                     <span className="amw-performer-avatar" style={{ background: performerTone.attention }}>{e.evaluatee?.name?.charAt(0) ?? '?'}</span>
                     <div>
-                      <strong>{e.evaluatee?.name ?? 'Unknown'}</strong>
+                      <strong>{e.evaluatee?.name ?? t('rp.unknown')}</strong>
                       <span>{e.evaluatee?.department ?? '—'}</span>
                     </div>
                     <span className="kbt-score-value">{e.totalScore!.toFixed(2)}</span>
@@ -182,7 +184,7 @@ export default function ReportsOverview({ summaries }: Props) {
                 ))}
               </>
             )}
-            {!scored.length && <div className="amw-analytics-empty"><Award size={20} /><span>No scored evaluations yet</span></div>}
+            {!scored.length && <div className="amw-analytics-empty"><Award size={20} /><span>{t('rp.noScored')}</span></div>}
           </div>
         </div>
       </div>

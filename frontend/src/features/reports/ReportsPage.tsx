@@ -93,9 +93,9 @@ export default function ReportsPage() {
         <div className="kbt-card">
           <EmptyState
             icon={BarChart2}
-            title="No report data yet"
-            description="Reports appear once evaluations are assigned and scored. Open a cycle and run reviews to populate analytics."
-            action={{ label: 'Go to evaluations', to: '/evaluations' }}
+            title={t('rp.noData')}
+            description={t('rp.noDataDesc')}
+            action={{ label: t('rp.goToEval'), to: '/evaluations' }}
           />
         </div>
       ) : (
@@ -106,16 +106,16 @@ export default function ReportsPage() {
             <section className="kbt-card">
               <div className="kbt-card-header">
                 <span className="kbt-card-title amw-card-title-inline">
-                  <ShieldCheck size={15} color="var(--sap-blue)" /> Audit Control Center
+                  <ShieldCheck size={15} color="var(--sap-blue)" /> {t('rp.auditCenter')}
                 </span>
-                <span className="amw-card-meta">latest 100 events</span>
+                <span className="amw-card-meta">{t('rp.latest100')}</span>
               </div>
               <div className="kbt-card-body">
                 <div className="kbt-metric-grid kbt-metric-grid-3">
                   {[
-                    { label: 'Mutations', value: mutationEvents, icon: <ShieldCheck size={14} color="var(--sap-blue)" /> },
-                    { label: 'Exports', value: exportEvents, icon: <Download size={14} color="var(--amw-red)" /> },
-                    { label: 'Failed Login', value: failedLoginEvents, icon: <KeyRound size={14} color="var(--kbt-warning)" /> },
+                    { label: t('rp.mutations'), value: mutationEvents, icon: <ShieldCheck size={14} color="var(--sap-blue)" /> },
+                    { label: t('rp.exports'), value: exportEvents, icon: <Download size={14} color="var(--amw-red)" /> },
+                    { label: t('rp.failedLogin'), value: failedLoginEvents, icon: <KeyRound size={14} color="var(--kbt-warning)" /> },
                   ].map((metric) => (
                     <div key={metric.label} className="kbt-metric amw-report-metric">
                       <div className="kbt-metric-head amw-report-metric-head">
@@ -128,25 +128,25 @@ export default function ReportsPage() {
                 </div>
 
                 {auditLoading ? (
-                  <div className="amw-loading-panel" style={{ marginTop: 14 }}>Loading audit events...</div>
+                  <div className="amw-loading-panel" style={{ marginTop: 14 }}>{t('rp.loadingAudit')}</div>
                 ) : !auditEvents?.length ? (
                   <EmptyState
                     compact
                     icon={ShieldCheck}
-                    title="No audit events yet"
-                    description="Login, export, and mutating API events will appear here after they are recorded."
+                    title={t('rp.noAudit')}
+                    description={t('rp.noAuditDesc')}
                   />
                 ) : (
                   <div style={{ overflowX: 'auto', marginTop: 14 }}>
                     <table className="kbt-table">
                       <thead>
                         <tr>
-                          <th>Event</th>
-                          <th>Actor</th>
-                          <th>Target</th>
-                          <th>Status</th>
-                          <th>Request</th>
-                          <th>Created</th>
+                          <th>{t('rp.event')}</th>
+                          <th>{t('rp.actor')}</th>
+                          <th>{t('rp.target')}</th>
+                          <th>{t('table.status')}</th>
+                          <th>{t('rp.request')}</th>
+                          <th>{t('rp.created')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -156,7 +156,7 @@ export default function ReportsPage() {
                               <strong>{event.eventType}</strong>
                               <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.7rem', marginTop: 2 }}>{event.method ?? '-'} {event.path ?? '-'}</p>
                             </td>
-                            <td>{event.actorRole ?? 'System'}</td>
+                            <td>{event.actorRole ?? t('rp.system')}</td>
                             <td>{event.targetType ? `${event.targetType}: ${event.targetId ?? '-'}` : '-'}</td>
                             <td>
                               <span className={event.statusCode && event.statusCode >= 400 ? 'kbt-badge-warning' : 'kbt-badge-success'}>
@@ -175,7 +175,7 @@ export default function ReportsPage() {
             </section>
           )}
 
-          <div className="kbt-section-title amw-section-title-compact">Cycle Breakdown</div>
+          <div className="kbt-section-title amw-section-title-compact">{t('rp.cycleBreakdown')}</div>
 
           {data.map((report) => {
             const pct = report.totalEvaluations > 0
@@ -193,15 +193,15 @@ export default function ReportsPage() {
                     </div>
                     <div className="amw-report-score">
                       <p className="kbt-score-value">{report.averageScore.toFixed(2)}</p>
-                      <p>Avg Score</p>
+                      <p>{t('rp.avgScore')}</p>
                     </div>
                   </div>
 
                   <div className="kbt-metric-grid kbt-metric-grid-3 amw-report-metrics">
                     {[
-                      { label: 'Total', value: report.totalEvaluations, icon: <Users size={14} color="var(--sap-blue)" /> },
-                      { label: 'Completed', value: report.completedEvaluations, icon: <CheckCircle2 size={14} color="var(--m-blue)" /> },
-                      { label: 'Completion', value: `${pct}%`, icon: <TrendingUp size={14} color="var(--amw-red)" /> },
+                      { label: t('rp.total'), value: report.totalEvaluations, icon: <Users size={14} color="var(--sap-blue)" /> },
+                      { label: t('rp.completed'), value: report.completedEvaluations, icon: <CheckCircle2 size={14} color="var(--m-blue)" /> },
+                      { label: t('rp.completion'), value: `${pct}%`, icon: <TrendingUp size={14} color="var(--amw-red)" /> },
                     ].map(({ label: metricLabel, value, icon }) => (
                       <div key={metricLabel} className="kbt-metric amw-report-metric">
                         <div className="kbt-metric-head amw-report-metric-head">
@@ -215,7 +215,7 @@ export default function ReportsPage() {
 
                   <div className="amw-report-progress">
                     <div>
-                      <span>Completion Progress</span>
+                      <span>{t('rp.completionProgress')}</span>
                       <span className="kbt-score-value">{pct}%</span>
                     </div>
                     <div className="kbt-progress">
@@ -226,7 +226,7 @@ export default function ReportsPage() {
                   {report.byDepartment.length > 0 && (
                     <div>
                       <p className="amw-chart-section-label">
-                        Score by Department
+                        {t('rp.scoreByDept')}
                       </p>
                       <ResponsiveContainer width="100%" height={180}>
                         <BarChart data={report.byDepartment} margin={chartMargin.report}>
