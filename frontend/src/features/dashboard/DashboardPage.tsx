@@ -4,8 +4,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Activity, AlertTriangle, ArrowUpRight, BarChart2, BookOpen, CalendarClock, CheckCircle2, ClipboardList, FileCheck2, Gauge, LayoutTemplate, Plus, RefreshCw, Send, ShieldCheck, TrendingUp, Users } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/i18n/languageContext'
+import { useLabels } from '@/i18n/useLabels'
 import api from '@/lib/api'
-import { getTypeLabel } from '@/lib/utils'
 import type { Evaluation } from '@/types'
 import DashboardAnalytics from './DashboardAnalytics'
 import GettingStarted from './GettingStarted'
@@ -111,18 +111,11 @@ const STATUS_CLS: Record<string, string> = {
   CLOSED: 'kbt-badge-neutral',
 }
 
-const STATUS_LBL: Record<string, string> = {
-  DRAFT: 'Draft',
-  IN_PROGRESS: 'In Progress',
-  SUBMITTED: 'Submitted',
-  REVIEWED: 'Reviewed',
-  CLOSED: 'Closed',
-}
-
 export default function DashboardPage() {
   const { user, isAdmin, isManager } = useAuth()
   const navigate = useNavigate()
   const t = useT()
+  const { statusLabel, typeLabel } = useLabels()
   const hour = new Date().getHours()
   const greeting = hour < 12 ? t('dash.morning') : hour < 17 ? t('dash.afternoon') : t('dash.evening')
 
@@ -225,46 +218,46 @@ export default function DashboardPage() {
     <div className="kbt-page">
       <section className="amw-studio-hero" style={{ minHeight: 188 }}>
         <div className="amw-hero-copy">
-          <span className="amw-eyebrow">AMW Corporate Performance</span>
+          <span className="amw-eyebrow">{t('page.dashboard.eyebrow')}</span>
           <h1 style={{ fontSize: 'clamp(2rem, 3.6vw, 3.9rem)' }}>
             {greeting}, <span className="kbt-gradient-text">{user?.name}</span>
           </h1>
           <p>
-            Executive cockpit for review readiness, corporate governance, scoring evidence, and performance decisions.
+            {t('dash.heroSubtitle')}
           </p>
           <div className="amw-hero-badges">
-            <span>{completionPct}% completion</span>
-            <span>{stats?.activeCycles ?? 0} active cycles</span>
-            <span>{stats?.pendingEvaluations ?? 0} pending</span>
-            <span>Corporate standard</span>
+            <span>{completionPct}% {t('dash.completion')}</span>
+            <span>{stats?.activeCycles ?? 0} {t('dash.activeCycles')}</span>
+            <span>{stats?.pendingEvaluations ?? 0} {t('dash.pending')}</span>
+            <span>{t('dash.corporateStandard')}</span>
           </div>
         </div>
         <div className="amw-hero-actions amw-corporate-stack">
           <div className="amw-hero-intel-panel" style={{ '--pct': `${completionPct}%` } as CSSProperties}>
             <div className="amw-hero-intel-head">
-              <span>Review Pulse</span>
-              <strong>{healthDown ? 'Offline' : 'Live'}</strong>
+              <span>{t('dash.reviewPulse')}</span>
+              <strong>{healthDown ? t('dash.offline') : t('dash.live')}</strong>
             </div>
             <div className="amw-hero-intel-body">
               <div className="amw-hero-gauge">
                 <Gauge size={24} />
                 <strong>{completionPct}%</strong>
-                <span>complete</span>
+                <span>{t('dash.complete')}</span>
               </div>
               <div className="amw-hero-intel-list">
                 <div>
                   <Activity size={14} />
-                  <span>Pending decisions</span>
+                  <span>{t('dash.pendingDecisions')}</span>
                   <strong>{stats?.pendingEvaluations ?? 0}</strong>
                 </div>
                 <div>
                   <ShieldCheck size={14} />
-                  <span>Governance state</span>
-                  <strong>Controlled</strong>
+                  <span>{t('dash.governanceState')}</span>
+                  <strong>{t('dash.controlled')}</strong>
                 </div>
                 <div>
                   <TrendingUp size={14} />
-                  <span>Average score</span>
+                  <span>{t('dash.averageScore')}</span>
                   <strong>{stats?.averageScore != null ? stats.averageScore.toFixed(2) : '-'}</strong>
                 </div>
               </div>
@@ -294,15 +287,15 @@ export default function DashboardPage() {
       {stats && stats.totalEvaluations > 0 && (
         <div className="kbt-card kbt-animate-up kbt-stagger-4" style={{ padding: '16px 18px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <p style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--kbt-text-2)' }}>Overall Completion Progress</p>
+            <p style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--kbt-text-2)' }}>{t('dash.overallProgress')}</p>
             <span className="kbt-score-value kbt-counter">{completionPct}%</span>
           </div>
           <div className="kbt-progress">
             <div className="kbt-progress-fill" style={{ width: `${completionPct}%` }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 9 }}>
-            <span style={{ fontSize: '0.7rem', color: 'var(--kbt-text-3)' }}>{stats.completedEvaluations} completed</span>
-            <span style={{ fontSize: '0.7rem', color: 'var(--kbt-text-3)' }}>{stats.pendingEvaluations} pending</span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--kbt-text-3)' }}>{stats.completedEvaluations} {t('dash.completedCount')}</span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--kbt-text-3)' }}>{stats.pendingEvaluations} {t('dash.pendingCount')}</span>
           </div>
         </div>
       )}
@@ -311,7 +304,7 @@ export default function DashboardPage() {
         <div className="amw-exec-insight">
           <CalendarClock size={18} />
           <div>
-            <span>Cycle deadline</span>
+            <span>{t('dash.cycleDeadline')}</span>
             <strong>{executiveInsights.deadlineName}</strong>
           </div>
           <em>{executiveInsights.daysLeft == null ? 'n/a' : `${executiveInsights.daysLeft}d`}</em>
@@ -319,25 +312,25 @@ export default function DashboardPage() {
         <div className="amw-exec-insight">
           <AlertTriangle size={18} />
           <div>
-            <span>Highest pending risk</span>
-            <strong>{executiveInsights.riskiestDepartment?.name ?? 'No pending risk'}</strong>
+            <span>{t('dash.highestRisk')}</span>
+            <strong>{executiveInsights.riskiestDepartment?.name ?? t('dash.noPendingRisk')}</strong>
           </div>
           <em>{executiveInsights.riskiestDepartment?.count ?? 0}</em>
         </div>
         <div className="amw-exec-insight">
           <Activity size={18} />
           <div>
-            <span>Stale reviews</span>
-            <strong>Updated over 3 days ago</strong>
+            <span>{t('dash.staleReviews')}</span>
+            <strong>{t('dash.staleDesc')}</strong>
           </div>
           <em>{executiveInsights.staleCount}</em>
         </div>
         <div className="amw-exec-actions">
           <Link to="/evaluations" className="kbt-btn-outline">
-            <Send size={14} /> Review pending
+            <Send size={14} /> {t('dash.reviewPending')}
           </Link>
           <Link to="/reports" className="kbt-btn-report">
-            <BarChart2 size={14} /> Board report
+            <BarChart2 size={14} /> {t('dash.boardReport')}
           </Link>
         </div>
       </section>
@@ -349,26 +342,26 @@ export default function DashboardPage() {
           <div className="kbt-card-header">
             <span className="kbt-card-title">{t('dash.recent')}</span>
             <Link to="/evaluations" className="kbt-btn-ghost" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem', gap: 4 }}>
-              View All <ArrowUpRight size={11} />
+              {t('common.viewAll')} <ArrowUpRight size={11} />
             </Link>
           </div>
           {!recent.length ? (
             <EmptyState
               compact
               icon={ClipboardList}
-              title="No evaluations yet"
-              description="Once reviews are assigned and scored, they'll appear here with status and scores."
-              action={isAdmin || isManager ? { label: 'Create evaluation', to: '/evaluations' } : undefined}
+              title={t('dash.noEvalsTitle')}
+              description={t('dash.noEvalsDesc')}
+              action={isAdmin || isManager ? { label: t('dash.createEval'), to: '/evaluations' } : undefined}
             />
           ) : (
             <table className="kbt-table">
               <thead>
                 <tr>
-                  <th>Employee</th>
-                  <th>Cycle</th>
-                  <th>Type</th>
-                  <th>Status</th>
-                  <th style={{ textAlign: 'right' }}>Score</th>
+                  <th>{t('table.employee')}</th>
+                  <th>{t('table.cycle')}</th>
+                  <th>{t('table.type')}</th>
+                  <th>{t('table.status')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('table.score')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -386,8 +379,8 @@ export default function DashboardPage() {
                       </div>
                     </td>
                     <td style={{ color: 'var(--kbt-text-2)', fontSize: '0.8125rem' }}>{ev.cycle?.name}</td>
-                    <td style={{ color: 'var(--kbt-text-3)', fontSize: '0.75rem' }}>{getTypeLabel(ev.type)}</td>
-                    <td><span className={STATUS_CLS[ev.status] ?? 'kbt-badge-neutral'}>{STATUS_LBL[ev.status] ?? ev.status}</span></td>
+                    <td style={{ color: 'var(--kbt-text-3)', fontSize: '0.75rem' }}>{typeLabel(ev.type)}</td>
+                    <td><span className={STATUS_CLS[ev.status] ?? 'kbt-badge-neutral'}>{statusLabel(ev.status)}</span></td>
                     <td style={{ textAlign: 'right' }}>{ev.totalScore != null ? <span className="kbt-score-value">{ev.totalScore.toFixed(2)}</span> : <span style={{ color: 'var(--kbt-text-3)' }}>-</span>}</td>
                   </tr>
                 ))}
@@ -398,14 +391,14 @@ export default function DashboardPage() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div className="kbt-card">
-            <div className="kbt-card-header"><span className="kbt-card-title">Quick Actions</span></div>
+            <div className="kbt-card-header"><span className="kbt-card-title">{t('dash.quickActions')}</span></div>
             <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[
-                { label: 'View My Evaluations', icon: <ClipboardList size={14} />, to: '/evaluations' },
-                { label: 'Browse Templates', icon: <LayoutTemplate size={14} />, to: '/templates' },
-                { label: 'Evaluation Cycles', icon: <RefreshCw size={14} />, to: '/cycles' },
-                { label: 'View Reports', icon: <BarChart2 size={14} />, to: '/reports' },
-                { label: 'User Guidelines', icon: <BookOpen size={14} />, to: '/guidelines' },
+                { label: t('dash.viewMyEvals'), icon: <ClipboardList size={14} />, to: '/evaluations' },
+                { label: t('dash.browseTemplates'), icon: <LayoutTemplate size={14} />, to: '/templates' },
+                { label: t('dash.evalCycles'), icon: <RefreshCw size={14} />, to: '/cycles' },
+                { label: t('dash.viewReports'), icon: <BarChart2 size={14} />, to: '/reports' },
+                { label: t('dash.userGuidelines'), icon: <BookOpen size={14} />, to: '/guidelines' },
               ].map(({ label, icon, to }) => (
                 <Link key={to} to={to} style={{ textDecoration: 'none' }}>
                   <div className="kbt-action-row">
@@ -421,30 +414,30 @@ export default function DashboardPage() {
           <div className="amw-corporate-card">
             <div className="amw-corporate-card-head">
               <ShieldCheck size={17} />
-              <span>Corporate Control</span>
+              <span>{t('dash.corporateControl')}</span>
             </div>
             <div className="amw-corporate-list">
               <div>
                 <ShieldCheck size={14} />
-                <span>Role-based access</span>
-                <strong>Enforced</strong>
+                <span>{t('dash.roleAccess')}</span>
+                <strong>{t('dash.enforced')}</strong>
               </div>
               <div>
                 <FileCheck2 size={14} />
-                <span>Consent workflow</span>
-                <strong>Tracked</strong>
+                <span>{t('dash.consentWorkflow')}</span>
+                <strong>{t('dash.tracked')}</strong>
               </div>
               <div>
                 <ClipboardList size={14} />
-                <span>Evidence record</span>
-                <strong>Retained</strong>
+                <span>{t('dash.evidenceRecord')}</span>
+                <strong>{t('dash.retained')}</strong>
               </div>
             </div>
           </div>
 
           <div className="kbt-card">
             <div className="kbt-card-header">
-              <span className="kbt-card-title">System Status</span>
+              <span className="kbt-card-title">{t('dash.systemStatus')}</span>
               {health?.version && (
                 <span style={{ fontSize: '0.65rem', color: 'var(--kbt-text-3)', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
                   v{health.version}
@@ -453,22 +446,22 @@ export default function DashboardPage() {
             </div>
             <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                { label: 'API Server',    up: health ? !healthDown && health.services?.api === 'ok' : null },
-                { label: 'Database',      up: health ? !healthDown && health.services?.database === 'ok' : null },
-                { label: 'Auth Service',  up: health ? !healthDown && health.services?.auth === 'ok' : null },
+                { label: t('dash.apiServer'), up: health ? !healthDown && health.services?.api === 'ok' : null },
+                { label: t('dash.database'),  up: health ? !healthDown && health.services?.database === 'ok' : null },
+                { label: t('dash.authService'), up: health ? !healthDown && health.services?.auth === 'ok' : null },
               ].map(({ label, up }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)', fontWeight: 700 }}>{label}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {up === true && <><span className="kbt-dot-live" /><span style={{ fontSize: '0.6875rem', color: 'var(--m-light-blue)', fontWeight: 900 }}>Online</span></>}
-                    {up === false && <><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--kbt-error)', display: 'inline-block' }} /><span style={{ fontSize: '0.6875rem', color: 'var(--kbt-error)', fontWeight: 900 }}>Offline</span></>}
-                    {up == null && <><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--kbt-warning)', display: 'inline-block' }} /><span style={{ fontSize: '0.6875rem', color: 'var(--kbt-warning)', fontWeight: 900 }}>Checking…</span></>}
+                    {up === true && <><span className="kbt-dot-live" /><span style={{ fontSize: '0.6875rem', color: 'var(--m-light-blue)', fontWeight: 900 }}>{t('dash.online')}</span></>}
+                    {up === false && <><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--kbt-error)', display: 'inline-block' }} /><span style={{ fontSize: '0.6875rem', color: 'var(--kbt-error)', fontWeight: 900 }}>{t('dash.offline')}</span></>}
+                    {up == null && <><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--kbt-warning)', display: 'inline-block' }} /><span style={{ fontSize: '0.6875rem', color: 'var(--kbt-warning)', fontWeight: 900 }}>{t('dash.checking')}</span></>}
                   </div>
                 </div>
               ))}
               <div className="amw-health-meta">
-                <span>Latency <strong>{health?.latencyMs ?? '-'}ms</strong></span>
-                <span>Checked <strong>{health?.checkedAt ? new Date(health.checkedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</strong></span>
+                <span>{t('dash.latency')} <strong>{health?.latencyMs ?? '-'}ms</strong></span>
+                <span>{t('dash.checked')} <strong>{health?.checkedAt ? new Date(health.checkedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</strong></span>
               </div>
               {health?.requestId && (
                 <div className="amw-health-request" title={health.requestId}>

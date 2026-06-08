@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { ArrowRight, BarChart3, Check, ClipboardList, LayoutTemplate, RefreshCw, Rocket, type LucideIcon } from 'lucide-react'
 import api from '@/lib/api'
+import { useT } from '@/i18n/languageContext'
 import type { Cycle, Evaluation, Template } from '@/types'
 
 interface Step {
@@ -14,6 +15,7 @@ interface Step {
 }
 
 export default function GettingStarted({ canManage }: { canManage: boolean }) {
+  const t = useT()
   const { data: templates } = useQuery<Template[]>({ queryKey: ['templates'], queryFn: () => api.get('/templates').then(r => r.data) })
   const { data: cycles }    = useQuery<Cycle[]>({ queryKey: ['cycles'], queryFn: () => api.get('/cycles').then(r => r.data) })
   const { data: evaluations } = useQuery<Evaluation[]>({ queryKey: ['evaluations'], queryFn: () => api.get('/evaluations').then(r => r.data) })
@@ -24,10 +26,10 @@ export default function GettingStarted({ canManage }: { canManage: boolean }) {
   const hasScored    = (evaluations ?? []).some(e => e.totalScore != null)
 
   const steps: Step[] = [
-    { id: 'tpl',  label: 'Create a review template', hint: 'Define weighted sections and competencies', to: '/templates',   icon: LayoutTemplate, done: hasTemplates },
-    { id: 'cyc',  label: 'Open a review cycle',       hint: 'Set the period and attach a template',      to: '/cycles',      icon: RefreshCw,      done: hasCycles },
-    { id: 'eval', label: 'Run an evaluation',         hint: 'Assign and score an employee review',       to: '/evaluations', icon: ClipboardList,  done: hasEvals },
-    { id: 'rpt',  label: 'Review performance insights', hint: 'Explore trends, distribution, and BI',     to: '/reports',     icon: BarChart3,      done: hasScored },
+    { id: 'tpl',  label: t('onboard.tpl.label'),  hint: t('onboard.tpl.hint'),  to: '/templates',   icon: LayoutTemplate, done: hasTemplates },
+    { id: 'cyc',  label: t('onboard.cyc.label'),  hint: t('onboard.cyc.hint'),  to: '/cycles',      icon: RefreshCw,      done: hasCycles },
+    { id: 'eval', label: t('onboard.eval.label'), hint: t('onboard.eval.hint'), to: '/evaluations', icon: ClipboardList,  done: hasEvals },
+    { id: 'rpt',  label: t('onboard.rpt.label'),  hint: t('onboard.rpt.hint'),  to: '/reports',     icon: BarChart3,      done: hasScored },
   ]
 
   const doneCount = steps.filter(s => s.done).length
@@ -43,12 +45,12 @@ export default function GettingStarted({ canManage }: { canManage: boolean }) {
         <div className="amw-onboard-title">
           <div className="amw-onboard-badge"><Rocket size={18} /></div>
           <div>
-            <span>Getting Started</span>
-            <strong>Finish setting up AMW Command</strong>
+            <span>{t('onboard.gettingStarted')}</span>
+            <strong>{t('onboard.finishSetup')}</strong>
           </div>
         </div>
         <div className="amw-onboard-progress">
-          <span>{doneCount}/{steps.length} complete</span>
+          <span>{doneCount}/{steps.length} {t('onboard.complete')}</span>
           <div className="kbt-progress" style={{ width: 140 }}>
             <div className="kbt-progress-fill" style={{ width: `${pct}%` }} />
           </div>
