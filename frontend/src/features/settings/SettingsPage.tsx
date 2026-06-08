@@ -4,11 +4,12 @@ import ThemeToggle from '@/components/ThemeToggle'
 import Toggle from '@/components/Toggle'
 import { usePreferences, type Preferences } from '@/hooks/usePreferences'
 import { useT } from '@/i18n/languageContext'
+import type { TranslationKey } from '@/i18n/translations'
 
 const WORKSPACE_OPTS = [
-  { value: 'dashboard', label: 'Dashboard overview' },
-  { value: 'evaluations', label: 'Evaluations' },
-  { value: 'reports', label: 'Reports' },
+  { value: 'dashboard', labelKey: 'opt.workspace.dashboard' },
+  { value: 'evaluations', labelKey: 'opt.workspace.evaluations' },
+  { value: 'reports', labelKey: 'opt.workspace.reports' },
 ] as const
 
 const LANGUAGE_OPTS = [
@@ -18,9 +19,9 @@ const LANGUAGE_OPTS = [
 ] as const
 
 const DEADLINE_OPTS = [
-  { value: 'priority', label: 'Priority only' },
-  { value: 'all', label: 'All deadlines' },
-  { value: 'off', label: 'Off' },
+  { value: 'priority', labelKey: 'opt.deadline.priority' },
+  { value: 'all', labelKey: 'opt.deadline.all' },
+  { value: 'off', labelKey: 'opt.deadline.off' },
 ] as const
 
 export default function SettingsPage() {
@@ -42,7 +43,7 @@ export default function SettingsPage() {
 
   function Select<K extends keyof Preferences>({ field, options }: {
     field: K
-    options: readonly { value: Preferences[K]; label: string }[]
+    options: readonly { value: Preferences[K]; label?: string; labelKey?: TranslationKey }[]
   }) {
     return (
       <select
@@ -50,7 +51,7 @@ export default function SettingsPage() {
         value={prefs[field] as string}
         onChange={e => update(field, e.target.value as Preferences[K])}
       >
-        {options.map(o => <option key={String(o.value)} value={String(o.value)}>{o.label}</option>)}
+        {options.map(o => <option key={String(o.value)} value={String(o.value)}>{o.labelKey ? t(o.labelKey) : o.label}</option>)}
       </select>
     )
   }
@@ -68,9 +69,9 @@ export default function SettingsPage() {
 
       <section className="amw-settings-hero">
         <div>
-          <span>Display Mode</span>
-          <h2>Personal workspace controls</h2>
-          <p>Changes apply instantly and are remembered on this device.</p>
+          <span>{t('set.displayMode')}</span>
+          <h2>{t('set.personalControls')}</h2>
+          <p>{t('set.changesApply')}</p>
         </div>
         <div className="amw-settings-theme">
           <ThemeToggle />
@@ -80,46 +81,46 @@ export default function SettingsPage() {
       <div className="amw-settings-grid">
         <section className="kbt-card amw-settings-panel">
           <div className="amw-settings-panel-head">
-            <span>General</span>
-            <strong>User Preferences</strong>
+            <span>{t('set.general')}</span>
+            <strong>{t('set.userPrefs')}</strong>
           </div>
           <div className="amw-settings-list">
-            <Row icon={<Monitor size={16} />} label="Default workspace" hint="Landing page after sign-in"
+            <Row icon={<Monitor size={16} />} label={t('set.defaultWorkspace')} hint={t('set.defaultWorkspaceHint')}
               control={<Select field="defaultWorkspace" options={WORKSPACE_OPTS} />} />
-            <Row icon={<Languages size={16} />} label="Language" hint="Interface language preference"
+            <Row icon={<Languages size={16} />} label={t('set.language')} hint={t('set.languageHint')}
               control={<Select field="language" options={LANGUAGE_OPTS} />} />
-            <Row icon={<UserCog size={16} />} label="Role view" hint="Navigation scoped to your role"
-              control={<span className="amw-settings-static">Auto · role-based</span>} />
+            <Row icon={<UserCog size={16} />} label={t('set.roleView')} hint={t('set.roleViewHint')}
+              control={<span className="amw-settings-static">{t('set.roleViewStatic')}</span>} />
           </div>
         </section>
 
         <section className="kbt-card amw-settings-panel">
           <div className="amw-settings-panel-head">
-            <span>Alerts</span>
-            <strong>Notifications</strong>
+            <span>{t('set.alerts')}</span>
+            <strong>{t('set.notifications')}</strong>
           </div>
           <div className="amw-settings-list">
-            <Row icon={<Bell size={16} />} label="Evaluation reminders" hint="Nudges for pending reviews"
-              control={<Toggle label="Evaluation reminders" checked={prefs.evaluationReminders} onChange={v => update('evaluationReminders', v)} />} />
-            <Row icon={<ShieldCheck size={16} />} label="Report updates" hint="When new analytics are ready"
-              control={<Toggle label="Report updates" checked={prefs.reportUpdates} onChange={v => update('reportUpdates', v)} />} />
-            <Row icon={<Eye size={16} />} label="Deadline warnings" hint="How aggressively to warn"
+            <Row icon={<Bell size={16} />} label={t('set.evalReminders')} hint={t('set.evalRemindersHint')}
+              control={<Toggle label={t('set.evalReminders')} checked={prefs.evaluationReminders} onChange={v => update('evaluationReminders', v)} />} />
+            <Row icon={<ShieldCheck size={16} />} label={t('set.reportUpdates')} hint={t('set.reportUpdatesHint')}
+              control={<Toggle label={t('set.reportUpdates')} checked={prefs.reportUpdates} onChange={v => update('reportUpdates', v)} />} />
+            <Row icon={<Eye size={16} />} label={t('set.deadlineWarnings')} hint={t('set.deadlineWarningsHint')}
               control={<Select field="deadlineWarnings" options={DEADLINE_OPTS} />} />
           </div>
         </section>
 
         <section className="kbt-card amw-settings-panel">
           <div className="amw-settings-panel-head">
-            <span>Account</span>
-            <strong>Privacy &amp; Access</strong>
+            <span>{t('set.account')}</span>
+            <strong>{t('set.privacyAccess')}</strong>
           </div>
           <div className="amw-settings-list">
-            <Row icon={<LockKeyhole size={16} />} label="Session protection" hint="Auto-lock idle sessions"
-              control={<Toggle label="Session protection" checked={prefs.sessionProtection} onChange={v => update('sessionProtection', v)} />} />
-            <Row icon={<ShieldCheck size={16} />} label="Audit visibility" hint="Who can see your activity"
-              control={<span className="amw-settings-static">Role based</span>} />
-            <Row icon={<Eye size={16} />} label="Personal data mode" hint="PDPA-aware data handling"
-              control={<Toggle label="Personal data mode" checked={prefs.personalDataMode} onChange={v => update('personalDataMode', v)} />} />
+            <Row icon={<LockKeyhole size={16} />} label={t('set.sessionProtection')} hint={t('set.sessionProtectionHint')}
+              control={<Toggle label={t('set.sessionProtection')} checked={prefs.sessionProtection} onChange={v => update('sessionProtection', v)} />} />
+            <Row icon={<ShieldCheck size={16} />} label={t('set.auditVisibility')} hint={t('set.auditVisibilityHint')}
+              control={<span className="amw-settings-static">{t('set.auditVisibilityStatic')}</span>} />
+            <Row icon={<Eye size={16} />} label={t('set.personalData')} hint={t('set.personalDataHint')}
+              control={<Toggle label={t('set.personalData')} checked={prefs.personalDataMode} onChange={v => update('personalDataMode', v)} />} />
           </div>
         </section>
       </div>
