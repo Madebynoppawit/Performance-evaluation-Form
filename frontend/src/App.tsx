@@ -28,7 +28,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const [splashDone, setSplashDone] = useState(false)
+  const [splashDone, setSplashDone] = useState(() => window.sessionStorage.getItem('amw-skip-splash') === 'true')
   const handleSplashDone = useCallback(() => setSplashDone(true), [])
 
   return (

@@ -16,8 +16,8 @@ const SCORE_BG = (score: number) =>
   score >= 4 ? 'rgba(129,196,255,0.15)' : score === 3 ? 'rgba(10,110,209,0.15)' : 'rgba(237,28,36,0.12)'
 
 const CRITERIA: { labelKey: TranslationKey; scores: Record<number, string> }[] = [
-  { labelKey: 'att.leave', scores: { 5: '0 days', 4: '1-2 days', 3: '3-4 days', 2: '5-6 days', 1: '>7 days' } },
-  { labelKey: 'att.late', scores: { 5: '<=6 times', 4: '<=8 times', 3: '<=10 times', 2: '<=12 times', 1: '>14 times' } },
+  { labelKey: 'att.leave', scores: { 5: '0 days', 4: '1-2 days', 3: '3-4 days', 2: '5-6 days', 1: '>=7 days' } },
+  { labelKey: 'att.late', scores: { 5: '1-3 times', 4: '4-5 times', 3: '6-7 times', 2: '8-9 times', 1: '>=10 times' } },
   { labelKey: 'att.disciplinary', scores: { 5: 'None', 4: 'None', 3: 'None', 2: 'Warning x1', 1: '>2 or Suspend' } },
 ]
 

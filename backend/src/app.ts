@@ -16,9 +16,10 @@ import cycleRoutes from './routes/cycles'
 import reportRoutes from './routes/reports'
 import dashboardRoutes from './routes/dashboard'
 import userRoutes from './routes/users'
+import swaggerRoutes from './docs/swagger'
 import { prisma } from './lib/prisma'
+import { APP_VERSION } from './config/version'
 
-export const APP_VERSION = '0.1.0'
 
 /** The configured Express app — no server is started here, so it can be
     imported directly by integration tests (supertest). */
@@ -47,6 +48,11 @@ export function createApp() {
       status: 'ok',
       version: APP_VERSION,
       env: env.NODE_ENV,
+      release: {
+        channel: env.APP_RELEASE_CHANNEL,
+        aiEnabled: env.aiFeaturesEnabled,
+        aiProvider: env.AI_PROVIDER,
+      },
       checkedAt: new Date().toISOString(),
       requestId: req.requestId,
     })
@@ -66,6 +72,11 @@ export function createApp() {
       status,
       version: APP_VERSION,
       env: env.NODE_ENV,
+      release: {
+        channel: env.APP_RELEASE_CHANNEL,
+        aiEnabled: env.aiFeaturesEnabled,
+        aiProvider: env.AI_PROVIDER,
+      },
       checkedAt,
       requestId: req.requestId,
       services: {
@@ -83,6 +94,7 @@ export function createApp() {
   app.get('/ready', healthPayload)
   app.get('/api/ready', healthPayload)
 
+  app.use('/api', swaggerRoutes)
   app.use('/api', noStoreApiResponses, apiLimiter, auditLog)
   app.use('/api/auth', authLimiter, authRoutes)
   app.use('/api/evaluations', evaluationRoutes)

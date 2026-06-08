@@ -4,6 +4,7 @@ import { calculateAttendanceScores } from './attendanceService'
 import { calculateCompetencyScore } from './competencyService'
 import { calculateGoalScore } from './goalService'
 import { calculateTotalScore } from './evaluationService'
+import { calculateTrainingScore } from './trainingService'
 
 describe('scoring services', () => {
   it('calculates weighted goal scores from completed entries only', () => {
@@ -40,10 +41,22 @@ describe('scoring services', () => {
 
     assert.deepEqual(scores, {
       leaveScore: 3,
-      lateScore: 3,
+      lateScore: 2,
       disciplinaryScore: 5,
-      attendanceAvgScore: 11 / 3,
+      attendanceAvgScore: 10 / 3,
     })
+  })
+
+  it('uses manager-provided late attendance thresholds', () => {
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 0 }).lateScore, 5)
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 3 }).lateScore, 5)
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 4 }).lateScore, 4)
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 5 }).lateScore, 4)
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 6 }).lateScore, 3)
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 7 }).lateScore, 3)
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 8 }).lateScore, 2)
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 9 }).lateScore, 2)
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 10 }).lateScore, 1)
   })
 
   it('leaves omitted attendance components undefined', () => {
@@ -53,6 +66,16 @@ describe('scoring services', () => {
       disciplinaryScore: undefined,
       attendanceAvgScore: undefined,
     })
+  })
+})
+
+describe('training scoring', () => {
+  it('scores training hours against minimum-hour bands', () => {
+    assert.equal(calculateTrainingScore({ minimumHours: 10, actualHours: 13 }).score, 5)
+    assert.equal(calculateTrainingScore({ minimumHours: 10, actualHours: 11 }).score, 4)
+    assert.equal(calculateTrainingScore({ minimumHours: 10, actualHours: 10 }).score, 3)
+    assert.equal(calculateTrainingScore({ minimumHours: 10, actualHours: 7 }).score, 2)
+    assert.equal(calculateTrainingScore({ minimumHours: 10, actualHours: 6.9 }).score, 1)
   })
 })
 

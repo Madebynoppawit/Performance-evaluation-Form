@@ -11,8 +11,15 @@ interface Props {
 const emptyGoal = (): GoalEntry => ({
   goal: '', goalDescription: '', weight: 20,
   targetRating5: '', targetRating4: '', targetRating3: '', targetRating2: '', targetRating1: '',
+  wig: '', kpiCategory: '',
   result: '', evaluationScore: null, employeeComment: '', superiorComment: '', order: 1,
 })
+
+const WIG_OPTIONS = [
+  { value: 'WIG_1_CUSTOMER', label: 'WIG-1 Customer Focus' },
+  { value: 'WIG_2_PEOPLE', label: 'WIG-2 People our Asset' },
+  { value: 'WIG_3_RESULT', label: 'WIG-3 Company Result' },
+]
 
 export default function GoalSettingSection({ goals, readOnly, onChange }: Props) {
   const t = useT()
@@ -106,6 +113,18 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
             <div style={{ gridColumn: '1/-1' }}>
               <label className="kbt-label">{t('gs.bDesc')}</label>
               <textarea value={goal.goalDescription ?? ''} rows={2} onChange={e => update(idx, 'goalDescription', e.target.value)} disabled={readOnly} className="kbt-textarea" placeholder={t('gs.phDesc')} />
+            </div>
+
+            <div>
+              <label className="kbt-label kbt-label-required">WIG Strategic Pillar</label>
+              <select value={goal.wig ?? ''} onChange={e => update(idx, 'wig', e.target.value)} disabled={readOnly} className="kbt-select">
+                <option value="">Select WIG</option>
+                {WIG_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="kbt-label kbt-label-required">KPI Category</label>
+              <input value={goal.kpiCategory ?? ''} onChange={e => update(idx, 'kpiCategory', e.target.value)} disabled={readOnly} className="kbt-input" placeholder="Customer / People / Business performance" />
             </div>
 
             <div style={{ gridColumn: '1/-1' }}>

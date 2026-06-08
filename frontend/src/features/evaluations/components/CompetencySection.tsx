@@ -42,6 +42,11 @@ export default function CompetencySection({ position, scores, readOnly, onChange
   const avg = validScores.length
     ? (validScores.reduce((s, c) => s + c.score!, 0) / validScores.length).toFixed(2)
     : null
+  const groups = [
+    { title: 'Core Competency', items: competencies.filter(c => c.id.startsWith('CC')) },
+    { title: 'Management Competency', items: competencies.filter(c => c.id.startsWith('MC')) },
+    { title: 'Technical Competency', items: competencies.filter(c => c.id.startsWith('TC')) },
+  ].filter(group => group.items.length > 0)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -73,15 +78,19 @@ export default function CompetencySection({ position, scores, readOnly, onChange
           <span style={{ fontSize: '0.625rem', fontWeight: 700, color: 'var(--kbt-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center', width: 160 }}>{t('cs.rating')}</span>
         </div>
 
-        {competencies.map((c, idx) => {
+        {groups.map((group) => (
+          <div key={group.title} style={{ border: '1px solid var(--kbt-border)', borderTop: 'none' }}>
+            <div style={{ padding: '9px 14px', background: 'rgba(10,110,209,0.06)', color: 'var(--kbt-text)', fontSize: '0.78rem', fontWeight: 800, letterSpacing: '0.02em' }}>
+              {group.title}
+            </div>
+            {group.items.map((c, idx) => {
           const current = getScore(c.id)
           return (
             <div key={c.id} style={{
               display: 'grid', gridTemplateColumns: '2fr 3fr auto', gap: 8,
               padding: '12px 14px', alignItems: 'center',
               background: idx % 2 === 0 ? 'rgba(255,255,255,0.015)' : 'transparent',
-              border: '1px solid var(--kbt-border)',
-              borderTop: 'none',
+              borderTop: '1px solid var(--kbt-border)',
             }}>
               <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--kbt-text-2)' }}>{c.name}</p>
               <p style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)', lineHeight: 1.5 }}>{c.descriptions[position]}</p>
@@ -129,6 +138,8 @@ export default function CompetencySection({ position, scores, readOnly, onChange
             </div>
           )
         })}
+          </div>
+        ))}
       </div>
     </div>
   )

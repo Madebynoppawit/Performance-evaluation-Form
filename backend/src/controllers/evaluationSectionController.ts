@@ -4,9 +4,16 @@ import { AuthRequest } from '../middleware/auth'
 import * as goalService from '../services/goalService'
 import * as competencyService from '../services/competencyService'
 import * as attendanceService from '../services/attendanceService'
+import * as trainingService from '../services/trainingService'
 import * as sectionService from '../services/evaluationSectionService'
 
 const nullableText = z.string().trim().max(2000).nullable().optional()
+const nullableNumberText = z.string()
+  .trim()
+  .max(100)
+  .regex(/^$|^\d+(\.\d+)?$/, 'Must be a number')
+  .nullable()
+  .optional()
 
 const goalsSchema = z.object({
   goals: z.array(z.object({
@@ -14,11 +21,13 @@ const goalsSchema = z.object({
     goal: z.string().trim().min(1).max(500),
     goalDescription: nullableText,
     weight: z.number().min(0).max(100),
-    targetRating5: nullableText,
-    targetRating4: nullableText,
-    targetRating3: nullableText,
-    targetRating2: nullableText,
-    targetRating1: nullableText,
+    targetRating5: nullableNumberText,
+    targetRating4: nullableNumberText,
+    targetRating3: nullableNumberText,
+    targetRating2: nullableNumberText,
+    targetRating1: nullableNumberText,
+    wig: z.enum(['WIG_1_CUSTOMER', 'WIG_2_PEOPLE', 'WIG_3_RESULT']).nullable().optional(),
+    kpiCategory: z.string().trim().max(200).nullable().optional(),
     result: nullableText,
     evaluationScore: z.number().int().min(1).max(5).nullable().optional(),
     employeeComment: nullableText,
@@ -45,6 +54,12 @@ const attendanceSchema = z.object({
   ]).nullable().optional(),
 })
 
+const trainingSchema = z.object({
+  minimumHours: z.number().min(0).nullable().optional(),
+  actualHours: z.number().min(0).nullable().optional(),
+  behaviorNote: nullableText,
+})
+
 const commentSchema = z.object({
   strengths: nullableText,
   improvements: nullableText,
@@ -62,6 +77,17 @@ const salarySchema = z.object({
 
 const acknowledgementSchema = z.object({
   signerType: z.enum(['employee', 'evaluator', 'director']),
+})
+
+const summarySchema = z.object({
+  evaluateeName: z.string().trim().max(200).nullable().optional(),
+  evaluationReason: z.enum(['PROBATION', 'ANNUAL', 'OTHER']).nullable().optional(),
+  evaluationReasonOther: nullableText,
+  evaluatorTitle: z.string().trim().max(200).nullable().optional(),
+  performanceGrade: z.enum([
+    'EXCELLENT', 'ABOVE_STANDARD', 'MEETS_STANDARD', 'ALMOST_STANDARD', 'BELOW_STANDARD',
+  ]).nullable().optional(),
+  effectiveDate: z.string().trim().min(1).nullable().optional(),
 })
 
 export async function getFullEvaluation(req: AuthRequest, res: Response, next: NextFunction) {
@@ -105,6 +131,15 @@ export async function saveAttendance(req: AuthRequest, res: Response, next: Next
   }
 }
 
+export async function saveTraining(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const body = trainingSchema.parse(req.body)
+    res.json(await trainingService.upsertTrainingScore(req.params.id, body))
+  } catch (err) {
+    next(err)
+  }
+}
+
 export async function saveComment(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const body = commentSchema.parse(req.body)
@@ -127,6 +162,15 @@ export async function acknowledge(req: AuthRequest, res: Response, next: NextFun
   try {
     const body = acknowledgementSchema.parse(req.body)
     res.json(await sectionService.signAcknowledgement(req.params.id, body.signerType, req.user!))
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function saveSummary(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const body = summarySchema.parse(req.body)
+    res.json(await sectionService.upsertEvaluationSummary(req.params.id, body))
   } catch (err) {
     next(err)
   }

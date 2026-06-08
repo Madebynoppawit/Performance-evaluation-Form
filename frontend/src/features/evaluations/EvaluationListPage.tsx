@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { AlertTriangle, ArrowUpRight, CalendarClock, CheckCircle2, FileCheck2, Gauge, Plus, RefreshCw, Search, Send, Trash2, TrendingUp, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import api from '@/lib/api'
-import type { Cycle, Evaluation, EvaluationType, User } from '@/types'
+import type { Cycle, Evaluation, EvaluationType, Position, User } from '@/types'
 import { formatDate } from '@/lib/utils'
 import { SkeletonMetricCard, SkeletonTableRows } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
@@ -21,6 +21,10 @@ const STATUS: Record<string, { cls: string; label: string }> = {
   REVIEWED: { cls: 'kbt-badge-success', label: 'Reviewed' },
   CLOSED: { cls: 'kbt-badge-neutral', label: 'Closed' },
 }
+
+/* Only supervisory levels (หัวหน้างานขึ้นไป) may act as the evaluator; the
+   evaluatee can be anyone. Kept in sync with the backend guard. */
+const EVALUATOR_POSITIONS: Position[] = ['DIRECTOR_UP', 'MANAGER', 'SUPERVISOR']
 
 export default function EvaluationListPage() {
   const qc = useQueryClient()
@@ -56,11 +60,17 @@ export default function EvaluationListPage() {
     enabled: isAdmin && showCreateDialog,
   })
 
+  // Evaluator must be a supervisor/manager/director; evaluatee can be anyone.
+  const evaluatorUsers = useMemo(
+    () => users.filter((u) => u.position && EVALUATOR_POSITIONS.includes(u.position)),
+    [users]
+  )
+
   const createMutation = useMutation({
     mutationFn: () => api.post('/evaluations', {
       cycleId: draft.cycleId || cycles[0]?.id,
       evaluateeId: draft.evaluateeId || users[0]?.id,
-      evaluatorId: draft.evaluatorId || users[0]?.id,
+      evaluatorId: draft.evaluatorId || evaluatorUsers[0]?.id,
       type: draft.type,
     }),
     onSuccess: () => {
@@ -128,7 +138,7 @@ export default function EvaluationListPage() {
   ]
   const selectedCycleId = draft.cycleId || cycles[0]?.id || ''
   const selectedEvaluateeId = draft.evaluateeId || users[0]?.id || ''
-  const selectedEvaluatorId = draft.evaluatorId || users[0]?.id || ''
+  const selectedEvaluatorId = draft.evaluatorId || evaluatorUsers[0]?.id || ''
   const canCreate = !!selectedCycleId && !!selectedEvaluateeId && !!selectedEvaluatorId && !createMutation.isPending
 
   return (
@@ -363,11 +373,12 @@ export default function EvaluationListPage() {
                   className="kbt-input"
                   value={selectedEvaluatorId}
                   onChange={(e) => setDraft((d) => ({ ...d, evaluatorId: e.target.value }))}
-                  disabled={usersLoading || createMutation.isPending}
+                  disabled={usersLoading || createMutation.isPending || evaluatorUsers.length === 0}
                   required
                 >
-                  {users.map((person) => (
-                    <option key={person.id} value={person.id}>{person.name} - {person.role}</option>
+                  {evaluatorUsers.length === 0 && <option value="">{t('eval.noEvaluators')}</option>}
+                  {evaluatorUsers.map((person) => (
+                    <option key={person.id} value={person.id}>{person.name} - {person.position ?? person.role}</option>
                   ))}
                 </select>
               </label>

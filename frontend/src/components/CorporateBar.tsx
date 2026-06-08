@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { BadgeCheck, ChevronRight, Clock3, FileLock2, Scale, ShieldCheck } from 'lucide-react'
+import { BadgeCheck, ChevronRight, Clock3, FileLock2, Scale, ShieldCheck, Sparkles } from 'lucide-react'
+import { AI_FEATURES_ENABLED, AI_PROVIDER, RELEASE_FLAVOR_LABEL } from '@/config/release'
 import { useT } from '@/i18n/languageContext'
 import type { TranslationKey } from '@/i18n/translations'
 
@@ -63,6 +64,12 @@ export default function CorporateBar() {
           <span aria-current="page">{current}</span>
         </nav>
         <span className="amw-corp-ref" title="Document reference">{ref}</span>
+        <span
+          className={`amw-corp-chip ${AI_FEATURES_ENABLED ? 'amw-corp-chip--ai' : 'amw-corp-chip--standard'}`}
+          title={`Release flavor: ${RELEASE_FLAVOR_LABEL}${AI_PROVIDER !== 'none' ? ` (${AI_PROVIDER})` : ''}`}
+        >
+          <Sparkles size={11} /> {RELEASE_FLAVOR_LABEL}
+        </span>
       </div>
       <div className="amw-corp-chips" aria-label="Governance status">
         <span className="amw-corp-synced"><Clock3 size={11} /> {t('corp.synced')} {time}</span>

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import { APP_VERSION } from '@/config/release'
 
 /* ── Boot log content ───────────────────────────────────────────────────── */
 const LOG: { t: string; msg: string; type: 'kern'|'info'|'amw'|'ok'|'blank'|'title'|'login'|'law'|'lawbox' }[] = [
-  { t:'[    0.000000]', msg:'Booting AMW Command v0.1.0-gpe (Grand Prix Edition)', type:'kern' },
+  { t:'[    0.000000]', msg:`Booting AMW Command v${APP_VERSION} (Release Candidate)`, type:'kern' },
   { t:'[    0.001423]', msg:'BIOS: UEFI 2.80 · Atelier AMW · Signed-off: Paris', type:'info' },
   { t:'[    0.018234]', msg:'CPU: AMW Octacore Performance @ 4.200GHz, 32T', type:'info' },
   { t:'[    0.034512]', msg:'Memory: 65536MB DDR5-6800 ECC · Registered', type:'info' },
@@ -63,7 +64,7 @@ const LOG: { t: string; msg: string; type: 'kern'|'info'|'amw'|'ok'|'blank'|'tit
   { t:'[    4.888890]', msg:'[  OK  ] Started Legal Compliance Layer', type:'ok' },
   { t:'[    4.999901]', msg:'[  OK  ] Reached target Grand Prix Ready', type:'ok' },
   { t:'[    5.111012]', msg:'', type:'blank' },
-  { t:'[    5.222123]', msg:'AMW Command v0.1.0 · Grand Prix Edition', type:'title' },
+  { t:'[    5.222123]', msg:`AMW Command v${APP_VERSION} · Release Candidate`, type:'title' },
   { t:'[    5.333234]', msg:'Atelier AMW · Paris · Monaco · Le Mans', type:'title' },
   { t:'            ', msg:'', type:'blank' },
   { t:'amw login:', msg:' ', type:'login' },
@@ -325,7 +326,7 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
 
       <div style={{ position:'absolute', bottom:14, left:'50%', transform:'translateX(-50%)', opacity:step>=2?0.4:0, transition:'opacity 0.4s ease 1.2s', whiteSpace:'nowrap' }}>
         <span style={{ fontFamily:'"JetBrains Mono",monospace', fontSize:'0.55rem', letterSpacing:'0.14em', color:'rgba(201,168,76,0.9)' }}>
-          AMW PERFORMANCE  ·  v0.1.0  ·  GRAND PRIX EDITION
+          AMW PERFORMANCE  ·  v{APP_VERSION}  ·  RELEASE CANDIDATE
         </span>
       </div>
 

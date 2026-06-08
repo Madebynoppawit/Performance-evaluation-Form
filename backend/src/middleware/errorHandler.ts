@@ -31,5 +31,6 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
   if (status >= 500) reportError(err)
 
   const message = err instanceof Error ? err.message : 'Unexpected server error'
-  res.status(status).json({ message, requestId: req.requestId })
+  const details = (err as { details?: unknown }).details
+  res.status(status).json({ message, requestId: req.requestId, ...(details ? { details } : {}) })
 }

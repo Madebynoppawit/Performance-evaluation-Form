@@ -7,11 +7,12 @@ describe('getCompetenciesForPosition', () => {
 
     expect(competencies.map((c) => c.id)).toContain('MC1')
     expect(competencies.map((c) => c.id)).toContain('MC2')
+    expect(competencies.map((c) => c.id)).toContain('TCM1')
   })
 
-  it('excludes management competencies for production staff', () => {
+  it('uses staff technical competencies for production staff', () => {
     const competencies = getCompetenciesForPosition('PRODUCTION_STAFF')
 
-    expect(competencies.map((c) => c.id)).toEqual(['CC1', 'CC2', 'CC3', 'CC4'])
+    expect(competencies.map((c) => c.id)).toEqual(['CC1', 'CC2', 'CC3', 'CC4', 'TCP1', 'TCP2', 'TCP3', 'TCP4'])
   })
 })

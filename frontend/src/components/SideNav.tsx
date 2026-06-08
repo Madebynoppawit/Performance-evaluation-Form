@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { BarChart2, BookOpen, ClipboardList, FileJson2, LayoutDashboard, LayoutTemplate, RefreshCw, Settings, UserRound } from 'lucide-react'
+import { APP_VERSION } from '@/config/release'
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/i18n/languageContext'
 import type { TranslationKey } from '@/i18n/translations'
@@ -149,7 +150,7 @@ export default function SideNav() {
           boxShadow: '0 0 24px rgba(10,110,209,0.06)',
         }}>
           <p style={{ fontSize: '0.6rem', color: 'var(--kbt-text-3)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 800 }}>
-            v0.1.0 / AMW Command
+            v{APP_VERSION} / AMW Command
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 9 }}>
             <span className="kbt-dot-live" />

@@ -1,0 +1,65 @@
+name: Feature request
+description: Propose a new product, API, or workflow capability
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Dashboard
+        - Evaluations
+        - Templates
+        - Cycles
+        - Reports
+        - Users
+        - API/Swagger
+        - Export CSV/PDF
+        - AI Preview
+        - DevSecOps/Operations
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: flavor
+    attributes:
+      label: Target release flavor
+      options:
+        - Standard
+        - AI Preview
+        - Both
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user, business, compliance, or operational problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the workflow, API behavior, UI state, or policy you want.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - ...
+        - ...
+        - ...
+    validations:
+      required: true
+  - type: checkboxes
+    id: risk
+    attributes:
+      label: Risk review
+      options:
+        - label: This feature does not require sensitive salary/HR data to be exposed to unauthorized users.
+        - label: If this is AI-related, it can be audited and disabled by release flavor.

@@ -94,6 +94,7 @@ const evaluation = {
 
 async function mockApi(page: Page) {
   await page.route('**/api/**', async (route) => {
+    const method = route.request().method()
     const url = new URL(route.request().url())
     const path = url.pathname.replace(/^\/api/, '')
 
@@ -115,24 +116,57 @@ async function mockApi(page: Page) {
       await route.fulfill({
         json: {
           status: 'ok',
-          version: '0.1.0',
+          version: '0.2.0-rc.1',
           env: 'e2e',
           checkedAt: '2026-06-06T10:00:00.000Z',
           latencyMs: 18,
           requestId: 'e2e-health-request',
           services: { api: 'ok', auth: 'ok', database: 'ok' },
+          release: { channel: 'standard', aiEnabled: false, aiProvider: 'none' },
         },
       })
       return
     }
 
     if (path === '/evaluations') {
+      if (method === 'POST') {
+        await route.fulfill({ status: 201, json: { ...evaluation, id: 'eval-new', status: 'DRAFT' } })
+        return
+      }
       await route.fulfill({ json: [evaluation] })
+      return
+    }
+
+    if (path === '/evaluations/eval-1' && method === 'DELETE') {
+      await route.fulfill({ status: 204, body: '' })
       return
     }
 
     if (path === '/evaluations/eval-1') {
       await route.fulfill({ json: evaluation })
+      return
+    }
+
+    if (path === '/cycles') {
+      await route.fulfill({ json: [evaluation.cycle] })
+      return
+    }
+
+    if (path === '/users') {
+      await route.fulfill({
+        json: [
+          user,
+          evaluation.evaluatee,
+          {
+            id: 'manager-2',
+            email: 'sora@amw-ems.com',
+            name: 'Sora Nishida',
+            role: 'MANAGER',
+            position: 'MANAGER',
+            department: 'Manufacturing Excellence',
+          },
+        ],
+      })
       return
     }
 
@@ -236,8 +270,18 @@ test.describe('executive frontend experience', () => {
 
     await expect(page.getByText('Review Pulse')).toBeVisible()
     await expect(page.getByText('Corporate Control')).toBeVisible()
+    await expect(page.getByRole('link', { name: 'API Docs OpenAPI' })).toBeVisible()
     await expect(page.getByRole('cell', { name: 'FY2026 Leadership Review' })).toBeVisible()
     await expectNoHorizontalOverflow(page)
+    await expectNoCriticalA11yViolations(page)
+  })
+
+  test('exposes API docs in the command palette for admins', async ({ page }) => {
+    await openAuthed(page, '/')
+
+    await page.keyboard.press('Control+K')
+    await page.getByLabel('Command palette search').fill('swagger')
+    await expect(page.getByRole('button', { name: 'API Docs Swagger UI / OpenAPI' })).toBeVisible()
     await expectNoCriticalA11yViolations(page)
   })
 
@@ -245,6 +289,8 @@ test.describe('executive frontend experience', () => {
     await openAuthed(page, '/evaluations')
 
     await expect(page.getByRole('heading', { name: 'Evaluations' })).toBeVisible()
+    await expect(page.getByText('Review Command Queue')).toBeVisible()
+    await expect(page.getByText('Highest pending concentration')).toBeVisible()
     await page.getByRole('button', { name: 'Export' }).first().click()
     await expect(page.getByText('CSV workbook')).toBeVisible()
     await expect(page.getByText('PDF report EN')).toBeVisible()
@@ -259,6 +305,22 @@ test.describe('executive frontend experience', () => {
     const pdfDownload = page.waitForEvent('download')
     await page.getByText('PDF report FR').click()
     await expect.poll(async () => (await pdfDownload).suggestedFilename()).toBe('evaluation-Mina Laurent-fr.pdf')
+    await expectNoHorizontalOverflow(page)
+  })
+
+  test('supports admin add and delete evaluation actions', async ({ page }) => {
+    await openAuthed(page, '/evaluations')
+
+    await page.getByRole('button', { name: 'New Evaluation' }).click()
+    await expect(page.getByRole('dialog', { name: 'Add evaluation' })).toBeVisible()
+    await page.getByLabel('Evaluator').selectOption('manager-2')
+    await page.getByRole('button', { name: 'Add Evaluation', exact: true }).click()
+    await expect(page.getByRole('dialog', { name: 'Add evaluation' })).toBeHidden()
+
+    await page.getByRole('button', { name: 'Delete evaluation for Mina Laurent' }).click()
+    await expect(page.getByRole('dialog', { name: 'Delete evaluation' })).toBeVisible()
+    await page.getByRole('button', { name: 'Delete', exact: true }).click()
+    await expect(page.getByRole('dialog', { name: 'Delete evaluation' })).toBeHidden()
     await expectNoHorizontalOverflow(page)
   })
 

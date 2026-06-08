@@ -42,6 +42,28 @@ enum CycleStatus {
   CLOSED
 }
 
+enum FormType {
+  DIRECTOR_LEVEL
+  MANAGER_LEVEL
+  OFFICER_LEVEL
+  SUPERVISOR_LEVEL
+  PRODUCTION_LEVEL
+}
+
+enum EvaluationReason {
+  PROBATION
+  ANNUAL
+  OTHER
+}
+
+enum PerformanceGrade {
+  EXCELLENT
+  ABOVE_STANDARD
+  MEETS_STANDARD
+  ALMOST_STANDARD
+  BELOW_STANDARD
+}
+
 model User {
   id         String    @id @default(cuid())
   email      String    @unique
@@ -51,6 +73,8 @@ model User {
   position   Position?
   department String?
   managerId  String?
+  hireDate   DateTime?
+  jobTitle   String?
 
   manager   User?  @relation("ManagerEmployee", fields: [managerId], references: [id])
   employees User[] @relation("ManagerEmployee")
@@ -146,6 +170,7 @@ model Evaluation {
   evaluatorId String
   type        EvaluationType
   status      EvaluationStatus @default(DRAFT)
+  formType    FormType         @default(OFFICER_LEVEL)
 
   goalWeight       Float @default(70)
   competencyWeight Float @default(20)
@@ -157,6 +182,13 @@ model Evaluation {
   totalScore      Float?
   submittedAt     DateTime?
 
+  evaluateeName         String?
+  evaluationReason      EvaluationReason?
+  evaluationReasonOther String?
+  evaluatorTitle        String?
+  performanceGrade      PerformanceGrade?
+  effectiveDate         DateTime?
+
   cycle     Cycle    @relation(fields: [cycleId], references: [id])
   evaluatee User     @relation("Evaluatee", fields: [evaluateeId], references: [id])
   evaluator User     @relation("Evaluator", fields: [evaluatorId], references: [id])
@@ -165,6 +197,7 @@ model Evaluation {
   goalEntries      GoalEntry[]
   competencyScores CompetencyScore[]
   attendanceRecord AttendanceScore?
+  trainingRecord   TrainingScore?
   comment          EvaluationComment?
   salarySummary    SalarySummary?
   acknowledgement  EvaluationAcknowledgement?
@@ -205,6 +238,9 @@ model GoalEntry {
   targetRating2 String?
   targetRating1 String?
 
+  wig          String?
+  kpiCategory  String?
+
   result          String?
   evaluationScore Int?
   employeeComment String?
@@ -241,6 +277,18 @@ model AttendanceScore {
   lateScore         Int?
   disciplinaryScore Int?
   attendanceAvgScore Float?
+}
+
+model TrainingScore {
+  id           String     @id @default(cuid())
+  evaluationId String     @unique
+  evaluation   Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+
+  minimumHours     Float?
+  actualHours      Float?
+  percentOfMinimum Float?
+  score            Int?
+  behaviorNote     String?
 }
 
 model EvaluationComment {

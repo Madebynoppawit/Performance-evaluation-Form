@@ -8,6 +8,8 @@ loadDotenv()
 if (process.env.NODE_ENV === 'test') loadDotenv({ path: '.env.test', override: true })
 
 const NODE_ENVS = ['development', 'test', 'production'] as const
+const RELEASE_CHANNELS = ['standard', 'ai-preview'] as const
+const AI_PROVIDERS = ['none', 'openai', 'azure-openai'] as const
 
 /* Comma-separated origin list → string[] (trimmed, empty removed). */
 const csv = z
@@ -43,6 +45,10 @@ const schema = z.object({
   BCRYPT_ROUNDS: z.coerce.number().int().min(8).max(15).default(10),
 
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+
+  APP_RELEASE_CHANNEL: z.enum(RELEASE_CHANNELS).default('standard'),
+  ENABLE_AI_FEATURES: boolEnv,
+  AI_PROVIDER: z.enum(AI_PROVIDERS).default('none'),
 
   /* Error monitoring — when set, Sentry activates; otherwise dormant.
      Empty string (from an unset .env line) is treated as "not configured". */
@@ -91,10 +97,12 @@ if (isProd) {
 /* Final CORS allowlist: explicit list wins, else the single client URL. */
 const corsOrigins = raw.CORS_ORIGINS?.length ? raw.CORS_ORIGINS : [raw.CLIENT_URL]
 const allowPublicRegistration = raw.ALLOW_PUBLIC_REGISTRATION ?? !isProd
+const aiFeaturesEnabled = raw.ENABLE_AI_FEATURES ?? false
 
 export const env = {
   ...raw,
   allowPublicRegistration,
+  aiFeaturesEnabled,
   corsOrigins,
   isProd,
   isDev: raw.NODE_ENV === 'development',

@@ -24,6 +24,11 @@ interface HealthStatus {
   status: 'ok' | 'degraded'
   version: string
   env: string
+  release?: {
+    channel?: string
+    aiEnabled?: boolean
+    aiProvider?: string
+  }
   checkedAt: string
   latencyMs: number
   requestId?: string
@@ -462,6 +467,7 @@ export default function DashboardPage() {
               <div className="amw-health-meta">
                 <span>{t('dash.latency')} <strong>{health?.latencyMs ?? '-'}ms</strong></span>
                 <span>{t('dash.checked')} <strong>{health?.checkedAt ? new Date(health.checkedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</strong></span>
+                <span>Release <strong>{health?.release?.aiEnabled ? 'AI Preview' : 'Standard'}</strong></span>
               </div>
               {health?.requestId && (
                 <div className="amw-health-request" title={health.requestId}>

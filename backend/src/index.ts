@@ -1,7 +1,8 @@
 /* env must load first - it calls dotenv before any module reads process.env. */
 import { env } from './config/env'
 import { initMonitoring } from './config/monitoring'
-import { createApp, APP_VERSION } from './app'
+import { createApp } from './app'
+import { APP_VERSION } from './config/version'
 import { prisma } from './lib/prisma'
 
 void initMonitoring()

@@ -1,0 +1,81 @@
+name: Bug report
+description: Report a defect in the performance evaluation system
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. Please include enough detail for the team to reproduce it safely.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Dashboard
+        - Evaluations
+        - Templates
+        - Cycles
+        - Reports
+        - Users
+        - API/Swagger
+        - Export CSV/PDF
+        - Security/RBAC
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: flavor
+    attributes:
+      label: Release flavor
+      options:
+        - Standard
+        - AI Preview
+        - Both
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: v0.2.0-rc.1
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Screenshots, logs, request IDs, Swagger response, or export file details.
+  - type: checkboxes
+    id: security
+    attributes:
+      label: Security and data safety
+      options:
+        - label: I did not include passwords, tokens, private employee data, or salary details in this issue.
+          required: true

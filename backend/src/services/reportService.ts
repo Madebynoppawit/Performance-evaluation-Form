@@ -111,6 +111,7 @@ export async function exportEvaluationCsv(
       goalEntries: { orderBy: { order: 'asc' } },
       competencyScores: true,
       attendanceRecord: true,
+      trainingRecord: true,
       comment: true,
       salarySummary: true,
       acknowledgement: true,
@@ -161,6 +162,8 @@ export async function exportEvaluationCsv(
       rows.push(csvBlank(), csvSection('Goals'), csvRow('Goal', 'Field', 'Value'))
     }
     rows.push(csvRow('Goal', `Goal ${goal.order}`, goal.goal))
+    rows.push(csvRow('Goal', `Goal ${goal.order} WIG`, goal.wig))
+    rows.push(csvRow('Goal', `Goal ${goal.order} KPI Category`, goal.kpiCategory))
     rows.push(csvRow('Goal', `Goal ${goal.order} Weight`, goal.weight))
     rows.push(csvRow('Goal', `Goal ${goal.order} Result`, goal.result))
     rows.push(csvRow('Goal', `Goal ${goal.order} Score`, goal.evaluationScore))
@@ -183,6 +186,15 @@ export async function exportEvaluationCsv(
     rows.push(csvRow('Attendance', 'Leave Score', evaluation.attendanceRecord.leaveScore))
     rows.push(csvRow('Attendance', 'Late Score', evaluation.attendanceRecord.lateScore))
     rows.push(csvRow('Attendance', 'Disciplinary Score', evaluation.attendanceRecord.disciplinaryScore))
+  }
+
+  if (evaluation.trainingRecord) {
+    rows.push(csvBlank(), csvSection('Training'), csvRow('Metric', 'Value'))
+    rows.push(csvRow('Training', 'Minimum Hours', evaluation.trainingRecord.minimumHours))
+    rows.push(csvRow('Training', 'Actual Hours', evaluation.trainingRecord.actualHours))
+    rows.push(csvRow('Training', '% vs Minimum', evaluation.trainingRecord.percentOfMinimum))
+    rows.push(csvRow('Training', 'Score', evaluation.trainingRecord.score))
+    rows.push(csvRow('Training', 'Behavior Note', evaluation.trainingRecord.behaviorNote))
   }
 
   if (evaluation.comment) {

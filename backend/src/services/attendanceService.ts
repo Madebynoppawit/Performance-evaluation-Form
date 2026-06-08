@@ -9,10 +9,10 @@ function calcLeaveScore(days: number): number {
 }
 
 function calcLateScore(times: number): number {
-  if (times <= 6) return 5
-  if (times <= 8) return 4
-  if (times <= 10) return 3
-  if (times <= 12) return 2
+  if (times <= 3) return 5
+  if (times <= 5) return 4
+  if (times <= 7) return 3
+  if (times <= 9) return 2
   return 1
 }
 

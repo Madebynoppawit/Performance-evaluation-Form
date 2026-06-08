@@ -1,5 +1,28 @@
 import { prisma } from '../lib/prisma'
-import { EvaluationStatus } from '@prisma/client'
+import { EvaluationStatus, EvaluationType, FormType, Position } from '@prisma/client'
+
+/** Each employee level uses its own appraisal form. */
+const POSITION_FORM_TYPE: Record<Position, FormType> = {
+  DIRECTOR_UP: 'DIRECTOR_LEVEL',
+  MANAGER: 'MANAGER_LEVEL',
+  OFFICER: 'OFFICER_LEVEL',
+  SUPERVISOR: 'SUPERVISOR_LEVEL',
+  PRODUCTION_STAFF: 'PRODUCTION_LEVEL',
+}
+
+function formTypeForPosition(position: Position | null): FormType {
+  return position ? POSITION_FORM_TYPE[position] : 'OFFICER_LEVEL'
+}
+
+/* The evaluator must be a supervisor / manager / director — the evaluatee can
+   be anyone. Kept in sync with the frontend EVALUATOR_POSITIONS list. */
+const EVALUATOR_POSITIONS: Position[] = ['DIRECTOR_UP', 'MANAGER', 'SUPERVISOR']
+
+function badRequest(message: string) {
+  const err = new Error(message) as Error & { status: number }
+  err.status = 400
+  return err
+}
 
 /**
  * Weighted-average total score across scored rating answers.
@@ -48,6 +71,31 @@ export async function getEvaluationsForUser(userId: string, role: string) {
 
 export async function getEvaluationById(id: string) {
   return prisma.evaluation.findUniqueOrThrow({ where: { id }, include: EVALUATION_INCLUDE })
+}
+
+export async function createEvaluation(data: {
+  cycleId: string
+  evaluateeId: string
+  evaluatorId: string
+  type: EvaluationType
+}) {
+  const [evaluatee, evaluator] = await Promise.all([
+    prisma.user.findUniqueOrThrow({ where: { id: data.evaluateeId }, select: { position: true } }),
+    prisma.user.findUniqueOrThrow({ where: { id: data.evaluatorId }, select: { position: true } }),
+  ])
+
+  if (!evaluator.position || !EVALUATOR_POSITIONS.includes(evaluator.position)) {
+    throw badRequest('Evaluator must be a supervisor, manager or director.')
+  }
+
+  return prisma.evaluation.create({
+    data: { ...data, formType: formTypeForPosition(evaluatee.position) },
+    include: EVALUATION_INCLUDE,
+  })
+}
+
+export async function deleteEvaluation(id: string) {
+  return prisma.evaluation.delete({ where: { id } })
 }
 
 export async function saveAnswers(evaluationId: string, answers: Record<string, string>) {

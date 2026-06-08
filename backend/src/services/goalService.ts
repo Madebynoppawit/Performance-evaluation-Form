@@ -10,6 +10,8 @@ export interface GoalEntryInput {
   targetRating3?: string | null
   targetRating2?: string | null
   targetRating1?: string | null
+  wig?: string | null
+  kpiCategory?: string | null
   result?: string | null
   evaluationScore?: number | null
   employeeComment?: string | null

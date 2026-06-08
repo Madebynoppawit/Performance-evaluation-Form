@@ -82,6 +82,8 @@ export interface GoalEntry {
   targetRating3?: string
   targetRating2?: string
   targetRating1?: string
+  wig?: string | null
+  kpiCategory?: string | null
   result?: string
   evaluationScore?: number | null
   employeeComment?: string
@@ -102,6 +104,14 @@ export interface AttendanceScore {
   lateScore?: number | null
   disciplinaryScore?: number | null
   attendanceAvgScore?: number | null
+}
+
+export interface TrainingScore {
+  minimumHours?: number | null
+  actualHours?: number | null
+  percentOfMinimum?: number | null
+  score?: number | null
+  behaviorNote?: string | null
 }
 
 export interface EvaluationComment {
@@ -150,6 +160,7 @@ export interface Evaluation {
   goalEntries: GoalEntry[]
   competencyScores: CompetencyScore[]
   attendanceRecord?: AttendanceScore | null
+  trainingRecord?: TrainingScore | null
   comment?: EvaluationComment | null
   salarySummary?: SalarySummary | null
   acknowledgement?: EvaluationAcknowledgement | null

@@ -31,8 +31,15 @@ const PDF_COPY: Record<ExportLanguage, Record<string, string>> = {
     weight: 'weight',
     goals: 'Goals',
     result: 'Result',
+    wig: 'WIG',
+    kpiCategory: 'KPI Category',
     score: 'Score',
     competencyId: 'Competency ID',
+    training: 'Training',
+    minimumHours: 'Minimum Hours',
+    actualHours: 'Actual Hours',
+    percentMinimum: '% vs Minimum',
+    behaviorNote: 'Behavior Note',
     comments: 'Comments',
     strengths: 'Strengths',
     improvements: 'Improvements',
@@ -74,8 +81,15 @@ const PDF_COPY: Record<ExportLanguage, Record<string, string>> = {
     weight: 'ponderation',
     goals: 'Objectifs',
     result: 'Resultat',
+    wig: 'WIG',
+    kpiCategory: 'Categorie KPI',
     score: 'Score',
     competencyId: 'ID competence',
+    training: 'Formation',
+    minimumHours: 'Heures minimales',
+    actualHours: 'Heures realisees',
+    percentMinimum: '% du minimum',
+    behaviorNote: 'Note comportementale',
     comments: 'Commentaires',
     strengths: 'Points forts',
     improvements: 'Axes damelioration',
@@ -145,7 +159,7 @@ function score(value?: number | null) {
 }
 
 function date(value?: string | null) {
-  return value ? new Date(value).toLocaleDateString() : '-'
+  return value ? new Date(value).toLocaleDateString('en-US') : '-'
 }
 
 export async function downloadEvaluationPdf(evaluationId: string, fallbackName?: string, language: ExportLanguage = 'en') {
@@ -355,7 +369,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     valueRow(copy.status, ev.status),
     valueRow(copy.evaluationType, ev.type),
     valueRow(copy.period, `${date(ev.cycle?.startDate)} - ${date(ev.cycle?.endDate)}`),
-    valueRow(copy.exportedAt, new Date().toLocaleString(), { wide: true }),
+    valueRow(copy.exportedAt, new Date().toLocaleString('en-US'), { wide: true }),
   ])
 
   sectionTitle(copy.scores)
@@ -370,9 +384,9 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   if (ev.goalEntries?.length) {
     sectionTitle(copy.goals)
     table(
-      [copy.goal, copy.weight, copy.result, copy.score],
-      ev.goalEntries.map((goal) => [goal.goal, `${goal.weight}%`, goal.result ?? '-', goal.evaluationScore ?? '-']),
-      [210, 70, 190, contentWidth - 470]
+      [copy.goal, copy.wig, copy.kpiCategory, copy.weight, copy.score],
+      ev.goalEntries.map((goal) => [goal.goal, goal.wig ?? '-', goal.kpiCategory ?? '-', `${goal.weight}%`, goal.evaluationScore ?? '-']),
+      [170, 110, 130, 70, contentWidth - 480]
     )
   }
 
@@ -403,6 +417,21 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
         [copy.lateTimes, ev.attendanceRecord.lateActualTimes],
         [copy.disciplinary, ev.attendanceRecord.disciplinaryLevel],
         [copy.attendanceAvg, score(ev.attendanceRecord.attendanceAvgScore)],
+      ],
+      [220, contentWidth - 220]
+    )
+  }
+
+  if (ev.trainingRecord) {
+    sectionTitle(copy.training)
+    table(
+      [copy.metric, copy.value],
+      [
+        [copy.minimumHours, ev.trainingRecord.minimumHours],
+        [copy.actualHours, ev.trainingRecord.actualHours],
+        [copy.percentMinimum, ev.trainingRecord.percentOfMinimum == null ? '-' : `${ev.trainingRecord.percentOfMinimum.toFixed(1)}%`],
+        [copy.score, ev.trainingRecord.score],
+        [copy.behaviorNote, ev.trainingRecord.behaviorNote],
       ],
       [220, contentWidth - 220]
     )

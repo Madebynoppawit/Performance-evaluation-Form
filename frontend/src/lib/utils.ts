@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatDate(date: string | Date) {
-  return new Intl.DateTimeFormat('th-TH', {
+  return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -19,24 +19,24 @@ export function formatScore(score?: number | null) {
 }
 
 const EVALUATION_STATUS_LABEL: Record<string, string> = {
-  DRAFT: 'ร่าง',
-  IN_PROGRESS: 'กำลังดำเนินการ',
-  SUBMITTED: 'ส่งแล้ว',
-  REVIEWED: 'ตรวจสอบแล้ว',
-  CLOSED: 'ปิดแล้ว',
+  DRAFT: 'Draft',
+  IN_PROGRESS: 'In Progress',
+  SUBMITTED: 'Submitted',
+  REVIEWED: 'Reviewed',
+  CLOSED: 'Closed',
 }
 
 const CYCLE_STATUS_LABEL: Record<string, string> = {
-  UPCOMING: 'กำลังจะมาถึง',
-  ACTIVE: 'กำลังดำเนินการ',
-  CLOSED: 'ปิดแล้ว',
+  UPCOMING: 'Upcoming',
+  ACTIVE: 'Active',
+  CLOSED: 'Closed',
 }
 
 const EVALUATION_TYPE_LABEL: Record<string, string> = {
-  SELF: 'ประเมินตนเอง',
-  MANAGER: 'ประเมินโดยผู้จัดการ',
-  PEER: 'ประเมินโดยเพื่อนร่วมงาน',
-  THREE_SIXTY: '360 องศา',
+  SELF: 'Self Review',
+  MANAGER: 'Manager Review',
+  PEER: 'Peer Review',
+  THREE_SIXTY: '360 Review',
 }
 
 export function getStatusLabel(status: string) {

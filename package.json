@@ -1,6 +1,6 @@
 {
   "name": "performance-evaluation-form",
-  "version": "1.0.0",
+  "version": "0.2.0-rc.1",
   "private": true,
   "workspaces": [
     "frontend",
@@ -12,6 +12,7 @@
     "lint": "npm run lint -w backend && npm run lint -w frontend",
     "test": "npm run test -w backend && npm run test -w frontend",
     "test:e2e": "npm run test:e2e -w frontend",
+    "screenshots:readme": "node scripts/capture-readme-screenshots.mjs",
     "verify": "npm run lint && npm test && npm run test:e2e && npm run build && npm audit --audit-level=high",
     "db:migrate": "npm run db:migrate -w backend",
     "db:deploy": "npm run db:deploy -w backend",
