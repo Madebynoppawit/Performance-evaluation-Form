@@ -116,17 +116,17 @@ export default function AccountPage() {
   }
 
   const profileItems = [
-    { label: 'Email', value: user?.email ?? '-', icon: Mail },
-    { label: 'Department', value: user?.department ?? 'Not assigned', icon: Building2 },
-    { label: 'Position', value: user?.position ? positionLabel[user.position] : 'Not assigned', icon: User },
-    { label: 'Role', value: getDisplayRole(user), icon: ShieldCheck },
+    { label: t('acc.email'), value: user?.email ?? '-', icon: Mail },
+    { label: t('acc.department'), value: user?.department ?? t('acc.notAssigned'), icon: Building2 },
+    { label: t('acc.position'), value: user?.position ? positionLabel[user.position] : t('acc.notAssigned'), icon: User },
+    { label: t('acc.role'), value: getDisplayRole(user), icon: ShieldCheck },
   ]
 
   const accessItems = [
-    { label: 'Review Access', value: user?.role === 'EMPLOYEE' ? 'Self review only' : 'Team review workflow', icon: CheckCircle2 },
-    { label: 'Legal Record', value: 'Audit trail enabled', icon: Scale },
-    { label: 'Authentication', value: 'Company account active', icon: KeyRound },
-    { label: 'Session Status', value: 'Protected workspace', icon: Fingerprint },
+    { label: t('acc.reviewAccess'), value: user?.role === 'EMPLOYEE' ? t('acc.selfOnly') : t('acc.teamWorkflow'), icon: CheckCircle2 },
+    { label: t('acc.legalRecord'), value: t('acc.auditEnabled'), icon: Scale },
+    { label: t('acc.authentication'), value: t('acc.companyActive'), icon: KeyRound },
+    { label: t('acc.sessionStatus'), value: t('acc.protectedWorkspace'), icon: Fingerprint },
   ]
 
   return (
@@ -169,7 +169,7 @@ export default function AccountPage() {
           <div className="amw-account-photo-actions">
             <button type="button" onClick={() => fileInputRef.current?.click()}>
               <Camera size={14} />
-              {photo ? 'Change Photo' : 'Add Photo'}
+              {photo ? t('acc.changePhoto') : t('acc.addPhoto')}
             </button>
             {photo && (
               <>
@@ -180,11 +180,11 @@ export default function AccountPage() {
                   aria-expanded={layoutOpen}
                 >
                   <SlidersHorizontal size={14} />
-                  Filter
+                  {t('acc.filter')}
                 </button>
                 <button type="button" onClick={removePhoto} className="danger">
                   <Trash2 size={14} />
-                  Remove
+                  {t('acc.remove')}
                 </button>
               </>
             )}
@@ -193,7 +193,7 @@ export default function AccountPage() {
             <div className="amw-photo-layout-panel">
               <div className="amw-photo-layout-title">
                 <SlidersHorizontal size={14} />
-                <span>Photo Layout</span>
+                <span>{t('acc.photoLayout')}</span>
               </div>
               <div className="amw-photo-layout-group" aria-label="Photo shape">
                 {(['rounded', 'circle', 'square'] as PhotoShape[]).map(shape => (
@@ -235,28 +235,28 @@ export default function AccountPage() {
           )}
         </div>
         <div className="amw-account-identity">
-          <span>Signed-in User</span>
-          <h2>{user?.name ?? 'Unknown User'}</h2>
-          <p>{user?.email ?? 'No email available'}</p>
+          <span>{t('acc.signedInUser')}</span>
+          <h2>{user?.name ?? t('acc.unknownUser')}</h2>
+          <p>{user?.email ?? '-'}</p>
           <div className="amw-account-tags">
             <strong>{getDisplayRole(user)}</strong>
-            <strong>{user?.department ?? 'Unassigned department'}</strong>
-            <strong>AMW-PEF Identity</strong>
+            <strong>{user?.department ?? t('acc.notAssigned')}</strong>
+            <strong>{t('acc.identity')}</strong>
           </div>
         </div>
         <div className="amw-account-seal" aria-label="Verified user identity seal">
           <User size={24} />
-          <span>User Identity</span>
-          <strong>Account Owner</strong>
-          <em>Verified Person</em>
+          <span>{t('acc.userIdentity')}</span>
+          <strong>{t('acc.accountOwner')}</strong>
+          <em>{t('acc.verifiedPerson')}</em>
         </div>
       </section>
 
       <section className="kbt-card amw-account-panel">
         <div className="amw-account-panel-head">
           <div>
-            <span>Editable</span>
-            <strong>Personal Details</strong>
+            <span>{t('acc.editable')}</span>
+            <strong>{t('acc.personalDetails')}</strong>
           </div>
           <button type="button" className="kbt-btn-primary" onClick={saveDetails} style={{ height: 34 }}>
             {savedFlash ? <><CheckCircle2 size={14} /> {t('common.saved')}</> : t('common.saveChanges')}
@@ -264,22 +264,22 @@ export default function AccountPage() {
         </div>
         <div className="amw-account-edit-grid">
           <label className="amw-account-edit-field">
-            <span className="kbt-label">Display name</span>
+            <span className="kbt-label">{t('acc.displayName')}</span>
             <input className="kbt-input" value={details.displayName}
               onChange={e => setDetails(d => ({ ...d, displayName: e.target.value }))}
-              placeholder={user?.name ?? 'Your name'} />
+              placeholder={user?.name ?? ''} />
           </label>
           <label className="amw-account-edit-field">
-            <span className="kbt-label">Contact number</span>
+            <span className="kbt-label">{t('acc.contactNumber')}</span>
             <input className="kbt-input" value={details.phone}
               onChange={e => setDetails(d => ({ ...d, phone: e.target.value }))}
               placeholder="+66 ..." />
           </label>
           <label className="amw-account-edit-field amw-account-edit-full">
-            <span className="kbt-label">Bio / title</span>
+            <span className="kbt-label">{t('acc.bioTitle')}</span>
             <textarea className="kbt-textarea" rows={2} value={details.bio}
               onChange={e => setDetails(d => ({ ...d, bio: e.target.value }))}
-              placeholder="Short bio or job title — saved on this device" />
+              placeholder={t('acc.bioPlaceholder')} />
           </label>
         </div>
       </section>
@@ -288,8 +288,8 @@ export default function AccountPage() {
         <section className="kbt-card amw-account-panel">
           <div className="amw-account-panel-head">
             <div>
-              <span>Profile</span>
-              <strong>User Information</strong>
+              <span>{t('acc.profile')}</span>
+              <strong>{t('acc.userInfo')}</strong>
             </div>
           </div>
           <div className="amw-account-list">
@@ -309,8 +309,8 @@ export default function AccountPage() {
         <section className="kbt-card amw-account-panel">
           <div className="amw-account-panel-head">
             <div>
-              <span>Access</span>
-              <strong>Security & Compliance</strong>
+              <span>{t('acc.accessGroup')}</span>
+              <strong>{t('acc.securityCompliance')}</strong>
             </div>
           </div>
           <div className="amw-account-list">
@@ -332,15 +332,15 @@ export default function AccountPage() {
         <section className="kbt-card amw-account-panel">
           <div className="amw-account-panel-head">
             <div>
-              <span>Preferences</span>
-              <strong>Notification Channels</strong>
+              <span>{t('nav.settings.sub')}</span>
+              <strong>{t('acc.notifChannels')}</strong>
             </div>
           </div>
           <div className="amw-preference-list">
             {[
-              { label: 'Evaluation reminders', detail: 'Before cycle deadlines and pending approvals', active: true },
-              { label: 'Report availability', detail: 'When snapshots and summaries are refreshed', active: true },
-              { label: 'Legal acknowledgement', detail: 'When signature or audit action is required', active: true },
+              { label: t('acc.notifEvalReminders'), detail: t('acc.notifEvalRemindersDesc'), active: true },
+              { label: t('acc.notifReportAvail'), detail: t('acc.notifReportAvailDesc'), active: true },
+              { label: t('acc.notifLegalAck'), detail: t('acc.notifLegalAckDesc'), active: true },
             ].map(item => (
               <div key={item.label} className="amw-preference-item">
                 <Bell size={16} />
@@ -348,7 +348,7 @@ export default function AccountPage() {
                   <strong>{item.label}</strong>
                   <span>{item.detail}</span>
                 </div>
-                <em>{item.active ? 'On' : 'Off'}</em>
+                <em>{item.active ? t('acc.on') : 'Off'}</em>
               </div>
             ))}
           </div>
@@ -357,15 +357,15 @@ export default function AccountPage() {
         <section className="kbt-card amw-account-panel">
           <div className="amw-account-panel-head">
             <div>
-              <span>Activity</span>
-              <strong>Recent Account Events</strong>
+              <span>{t('acc.activity')}</span>
+              <strong>{t('acc.recentEvents')}</strong>
             </div>
           </div>
           <div className="amw-timeline">
             {[
-              { title: 'Account session verified', time: 'Now' },
-              { title: 'Notification center synchronized', time: 'Today' },
-              { title: 'Legal-tech access profile reviewed', time: 'This cycle' },
+              { title: t('acc.eventVerified'), time: t('acc.eventNow') },
+              { title: t('acc.eventSynced'), time: t('acc.eventToday') },
+              { title: t('acc.eventReviewed'), time: t('acc.eventThisCycle') },
             ].map(item => (
               <div key={item.title} className="amw-timeline-item">
                 <Clock4 size={15} />
