@@ -4,13 +4,14 @@ import { AlertTriangle, ArrowUpRight, CalendarClock, CheckCircle2, FileCheck2, G
 import { useMemo, useState } from 'react'
 import api from '@/lib/api'
 import type { Cycle, Evaluation, EvaluationType, User } from '@/types'
-import { formatDate, getTypeLabel } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import { SkeletonMetricCard, SkeletonTableRows } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
 import EvaluationExportMenu from './components/EvaluationExportMenu'
 import { useAuth } from '@/hooks/useAuth'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { useT } from '@/i18n/languageContext'
+import { useLabels } from '@/i18n/useLabels'
 import Spinner from '@/components/Spinner'
 
 const STATUS: Record<string, { cls: string; label: string }> = {
@@ -25,6 +26,7 @@ export default function EvaluationListPage() {
   const qc = useQueryClient()
   const { isAdmin } = useAuth()
   const t = useT()
+  const { statusLabel, typeLabel } = useLabels()
   const [search, setSearch] = useState('')
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Evaluation | null>(null)
@@ -120,9 +122,9 @@ export default function EvaluationListPage() {
   }, [data])
 
   const metricItems = [
-    { label: 'Total Evaluations', value: stats.total, icon: <TrendingUp size={16} color="var(--sap-blue)" />, color: 'var(--sap-blue)' },
-    { label: 'Completed', value: stats.completed, icon: <CheckCircle2 size={16} color="var(--m-blue)" />, color: 'var(--m-blue)' },
-    { label: 'Avg Score', value: stats.avgScore, icon: <Gauge size={16} color="var(--amw-red)" />, color: 'var(--amw-red)', mono: true },
+    { label: t('dash.metric.total'), value: stats.total, icon: <TrendingUp size={16} color="var(--sap-blue)" />, color: 'var(--sap-blue)' },
+    { label: t('dash.metric.completed'), value: stats.completed, icon: <CheckCircle2 size={16} color="var(--m-blue)" />, color: 'var(--m-blue)' },
+    { label: t('dash.metric.avg'), value: stats.avgScore, icon: <Gauge size={16} color="var(--amw-red)" />, color: 'var(--amw-red)', mono: true },
   ]
   const selectedCycleId = draft.cycleId || cycles[0]?.id || ''
   const selectedEvaluateeId = draft.evaluateeId || users[0]?.id || ''
@@ -139,7 +141,7 @@ export default function EvaluationListPage() {
         </div>
         {isAdmin && (
           <button onClick={() => setShowCreateDialog(true)} className="kbt-btn-primary">
-            <Plus size={15} /> New Evaluation
+            <Plus size={15} /> {t('eval.new')}
           </button>
         )}
       </div>
@@ -161,14 +163,14 @@ export default function EvaluationListPage() {
 
       <div className="kbt-card">
         <div className="kbt-toolbar">
-          <span className="kbt-toolbar-title">All Evaluations</span>
+          <span className="kbt-toolbar-title">{t('eval.all')}</span>
           <div className="kbt-spacer" />
           <div style={{ position: 'relative' }}>
             <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--kbt-text-3)', pointerEvents: 'none' }} />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search..."
+              placeholder={t('common.search')}
               className="kbt-input"
               style={{ paddingLeft: 32, width: 220, height: 32, fontSize: '0.8125rem' }}
             />
@@ -183,22 +185,20 @@ export default function EvaluationListPage() {
         ) : !filtered.length ? (
           <EmptyState
             icon={search ? Search : TrendingUp}
-            title={search ? 'No matching evaluations' : 'No evaluations yet'}
-            description={search
-              ? 'Try another search term, cycle name, or employee.'
-              : 'Active review workflows will show here with ownership, status, and scores.'}
+            title={search ? t('eval.noMatching') : t('dash.noEvalsTitle')}
+            description={search ? t('eval.noMatchingDesc') : t('eval.noneDesc')}
           />
         ) : (
           <table className="kbt-table">
             <thead>
               <tr>
-                <th>Cycle</th>
-                <th>Type</th>
-                <th>Evaluatee</th>
-                <th>Department</th>
-                <th>Status</th>
-                <th style={{ textAlign: 'right' }}>Score</th>
-                <th>Updated</th>
+                <th>{t('table.cycle')}</th>
+                <th>{t('table.type')}</th>
+                <th>{t('table.evaluatee')}</th>
+                <th>{t('table.department')}</th>
+                <th>{t('table.status')}</th>
+                <th style={{ textAlign: 'right' }}>{t('table.score')}</th>
+                <th>{t('table.updated')}</th>
                 <th></th>
               </tr>
             </thead>
@@ -206,11 +206,11 @@ export default function EvaluationListPage() {
               {filtered.map((ev) => (
                 <tr key={ev.id}>
                   <td><strong>{ev.cycle?.name ?? ev.cycleId}</strong></td>
-                  <td style={{ color: 'var(--kbt-text-2)' }}>{getTypeLabel(ev.type)}</td>
+                  <td style={{ color: 'var(--kbt-text-2)' }}>{typeLabel(ev.type)}</td>
                   <td style={{ fontWeight: 700 }}>{ev.evaluatee?.name ?? ev.evaluateeId}</td>
                   <td style={{ color: 'var(--kbt-text-2)' }}>{ev.evaluatee?.department ?? '-'}</td>
                   <td>
-                    <span className={STATUS[ev.status]?.cls ?? 'kbt-badge-neutral'}>{STATUS[ev.status]?.label ?? ev.status}</span>
+                    <span className={STATUS[ev.status]?.cls ?? 'kbt-badge-neutral'}>{statusLabel(ev.status)}</span>
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     {ev.totalScore != null ? (
@@ -224,7 +224,7 @@ export default function EvaluationListPage() {
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
                       <EvaluationExportMenu compact evaluationId={ev.id} employeeName={ev.evaluatee?.name} />
                       <Link to={`/evaluations/${ev.id}`} className="kbt-btn-ghost" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem', gap: 4 }}>
-                        Open <ArrowUpRight size={11} />
+                        {t('common.open')} <ArrowUpRight size={11} />
                       </Link>
                       {isAdmin && (
                         <button
@@ -247,7 +247,7 @@ export default function EvaluationListPage() {
         )}
 
         {!isLoading && filtered.length > 0 && (
-          <div className="kbt-table-footer">Showing {filtered.length} of {data?.length ?? 0}</div>
+          <div className="kbt-table-footer">{t('common.showing')} {filtered.length} {t('common.of')} {data?.length ?? 0}</div>
         )}
       </div>
 
@@ -255,11 +255,11 @@ export default function EvaluationListPage() {
         <section className="amw-eval-command">
           <div className="amw-eval-command-head">
             <div>
-              <span className="amw-eyebrow">Review Command Queue</span>
-              <h2>Next actions</h2>
+              <span className="amw-eyebrow">{t('eval.commandQueue')}</span>
+              <h2>{t('eval.nextActions')}</h2>
             </div>
             <Link to="/reports" className="kbt-btn-report">
-              <Gauge size={14} /> View performance BI
+              <Gauge size={14} /> {t('eval.viewBI')}
             </Link>
           </div>
 
@@ -267,31 +267,31 @@ export default function EvaluationListPage() {
             <div className="amw-eval-action-card primary">
               <div className="amw-eval-action-icon"><Send size={18} /></div>
               <div>
-                <span>Open workflow</span>
+                <span>{t('eval.openWorkflow')}</span>
                 <strong>{commandQueue.openCount}</strong>
-                <p>Reviews still moving through draft, in-progress, or submitted states.</p>
+                <p>{t('eval.openWorkflowDesc')}</p>
               </div>
             </div>
             <div className="amw-eval-action-card">
               <div className="amw-eval-action-icon warning"><AlertTriangle size={18} /></div>
               <div>
-                <span>Stale reviews</span>
+                <span>{t('dash.staleReviews')}</span>
                 <strong>{commandQueue.staleCount}</strong>
-                <p>Open records not updated in more than 3 days.</p>
+                <p>{t('eval.staleReviewsDesc')}</p>
               </div>
             </div>
             <div className="amw-eval-action-card">
               <div className="amw-eval-action-icon success"><FileCheck2 size={18} /></div>
               <div>
-                <span>Ready to close</span>
+                <span>{t('eval.readyToClose')}</span>
                 <strong>{commandQueue.readyToCloseCount}</strong>
-                <p>Submitted and scored records waiting for final review.</p>
+                <p>{t('eval.readyToCloseDesc')}</p>
               </div>
             </div>
             <div className="amw-eval-action-card">
               <div className="amw-eval-action-icon"><CalendarClock size={18} /></div>
               <div>
-                <span>Cycle deadline</span>
+                <span>{t('dash.cycleDeadline')}</span>
                 <strong>{commandQueue.nextCycleDaysLeft == null ? 'n/a' : `${commandQueue.nextCycleDaysLeft}d`}</strong>
                 <p>{commandQueue.nextCycleName}</p>
               </div>
@@ -300,10 +300,10 @@ export default function EvaluationListPage() {
 
           <div className="amw-eval-command-strip">
             <div>
-              <span>Highest pending concentration</span>
-              <strong>{commandQueue.busiestDepartment?.name ?? 'No pending department risk'}</strong>
+              <span>{t('eval.highestConcentration')}</span>
+              <strong>{commandQueue.busiestDepartment?.name ?? t('eval.noDeptRisk')}</strong>
             </div>
-            <em>{commandQueue.busiestDepartment?.count ?? 0} open</em>
+            <em>{commandQueue.busiestDepartment?.count ?? 0} {t('eval.openSuffix')}</em>
           </div>
         </section>
       )}
@@ -316,7 +316,7 @@ export default function EvaluationListPage() {
                 <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(10,110,209,0.1)', border: '1px solid rgba(10,110,209,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Plus size={14} color="#0a6ed1" />
                 </div>
-                <span>Add Evaluation</span>
+                <span>{t('eval.addEvaluation')}</span>
               </div>
               <button onClick={() => setShowCreateDialog(false)} className="kbt-btn-ghost" style={{ width: 28, height: 28, padding: 0 }} aria-label="Close add evaluation">
                 <X size={15} />
@@ -330,7 +330,7 @@ export default function EvaluationListPage() {
               }}
             >
               <label>
-                Cycle
+                {t('table.cycle')}
                 <select
                   className="kbt-input"
                   value={selectedCycleId}
@@ -344,7 +344,7 @@ export default function EvaluationListPage() {
                 </select>
               </label>
               <label>
-                Evaluatee
+                {t('table.evaluatee')}
                 <select
                   className="kbt-input"
                   value={selectedEvaluateeId}
@@ -358,7 +358,7 @@ export default function EvaluationListPage() {
                 </select>
               </label>
               <label>
-                Evaluator
+                {t('eval.evaluator')}
                 <select
                   className="kbt-input"
                   value={selectedEvaluatorId}
@@ -372,24 +372,24 @@ export default function EvaluationListPage() {
                 </select>
               </label>
               <label>
-                Evaluation Type
+                {t('eval.evaluationType')}
                 <select
                   className="kbt-input"
                   value={draft.type}
                   onChange={(e) => setDraft((d) => ({ ...d, type: e.target.value as EvaluationType }))}
                   disabled={createMutation.isPending}
                 >
-                  <option value="MANAGER">Manager Review</option>
-                  <option value="SELF">Self Review</option>
-                  <option value="PEER">Peer Review</option>
-                  <option value="THREE_SIXTY">360 Review</option>
+                  <option value="MANAGER">{typeLabel('MANAGER')}</option>
+                  <option value="SELF">{typeLabel('SELF')}</option>
+                  <option value="PEER">{typeLabel('PEER')}</option>
+                  <option value="THREE_SIXTY">{typeLabel('THREE_SIXTY')}</option>
                 </select>
               </label>
               <div className="kbt-modal-actions">
-                <button type="button" onClick={() => setShowCreateDialog(false)} className="kbt-btn-ghost">Cancel</button>
+                <button type="button" onClick={() => setShowCreateDialog(false)} className="kbt-btn-ghost">{t('common.cancel')}</button>
                 <button type="submit" disabled={!canCreate} className="kbt-btn-primary">
                   {createMutation.isPending ? <Spinner size={14} /> : <Plus size={13} />}
-                  Add Evaluation
+                  {t('eval.addEvaluation')}
                 </button>
               </div>
             </form>
@@ -405,7 +405,7 @@ export default function EvaluationListPage() {
                 <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(237,28,36,0.12)', border: '1px solid rgba(237,28,36,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <AlertTriangle size={14} color="#ed1c24" />
                 </div>
-                <span>Delete Evaluation</span>
+                <span>{t('eval.deleteTitle')}</span>
               </div>
               <button onClick={() => setDeleteTarget(null)} className="kbt-btn-ghost" style={{ width: 28, height: 28, padding: 0 }} aria-label="Close delete evaluation">
                 <X size={15} />
@@ -413,19 +413,19 @@ export default function EvaluationListPage() {
             </div>
             <div className="kbt-modal-body">
               <p style={{ color: 'var(--kbt-text-2)', fontSize: '0.875rem', lineHeight: 1.6 }}>
-                Delete the evaluation for <strong style={{ color: 'var(--kbt-text)' }}>{deleteTarget.evaluatee?.name ?? deleteTarget.evaluateeId}</strong>
-                {' '}in <strong style={{ color: 'var(--kbt-text)' }}>{deleteTarget.cycle?.name ?? deleteTarget.cycleId}</strong>?
-                This removes the evaluation record and its saved answers.
+                {t('eval.deleteFor')} <strong style={{ color: 'var(--kbt-text)' }}>{deleteTarget.evaluatee?.name ?? deleteTarget.evaluateeId}</strong>
+                {' '}{t('eval.deleteIn')} <strong style={{ color: 'var(--kbt-text)' }}>{deleteTarget.cycle?.name ?? deleteTarget.cycleId}</strong>?
+                {' '}{t('eval.deleteWarn')}
               </p>
               <div className="kbt-modal-actions">
-                <button onClick={() => setDeleteTarget(null)} className="kbt-btn-ghost">Cancel</button>
+                <button onClick={() => setDeleteTarget(null)} className="kbt-btn-ghost">{t('common.cancel')}</button>
                 <button
                   onClick={() => deleteMutation.mutate(deleteTarget.id)}
                   disabled={deleteMutation.isPending}
                   className="kbt-btn-danger"
                 >
                   {deleteMutation.isPending ? <Spinner size={14} /> : <Trash2 size={13} />}
-                  Delete
+                  {t('common.delete')}
                 </button>
               </div>
             </div>
