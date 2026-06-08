@@ -1,13 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { CheckSquare, ChevronRight, FileCheck2, Loader2, Save, Scale, ScrollText, Send, ShieldCheck } from 'lucide-react'
 import api from '@/lib/api'
 import type { AttendanceScore, CompetencyScore, Evaluation, EvaluationComment, GoalEntry, SalarySummary } from '@/types'
-import { formatDate, getTypeLabel } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
-import { POSITION_LABELS, RATING_SCALE } from './constants/competency'
+import { useT } from '@/i18n/languageContext'
+import { useLabels } from '@/i18n/useLabels'
+import type { TranslationKey } from '@/i18n/translations'
+import { getCompetenciesForPosition, POSITION_LABELS, RATING_SCALE } from './constants/competency'
 import GoalSettingSection from './components/GoalSettingSection'
 import CompetencySection from './components/CompetencySection'
 import AttendanceSection from './components/AttendanceSection'
@@ -24,17 +27,17 @@ const STATUS: Record<string, { cls: string; label: string }> = {
   CLOSED: { cls: 'kbt-badge-neutral', label: 'Closed' },
 }
 
-const SECTIONS = [
-  { id: 'info', num: '01', label: 'Employee Info' },
-  { id: 'rating', num: '02', label: 'Rating Scale' },
-  { id: 'instruction', num: '03', label: 'Instructions' },
-  { id: 'goals', num: '04', label: 'Goal Setting' },
-  { id: 'competency', num: '05', label: 'Competency' },
-  { id: 'attendance', num: '06', label: 'Attendance' },
-  { id: 'comment', num: '07', label: 'Comment' },
-  { id: 'summary', num: '08', label: 'Score Summary' },
-  { id: 'salary', num: '09', label: 'Salary & Bonus' },
-  { id: 'acknowledge', num: '10', label: 'Acknowledgement' },
+const SECTIONS: { id: string; num: string; key: TranslationKey }[] = [
+  { id: 'info', num: '01', key: 'ef.sec.info' },
+  { id: 'rating', num: '02', key: 'ef.sec.rating' },
+  { id: 'instruction', num: '03', key: 'ef.sec.instruction' },
+  { id: 'goals', num: '04', key: 'ef.sec.goals' },
+  { id: 'competency', num: '05', key: 'ef.sec.competency' },
+  { id: 'attendance', num: '06', key: 'ef.sec.attendance' },
+  { id: 'comment', num: '07', key: 'ef.sec.comment' },
+  { id: 'summary', num: '08', key: 'ef.sec.summary' },
+  { id: 'salary', num: '09', key: 'ef.sec.salary' },
+  { id: 'acknowledge', num: '10', key: 'ef.sec.acknowledge' },
 ]
 
 const dash = (value?: string | number | null) => value ?? '-'
@@ -44,6 +47,8 @@ export default function EvaluationFormPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const { user, isAdmin, isManager } = useAuth()
+  const t = useT()
+  const { statusLabel, typeLabel } = useLabels()
 
   const { data: ev, isLoading } = useQuery<Evaluation>({
     queryKey: ['evaluations', id],
@@ -57,6 +62,7 @@ export default function EvaluationFormPage() {
   const [salary, setSalary] = useState<SalarySummary>({})
   const [section, setSection] = useState('info')
   const [saved, setSaved] = useState(false)
+  const [submitErrors, setSubmitErrors] = useState<string[]>([])
 
   useEffect(() => {
     if (!ev) return
@@ -88,12 +94,17 @@ export default function EvaluationFormPage() {
 
   const submitMutation = useMutation({
     mutationFn: async () => {
+      setSubmitErrors([])
       await saveMutation.mutateAsync()
       await api.patch(`/evaluations/${id}/submit`, {})
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['evaluations'] })
       navigate('/evaluations')
+    },
+    onError: (err) => {
+      const data = (err as { response?: { data?: { details?: { missing?: string[] } } } }).response?.data
+      setSubmitErrors(data?.details?.missing ?? ['Submit failed. Please review the annual form requirements.'])
     },
   })
 
@@ -102,31 +113,67 @@ export default function EvaluationFormPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['evaluations', id] }),
   })
 
+  const pos = ev?.evaluatee?.position
+  const readinessMissing = useMemo(() => {
+    const missing: string[] = []
+    if (goals.length === 0) missing.push('Goal Setting requires at least 1 SMART goal.')
+    if (goals.length > 5) missing.push('Goal Setting allows no more than 5 goals.')
+    const totalWeight = goals.reduce((sum, goal) => sum + (Number(goal.weight) || 0), 0)
+    if (goals.length > 0 && Math.abs(totalWeight - 100) > 0.001) missing.push('Goal Setting total weight must equal 100%.')
+    goals.forEach((goal, index) => {
+      const label = `Goal ${index + 1}`
+      if (!goal.goal.trim()) missing.push(`${label}: Goal is required.`)
+      if ((Number(goal.weight) || 0) <= 0) missing.push(`${label}: Weight must be greater than 0.`)
+      if (goal.evaluationScore == null) missing.push(`${label}: Evaluation Score is required.`)
+      const targets = [goal.targetRating5, goal.targetRating4, goal.targetRating3, goal.targetRating2, goal.targetRating1]
+      if (targets.some(target => !target || !/^\d+(\.\d+)?$/.test(target.trim()))) {
+        missing.push(`${label}: Target per rating must be numeric for ratings 5-1.`)
+      }
+    })
+
+    if (!pos) {
+      missing.push('Employee position is required for position-based competency.')
+    } else {
+      const expected = getCompetenciesForPosition(pos).map(c => c.id)
+      const scored = new Set(compScores.filter(score => score.score != null).map(score => score.competencyId))
+      const missingCompetencies = expected.filter(competencyId => !scored.has(competencyId))
+      if (missingCompetencies.length) missing.push(`Competency requires ratings for: ${missingCompetencies.join(', ')}.`)
+    }
+
+    if (attendance.leaveActualDays == null) missing.push('Attendance requires leave actual days.')
+    if (attendance.lateActualTimes == null) missing.push('Attendance requires late actual times.')
+    if (!attendance.disciplinaryLevel) missing.push('Attendance requires disciplinary level.')
+    if (!comment.strengths?.trim()) missing.push('Comment requires strengths.')
+    if (!comment.improvements?.trim()) missing.push('Comment requires areas for improvement.')
+    if (!comment.requiredSkills?.trim()) missing.push('Comment requires required skills.')
+    return missing
+  }, [attendance, comment, compScores, goals, pos])
+  const isRequirementReady = readinessMissing.length === 0
+
   if (isLoading) {
     return (
       <div className="amw-loading-panel">
         <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
-        Loading evaluation...
+        {t('ef.loading')}
       </div>
     )
   }
 
-  if (!ev) return <div className="kbt-msg-error">Evaluation not found</div>
+  if (!ev) return <div className="kbt-msg-error">{t('ef.notFound')}</div>
 
-  const pos = ev.evaluatee?.position
   const factItems = [
-    ['Evaluator', ev.evaluator?.name],
-    ['Department', ev.evaluatee?.department],
-    ['Period End', ev.cycle?.endDate ? formatDate(ev.cycle.endDate) : '-'],
-    ['Goal', ev.goalScore != null ? ev.goalScore.toFixed(2) : '-'],
-    ['Competency', ev.competencyScore != null ? ev.competencyScore.toFixed(2) : '-'],
-    ['Attendance', ev.attendanceScore != null ? ev.attendanceScore.toFixed(2) : '-'],
+    [t('eval.evaluator'), ev.evaluator?.name],
+    [t('table.department'), ev.evaluatee?.department],
+    [t('ef.fld.periodEnd'), ev.cycle?.endDate ? formatDate(ev.cycle.endDate) : '-'],
+    [t('ef.fld.goal'), ev.goalScore != null ? ev.goalScore.toFixed(2) : '-'],
+    [t('ef.sec.competency'), ev.competencyScore != null ? ev.competencyScore.toFixed(2) : '-'],
+    [t('ef.sec.attendance'), ev.attendanceScore != null ? ev.attendanceScore.toFixed(2) : '-'],
   ]
 
   return (
     <div className="kbt-page">
       <nav className="amw-breadcrumb">
-        <Link to="/evaluations">Evaluations</Link>
+        <Link to="/evaluations">{t('nav.evaluations')}</Link>
         <ChevronRight size={12} />
         <span>{ev.cycle?.name}</span>
       </nav>
@@ -134,28 +181,28 @@ export default function EvaluationFormPage() {
       <section className="amw-studio-hero" style={{ minHeight: 188 }}>
         <div className="amw-hero-copy">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <span className="amw-eyebrow">Corporate Review Record</span>
-            <span className={STATUS[ev.status]?.cls ?? 'kbt-badge-neutral'}>{STATUS[ev.status]?.label ?? ev.status}</span>
+            <span className="amw-eyebrow">{t('ef.reviewRecord')}</span>
+            <span className={STATUS[ev.status]?.cls ?? 'kbt-badge-neutral'}>{statusLabel(ev.status)}</span>
           </div>
           <h1 style={{ fontSize: 'clamp(2rem, 3.3vw, 3.5rem)' }}>{ev.evaluatee?.name}</h1>
           <p>
-            {ev.cycle?.name} · {getTypeLabel(ev.type)}
+            {ev.cycle?.name} · {typeLabel(ev.type)}
             {pos ? ` · ${POSITION_LABELS[pos]}` : ''}
           </p>
           <div className="amw-hero-badges">
             {factItems.slice(0, 3).map(([label, value]) => <span key={label}>{label}: {dash(value)}</span>)}
-            <span>AMW standard</span>
+            <span>{t('ef.amwStandard')}</span>
           </div>
         </div>
         <div className="amw-hero-actions amw-corporate-stack">
           <div className="amw-corporate-seal amw-corporate-seal--compact">
             <Scale size={22} />
-            <span>Legal File</span>
-            <strong>{ev.status}</strong>
+            <span>{t('ef.legalFile')}</span>
+            <strong>{statusLabel(ev.status)}</strong>
           </div>
           {ev.totalScore != null && (
             <div style={{ textAlign: 'right' }}>
-              <span style={{ color: 'var(--kbt-text-3)', fontSize: '0.68rem', fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Total Score</span>
+              <span style={{ color: 'var(--kbt-text-3)', fontSize: '0.68rem', fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{t('ef.totalScore')}</span>
               <div className="kbt-score-value" style={{ fontSize: '3rem', lineHeight: 1 }}>{ev.totalScore.toFixed(2)}</div>
             </div>
           )}
@@ -168,11 +215,16 @@ export default function EvaluationFormPage() {
           <>
           <button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="kbt-btn-outline">
             {saveMutation.isPending ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={13} />}
-            {saveMutation.isPending ? 'Saving...' : saved ? 'Saved' : 'Save Draft'}
+            {saveMutation.isPending ? t('ef.saving') : saved ? t('common.saved') : t('ef.saveDraft')}
           </button>
-          <button onClick={() => submitMutation.mutate()} disabled={submitMutation.isPending} className="kbt-btn-primary">
+          <button
+            onClick={() => submitMutation.mutate()}
+            disabled={submitMutation.isPending || !isRequirementReady}
+            className="kbt-btn-primary"
+            title={isRequirementReady ? t('ef.submitReady') : t('ef.submitBlocked')}
+          >
             {submitMutation.isPending ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={13} />}
-            {submitMutation.isPending ? 'Submitting...' : 'Submit'}
+            {submitMutation.isPending ? t('ef.submitting') : t('ef.submit')}
           </button>
           </>
         )}
@@ -181,24 +233,65 @@ export default function EvaluationFormPage() {
       <div className="amw-corporate-strip">
         <div>
           <ShieldCheck size={15} />
-          <span>Access limited by role</span>
+          <span>{t('ef.accessRole')}</span>
         </div>
         <div>
           <ScrollText size={15} />
-          <span>Comments retained as corporate record</span>
+          <span>{t('ef.commentsRetained')}</span>
         </div>
         <div>
           <FileCheck2 size={15} />
-          <span>Submit confirms review checkpoint</span>
+          <span>{t('ef.submitConfirms')}</span>
         </div>
       </div>
+
+      {!isReadOnly && (
+        <div className={`kbt-card ${isRequirementReady ? 'amw-requirement-ready' : 'amw-requirement-missing'}`} style={{ padding: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <div style={{
+              width: 34,
+              height: 34,
+              borderRadius: 8,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              background: isRequirementReady ? 'rgba(22,88,142,0.14)' : 'rgba(237,28,36,0.1)',
+              color: isRequirementReady ? 'var(--m-light-blue)' : 'var(--amw-red)',
+            }}>
+              <FileCheck2 size={17} />
+            </div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <strong style={{ color: 'var(--kbt-text)', fontSize: '0.92rem' }}>
+                {t('ef.readinessTitle')}
+              </strong>
+              <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.78rem', marginTop: 3 }}>
+                {isRequirementReady
+                  ? t('ef.readinessReady')
+                  : `${readinessMissing.length} requirement item${readinessMissing.length > 1 ? 's' : ''} must be completed before submission.`}
+              </p>
+              {!isRequirementReady && (
+                <ul style={{ margin: '10px 0 0', paddingLeft: 18, color: 'var(--kbt-text-2)', fontSize: '0.78rem', lineHeight: 1.55 }}>
+                  {readinessMissing.slice(0, 6).map(item => <li key={item}>{item}</li>)}
+                  {readinessMissing.length > 6 && <li>{readinessMissing.length - 6} more item(s).</li>}
+                </ul>
+              )}
+              {submitErrors.length > 0 && (
+                <div className="kbt-msg-error" style={{ marginTop: 12, fontSize: '0.78rem' }}>
+                  {submitErrors.slice(0, 4).map(item => <p key={item}>{item}</p>)}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: 16 }}>
         <nav style={{ width: 190, flexShrink: 0 }}>
           <div className="kbt-card" style={{ position: 'sticky', top: 16, padding: 6 }}>
             {SECTIONS.map((item) => (
               <button key={item.id} onClick={() => setSection(item.id)} className={`kbt-section-tab${section === item.id ? ' active' : ''}`}>
-                <span>{item.num}</span>{item.label}
+                <span>{item.num}</span>{t(item.key)}
               </button>
             ))}
           </div>
@@ -207,18 +300,18 @@ export default function EvaluationFormPage() {
         <div style={{ flex: 1, minWidth: 0 }}>
           {section === 'info' && (
             <div className="kbt-card">
-              <div className="kbt-card-header"><span className="kbt-card-title">01 · Employee Information</span></div>
+              <div className="kbt-card-header"><span className="kbt-card-title">01 · {t('ef.title.info')}</span></div>
               <div className="kbt-card-body">
                 <div className="amw-grid-2" style={{ gap: '16px 32px' }}>
                   {[
-                    ['Employee', ev.evaluatee?.name],
-                    ['Evaluator', ev.evaluator?.name],
-                    ['Department', ev.evaluatee?.department],
-                    ['Position', pos ? POSITION_LABELS[pos] : '-'],
-                    ['Evaluation Type', getTypeLabel(ev.type)],
-                    ['Cycle', ev.cycle?.name],
-                    ['Start Date', ev.cycle?.startDate ? formatDate(ev.cycle.startDate) : '-'],
-                    ['End Date', ev.cycle?.endDate ? formatDate(ev.cycle.endDate) : '-'],
+                    [t('ef.fld.employee'), ev.evaluatee?.name],
+                    [t('eval.evaluator'), ev.evaluator?.name],
+                    [t('table.department'), ev.evaluatee?.department],
+                    [t('acc.position'), pos ? POSITION_LABELS[pos] : '-'],
+                    [t('eval.evaluationType'), typeLabel(ev.type)],
+                    [t('table.cycle'), ev.cycle?.name],
+                    [t('table.startDate'), ev.cycle?.startDate ? formatDate(ev.cycle.startDate) : '-'],
+                    [t('table.endDate'), ev.cycle?.endDate ? formatDate(ev.cycle.endDate) : '-'],
                   ].map(([label, value]) => (
                     <div key={label}>
                       <p className="kbt-fact-label">{label}</p>
@@ -232,24 +325,34 @@ export default function EvaluationFormPage() {
 
           {section === 'rating' && (
             <div className="kbt-card">
-              <div className="kbt-card-header"><span className="kbt-card-title">02 · Competency Rating Scale (1-5)</span></div>
+              <div className="kbt-card-header"><span className="kbt-card-title">02 · {t('ef.title.rating')}</span></div>
               <div style={{ overflowX: 'auto' }}>
                 <table className="kbt-table">
                   <thead>
                     <tr>
                       <th style={{ width: 60 }}>Score</th>
-                      <th>Definition</th>
-                      <th>Behavior Indicator</th>
+                      <th>Definition (EN)</th>
+                      <th>คำอธิบาย (TH)</th>
+                      <th>Behavior Indicator (EN)</th>
+                      <th>Behavior Indicator (TH)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {RATING_SCALE.map((rating) => (
                       <tr key={rating.score}>
-                        <td style={{ textAlign: 'center' }}><span className="kbt-rating-chip">{rating.score}</span></td>
+                        <td style={{ textAlign: 'center' }}>
+                          <span className="kbt-rating-chip">{rating.score}</span>
+                          <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.68rem', marginTop: 6 }}>{rating.labelEn}</p>
+                        </td>
                         <td>
                           <strong>{rating.labelEn}</strong>
-                          <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.75rem', marginTop: 2 }}>{rating.definitionEn}</p>
+                          <p style={{ color: 'var(--kbt-text-2)', fontSize: '0.75rem', marginTop: 4 }}>{rating.definitionEn}</p>
                         </td>
+                        <td>
+                          <strong>{rating.labelTh}</strong>
+                          <p style={{ color: 'var(--kbt-text-2)', fontSize: '0.75rem', marginTop: 4 }}>{rating.definitionTh}</p>
+                        </td>
+                        <td style={{ color: 'var(--kbt-text-2)', fontSize: '0.8rem' }}>{rating.indicatorEn}</td>
                         <td style={{ color: 'var(--kbt-text-2)', fontSize: '0.8rem' }}>{rating.indicatorTh}</td>
                       </tr>
                     ))}
@@ -261,15 +364,15 @@ export default function EvaluationFormPage() {
 
           {section === 'instruction' && (
             <div className="kbt-card">
-              <div className="kbt-card-header"><span className="kbt-card-title">03 · Instructions</span></div>
+              <div className="kbt-card-header"><span className="kbt-card-title">03 · {t('ef.sec.instruction')}</span></div>
               <div className="kbt-card-body">
                 {[
-                  'Complete all sections with accurate and current performance information.',
-                  'Goal Setting supports up to 5 SMART goals. Total goal weight should equal 100%.',
-                  'Competency scoring is position-based. Use the 1-5 rating scale consistently.',
-                  'Attendance scores are calculated from actual leave, late, and disciplinary records.',
-                  `Total score combines Goal (${ev.goalWeight}%), Competency (${ev.competencyWeight}%), and Attendance (${ev.attendanceWeight}%).`,
-                  'Save Draft while working. Submit only after the evaluation is complete.',
+                  t('ef.ins1'),
+                  t('ef.ins2'),
+                  t('ef.ins3'),
+                  t('ef.ins4'),
+                  `${t('ef.fld.goal')} (${ev.goalWeight}%) · ${t('ef.sec.competency')} (${ev.competencyWeight}%) · ${t('ef.sec.attendance')} (${ev.attendanceWeight}%)`,
+                  t('ef.ins6'),
                 ].map((text, index) => (
                   <div key={text} className="kbt-instruction-row">
                     <span>{String(index + 1).padStart(2, '0')}</span>
@@ -280,32 +383,32 @@ export default function EvaluationFormPage() {
             </div>
           )}
 
-          {section === 'goals' && <SectionCard title="04 · Goal Setting"><GoalSettingSection goals={goals} readOnly={isReadOnly} onChange={setGoals} /></SectionCard>}
-          {section === 'competency' && <SectionCard title={`05 · Core Competency (${ev.competencyWeight}%)`}><CompetencySection position={pos} scores={compScores} readOnly={isReadOnly} onChange={setCompScores} /></SectionCard>}
-          {section === 'attendance' && <SectionCard title="06 · Attendance"><AttendanceSection data={attendance} readOnly={isReadOnly} onChange={setAttendance} /></SectionCard>}
-          {section === 'comment' && <SectionCard title="07 · Comment"><CommentSection data={comment} readOnly={isReadOnly} onChange={setComment} /></SectionCard>}
+          {section === 'goals' && <SectionCard title={`04 · ${t('ef.sec.goals')}`}><GoalSettingSection goals={goals} readOnly={isReadOnly} onChange={setGoals} /></SectionCard>}
+          {section === 'competency' && <SectionCard title={`05 · ${t('ef.title.competency')} (${ev.competencyWeight}%)`}><CompetencySection position={pos} scores={compScores} readOnly={isReadOnly} onChange={setCompScores} /></SectionCard>}
+          {section === 'attendance' && <SectionCard title={`06 · ${t('ef.sec.attendance')}`}><AttendanceSection data={attendance} readOnly={isReadOnly} onChange={setAttendance} /></SectionCard>}
+          {section === 'comment' && <SectionCard title={`07 · ${t('ef.sec.comment')}`}><CommentSection data={comment} readOnly={isReadOnly} onChange={setComment} /></SectionCard>}
 
           {section === 'summary' && (
             <div className="kbt-card">
-              <div className="kbt-card-header"><span className="kbt-card-title">08 · Score Summary</span></div>
+              <div className="kbt-card-header"><span className="kbt-card-title">08 · {t('ef.title.summary')}</span></div>
               <div className="kbt-card-body">
                 {[
-                  { label: 'Goal Setting', weight: ev.goalWeight, score: ev.goalScore },
-                  { label: 'Competency', weight: ev.competencyWeight, score: ev.competencyScore },
-                  { label: 'Attendance', weight: ev.attendanceWeight, score: ev.attendanceScore },
+                  { label: t('ef.sec.goals'), weight: ev.goalWeight, score: ev.goalScore },
+                  { label: t('ef.sec.competency'), weight: ev.competencyWeight, score: ev.competencyScore },
+                  { label: t('ef.sec.attendance'), weight: ev.attendanceWeight, score: ev.attendanceScore },
                 ].map(({ label, weight, score }) => (
                   <div key={label} className="kbt-summary-row">
                     <div>
                       <strong>{label}</strong>
-                      <span>Weight: {weight}%</span>
+                      <span>{t('ef.weight')}: {weight}%</span>
                     </div>
                     <span className="kbt-score-value">{score != null ? score.toFixed(2) : '-'}</span>
                   </div>
                 ))}
                 <div className="kbt-summary-total">
                   <div>
-                    <strong>Total Score</strong>
-                    <span>{ev.totalScore != null ? scoreBand(ev.totalScore) : 'Pending calculation'}</span>
+                    <strong>{t('ef.totalScore')}</strong>
+                    <span>{ev.totalScore != null ? scoreBand(ev.totalScore) : t('ef.pendingCalc')}</span>
                   </div>
                   <span className="kbt-score-value" style={{ fontSize: '2.5rem' }}>{ev.totalScore != null ? ev.totalScore.toFixed(2) : '-'}</span>
                 </div>
@@ -314,17 +417,17 @@ export default function EvaluationFormPage() {
           )}
 
           {section === 'salary' && (
-            <SectionCard title="09 · Salary & Bonus">
+            <SectionCard title={`09 · ${t('ef.sec.salary')}`}>
               {isAdmin || isManager
                 ? <SalarySummarySection data={salary} readOnly={isReadOnly && !isAdmin} onChange={setSalary} />
-                : <div className="kbt-msg-info" style={{ fontSize: '0.8125rem' }}>Only Admin and Manager roles can view this section.</div>}
+                : <div className="kbt-msg-info" style={{ fontSize: '0.8125rem' }}>{t('ef.salaryRestricted')}</div>}
             </SectionCard>
           )}
 
           {section === 'acknowledge' && (
             <div className="kbt-card">
               <div className="kbt-card-header">
-                <span className="kbt-card-title">10 · Acknowledgement</span>
+                <span className="kbt-card-title">10 · {t('ef.sec.acknowledge')}</span>
                 <CheckSquare size={16} color="var(--kbt-text-3)" />
               </div>
               <div className="kbt-card-body">
