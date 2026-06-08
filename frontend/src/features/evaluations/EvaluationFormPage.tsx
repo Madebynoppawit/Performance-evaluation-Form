@@ -104,7 +104,7 @@ export default function EvaluationFormPage() {
     },
     onError: (err) => {
       const data = (err as { response?: { data?: { details?: { missing?: string[] } } } }).response?.data
-      setSubmitErrors(data?.details?.missing ?? ['Submit failed. Please review the annual form requirements.'])
+      setSubmitErrors(data?.details?.missing ?? [t('rd.submitFailed')])
     },
   })
 
@@ -116,38 +116,38 @@ export default function EvaluationFormPage() {
   const pos = ev?.evaluatee?.position
   const readinessMissing = useMemo(() => {
     const missing: string[] = []
-    if (goals.length === 0) missing.push('Goal Setting requires at least 1 SMART goal.')
-    if (goals.length > 5) missing.push('Goal Setting allows no more than 5 goals.')
+    if (goals.length === 0) missing.push(t('rd.goalMin'))
+    if (goals.length > 5) missing.push(t('rd.goalMax'))
     const totalWeight = goals.reduce((sum, goal) => sum + (Number(goal.weight) || 0), 0)
-    if (goals.length > 0 && Math.abs(totalWeight - 100) > 0.001) missing.push('Goal Setting total weight must equal 100%.')
+    if (goals.length > 0 && Math.abs(totalWeight - 100) > 0.001) missing.push(t('rd.goalWeight100'))
     goals.forEach((goal, index) => {
-      const label = `Goal ${index + 1}`
-      if (!goal.goal.trim()) missing.push(`${label}: Goal is required.`)
-      if ((Number(goal.weight) || 0) <= 0) missing.push(`${label}: Weight must be greater than 0.`)
-      if (goal.evaluationScore == null) missing.push(`${label}: Evaluation Score is required.`)
+      const label = `${t('gs.goal')} ${index + 1}`
+      if (!goal.goal.trim()) missing.push(`${label}: ${t('rd.goalRequired')}`)
+      if ((Number(goal.weight) || 0) <= 0) missing.push(`${label}: ${t('rd.weightGt0')}`)
+      if (goal.evaluationScore == null) missing.push(`${label}: ${t('rd.scoreRequired')}`)
       const targets = [goal.targetRating5, goal.targetRating4, goal.targetRating3, goal.targetRating2, goal.targetRating1]
       if (targets.some(target => !target || !/^\d+(\.\d+)?$/.test(target.trim()))) {
-        missing.push(`${label}: Target per rating must be numeric for ratings 5-1.`)
+        missing.push(`${label}: ${t('rd.targetNumeric')}`)
       }
     })
 
     if (!pos) {
-      missing.push('Employee position is required for position-based competency.')
+      missing.push(t('rd.positionRequired'))
     } else {
       const expected = getCompetenciesForPosition(pos).map(c => c.id)
       const scored = new Set(compScores.filter(score => score.score != null).map(score => score.competencyId))
       const missingCompetencies = expected.filter(competencyId => !scored.has(competencyId))
-      if (missingCompetencies.length) missing.push(`Competency requires ratings for: ${missingCompetencies.join(', ')}.`)
+      if (missingCompetencies.length) missing.push(`${t('rd.competencyNeeds')}: ${missingCompetencies.join(', ')}.`)
     }
 
-    if (attendance.leaveActualDays == null) missing.push('Attendance requires leave actual days.')
-    if (attendance.lateActualTimes == null) missing.push('Attendance requires late actual times.')
-    if (!attendance.disciplinaryLevel) missing.push('Attendance requires disciplinary level.')
-    if (!comment.strengths?.trim()) missing.push('Comment requires strengths.')
-    if (!comment.improvements?.trim()) missing.push('Comment requires areas for improvement.')
-    if (!comment.requiredSkills?.trim()) missing.push('Comment requires required skills.')
+    if (attendance.leaveActualDays == null) missing.push(t('rd.attLeave'))
+    if (attendance.lateActualTimes == null) missing.push(t('rd.attLate'))
+    if (!attendance.disciplinaryLevel) missing.push(t('rd.attDisc'))
+    if (!comment.strengths?.trim()) missing.push(t('rd.cmStrengths'))
+    if (!comment.improvements?.trim()) missing.push(t('rd.cmImprove'))
+    if (!comment.requiredSkills?.trim()) missing.push(t('rd.cmSkills'))
     return missing
-  }, [attendance, comment, compScores, goals, pos])
+  }, [attendance, comment, compScores, goals, pos, t])
   const isRequirementReady = readinessMissing.length === 0
 
   if (isLoading) {
@@ -268,12 +268,12 @@ export default function EvaluationFormPage() {
               <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.78rem', marginTop: 3 }}>
                 {isRequirementReady
                   ? t('ef.readinessReady')
-                  : `${readinessMissing.length} requirement item${readinessMissing.length > 1 ? 's' : ''} must be completed before submission.`}
+                  : `${readinessMissing.length} ${t('rd.itemsToComplete')}`}
               </p>
               {!isRequirementReady && (
                 <ul style={{ margin: '10px 0 0', paddingLeft: 18, color: 'var(--kbt-text-2)', fontSize: '0.78rem', lineHeight: 1.55 }}>
                   {readinessMissing.slice(0, 6).map(item => <li key={item}>{item}</li>)}
-                  {readinessMissing.length > 6 && <li>{readinessMissing.length - 6} more item(s).</li>}
+                  {readinessMissing.length > 6 && <li>{readinessMissing.length - 6} {t('rd.moreItems')}</li>}
                 </ul>
               )}
               {submitErrors.length > 0 && (
