@@ -8,6 +8,7 @@ import ReportsOverview from './ReportsOverview'
 import { scoreTier } from '@/lib/score'
 import { chartColor, chartMargin, chartStroke, chartTick } from '@/lib/chartTheme'
 import { useAuth } from '@/hooks/useAuth'
+import { useT } from '@/i18n/languageContext'
 
 interface ReportSummary {
   cycleId: string
@@ -60,6 +61,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 
 export default function ReportsPage() {
   const { isAdmin } = useAuth()
+  const t = useT()
   const { data, isLoading } = useQuery<ReportSummary[]>({
     queryKey: ['reports'],
     queryFn: () => api.get('/reports/summary').then(r => r.data),
@@ -77,9 +79,9 @@ export default function ReportsPage() {
     <div className="kbt-page">
       <div className="kbt-page-header">
         <div>
-          <span className="amw-eyebrow">Performance Intelligence</span>
-          <h1>Reports</h1>
-          <p>Analyze cycle-level scoring, completion coverage, and department performance distribution.</p>
+          <span className="amw-eyebrow">{t('page.reports.eyebrow')}</span>
+          <h1>{t('page.reports.title')}</h1>
+          <p>{t('page.reports.desc')}</p>
         </div>
       </div>
 
@@ -162,7 +164,7 @@ export default function ReportsPage() {
                               </span>
                             </td>
                             <td style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem', color: 'var(--kbt-text-3)' }}>{event.requestId ?? '-'}</td>
-                            <td>{new Date(event.createdAt).toLocaleString()}</td>
+                            <td>{new Date(event.createdAt).toLocaleString('en-US')}</td>
                           </tr>
                         ))}
                       </tbody>

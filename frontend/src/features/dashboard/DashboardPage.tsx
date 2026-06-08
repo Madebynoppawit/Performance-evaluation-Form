@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
 import { Activity, AlertTriangle, ArrowUpRight, BarChart2, BookOpen, CalendarClock, CheckCircle2, ClipboardList, FileCheck2, Gauge, LayoutTemplate, Plus, RefreshCw, Send, ShieldCheck, TrendingUp, Users } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { useT } from '@/i18n/languageContext'
 import api from '@/lib/api'
 import { getTypeLabel } from '@/lib/utils'
 import type { Evaluation } from '@/types'
@@ -121,8 +122,9 @@ const STATUS_LBL: Record<string, string> = {
 export default function DashboardPage() {
   const { user, isAdmin, isManager } = useAuth()
   const navigate = useNavigate()
+  const t = useT()
   const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+  const greeting = hour < 12 ? t('dash.morning') : hour < 17 ? t('dash.afternoon') : t('dash.evening')
 
   const { data: stats } = useQuery<DashboardStats>({
     queryKey: ['dashboard-stats'],
@@ -178,7 +180,7 @@ export default function DashboardPage() {
 
   const metricCards: MetricCardProps[] = [
     {
-      label: 'Total Evaluations',
+      label: t('dash.metric.total'),
       numericValue: stats?.totalEvaluations ?? null,
       displayValue: String(stats?.totalEvaluations ?? '-'),
       icon: <ClipboardList size={16} />,
@@ -188,7 +190,7 @@ export default function DashboardPage() {
       spark: [38, 52, 44, 70, 58, 82, 76],
     },
     {
-      label: 'Completed',
+      label: t('dash.metric.completed'),
       numericValue: stats?.completedEvaluations ?? null,
       displayValue: String(stats?.completedEvaluations ?? '-'),
       icon: <CheckCircle2 size={16} />,
@@ -198,7 +200,7 @@ export default function DashboardPage() {
       spark: [28, 40, 36, 62, 54, 73, 66],
     },
     {
-      label: 'Avg Score',
+      label: t('dash.metric.avg'),
       numericValue: null,
       displayValue: stats?.averageScore != null ? stats.averageScore.toFixed(2) : '-',
       icon: <TrendingUp size={16} />,
@@ -208,7 +210,7 @@ export default function DashboardPage() {
       spark: [55, 62, 58, 74, 68, 76, 71],
     },
     {
-      label: 'Total Users',
+      label: t('dash.metric.users'),
       numericValue: stats?.totalUsers ?? null,
       displayValue: String(stats?.totalUsers ?? '-'),
       icon: <Users size={16} />,
@@ -271,11 +273,11 @@ export default function DashboardPage() {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {(isAdmin || isManager) && (
               <Link to="/evaluations" style={{ textDecoration: 'none' }}>
-                <button className="kbt-btn-primary"><Plus size={14} /> New Evaluation</button>
+                <button className="kbt-btn-primary"><Plus size={14} /> {t('dash.newEvaluation')}</button>
               </Link>
             )}
             <Link to="/reports" style={{ textDecoration: 'none' }}>
-              <button className="kbt-btn-report"><BarChart2 size={15} /> View Reports</button>
+              <button className="kbt-btn-report"><BarChart2 size={15} /> {t('dash.viewReports')}</button>
             </Link>
           </div>
         </div>
@@ -345,7 +347,7 @@ export default function DashboardPage() {
       <div className="amw-dash-bottom">
         <div className="kbt-card">
           <div className="kbt-card-header">
-            <span className="kbt-card-title">Recent Evaluations</span>
+            <span className="kbt-card-title">{t('dash.recent')}</span>
             <Link to="/evaluations" className="kbt-btn-ghost" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem', gap: 4 }}>
               View All <ArrowUpRight size={11} />
             </Link>

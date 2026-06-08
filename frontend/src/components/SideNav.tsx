@@ -1,23 +1,37 @@
 import { NavLink } from 'react-router-dom'
-import { BarChart2, BookOpen, ClipboardList, LayoutDashboard, LayoutTemplate, RefreshCw, Settings, UserRound } from 'lucide-react'
+import { BarChart2, BookOpen, ClipboardList, FileJson2, LayoutDashboard, LayoutTemplate, RefreshCw, Settings, UserRound } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
+import { useT } from '@/i18n/languageContext'
+import type { TranslationKey } from '@/i18n/translations'
 
 const workspaceNav = [
-  { to: '/', label: 'Dashboard', sublabel: 'Overview', icon: LayoutDashboard, end: true },
-  { to: '/evaluations', label: 'Evaluations', sublabel: 'Review workflow', icon: ClipboardList },
-  { to: '/templates', label: 'Templates', sublabel: 'Form builder', icon: LayoutTemplate },
-  { to: '/cycles', label: 'Cycles', sublabel: 'Review periods', icon: RefreshCw },
-  { to: '/reports', label: 'Reports', sublabel: 'Performance BI', icon: BarChart2 },
-]
+  { to: '/', labelKey: 'nav.dashboard', subKey: 'nav.dashboard.sub', icon: LayoutDashboard, end: true },
+  { to: '/evaluations', labelKey: 'nav.evaluations', subKey: 'nav.evaluations.sub', icon: ClipboardList },
+  { to: '/templates', labelKey: 'nav.templates', subKey: 'nav.templates.sub', icon: LayoutTemplate },
+  { to: '/cycles', labelKey: 'nav.cycles', subKey: 'nav.cycles.sub', icon: RefreshCw },
+  { to: '/reports', labelKey: 'nav.reports', subKey: 'nav.reports.sub', icon: BarChart2 },
+] as const
 
 const userNav = [
-  { to: '/guidelines', label: 'Guidelines', sublabel: 'TH / EN / FR', icon: BookOpen },
-  { to: '/account', label: 'Account', sublabel: 'User access', icon: UserRound },
-  { to: '/settings', label: 'Settings', sublabel: 'Preferences', icon: Settings },
-]
+  { to: '/guidelines', labelKey: 'nav.guidelines', subKey: 'nav.guidelines.sub', icon: BookOpen },
+  { to: '/account', labelKey: 'nav.account', subKey: 'nav.account.sub', icon: UserRound },
+  { to: '/settings', labelKey: 'nav.settings', subKey: 'nav.settings.sub', icon: Settings },
+] as const
 
-type NavItemProps = typeof workspaceNav[number]
+const adminNav = [
+  { href: '/api/docs/', labelKey: 'nav.apiDocs', subKey: 'nav.apiDocs.sub', icon: FileJson2 },
+] as const
 
-function NavItem({ to, label, sublabel, icon: Icon, end }: NavItemProps) {
+interface NavItemProps {
+  to: string
+  labelKey: TranslationKey
+  subKey: TranslationKey
+  icon: typeof LayoutDashboard
+  end?: boolean
+}
+
+function NavItem({ to, labelKey, subKey, icon: Icon, end }: NavItemProps) {
+  const t = useT()
   return (
     <NavLink
       to={to}
@@ -46,10 +60,10 @@ function NavItem({ to, label, sublabel, icon: Icon, end }: NavItemProps) {
           </div>
           <div style={{ minWidth: 0 }}>
             <p style={{ fontSize: '0.8375rem', lineHeight: 1.2, color: isActive ? 'var(--kbt-text)' : 'var(--kbt-text-2)' }}>
-              {label}
+              {t(labelKey)}
             </p>
             <p style={{ fontSize: '0.65rem', color: 'var(--kbt-text-3)', marginTop: 2, letterSpacing: '0.02em' }}>
-              {sublabel}
+              {t(subKey)}
             </p>
           </div>
         </>
@@ -58,7 +72,51 @@ function NavItem({ to, label, sublabel, icon: Icon, end }: NavItemProps) {
   )
 }
 
+interface ExternalNavItemProps {
+  href: string
+  labelKey: TranslationKey
+  subKey: TranslationKey
+  icon: typeof LayoutDashboard
+}
+
+function ExternalNavItem({ href, labelKey, subKey, icon: Icon }: ExternalNavItemProps) {
+  const t = useT()
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="kbt-nav-item"
+      style={{ color: 'var(--kbt-text-2)', background: 'transparent', fontWeight: 500 }}
+    >
+      <div style={{
+        width: 34,
+        height: 34,
+        borderRadius: 9,
+        background: 'var(--control-bg)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+        transition: 'all 0.16s',
+      }}>
+        <Icon size={15} color="var(--kbt-text-3)" />
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <p style={{ fontSize: '0.8375rem', lineHeight: 1.2, color: 'var(--kbt-text-2)' }}>
+          {t(labelKey)}
+        </p>
+        <p style={{ fontSize: '0.65rem', color: 'var(--kbt-text-3)', marginTop: 2, letterSpacing: '0.02em' }}>
+          {t(subKey)}
+        </p>
+      </div>
+    </a>
+  )
+}
+
 export default function SideNav() {
+  const t = useT()
+  const { isAdmin } = useAuth()
   return (
     <aside className="kbt-sidebar">
       <div style={{ padding: '18px 16px 10px', borderBottom: '1px solid var(--kbt-border)' }}>
@@ -69,7 +127,7 @@ export default function SideNav() {
           textTransform: 'uppercase',
           letterSpacing: '0.12em',
         }}>
-          Workspace
+          {t('nav.workspace')}
         </p>
       </div>
 
@@ -79,6 +137,7 @@ export default function SideNav() {
 
       <nav className="kbt-user-nav">
         {userNav.map(item => <NavItem key={item.to} {...item} />)}
+        {isAdmin && adminNav.map(item => <ExternalNavItem key={item.href} {...item} />)}
       </nav>
 
       <div style={{ padding: 14, borderTop: '1px solid var(--kbt-border)' }}>
@@ -95,7 +154,7 @@ export default function SideNav() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 9 }}>
             <span className="kbt-dot-live" />
             <span style={{ fontSize: '0.6875rem', color: 'var(--m-light-blue)', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              Systems nominal
+              {t('nav.systemsNominal')}
             </span>
           </div>
         </div>

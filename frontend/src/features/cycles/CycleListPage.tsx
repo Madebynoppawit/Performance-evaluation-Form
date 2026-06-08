@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { SkeletonTableRows } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
+import { useT } from '@/i18n/languageContext'
 import Spinner from '@/components/Spinner'
 
 const STATUS: Record<string, { cls: string; label: string }> = {
@@ -34,6 +35,7 @@ type FormData = z.infer<typeof schema>
 export default function CycleListPage() {
   const qc = useQueryClient()
   const { isAdmin } = useAuth()
+  const t = useT()
   const [showDialog, setShowDialog] = useState(false)
   const modalRef = useFocusTrap<HTMLDivElement>(showDialog, () => setShowDialog(false))
 
@@ -62,9 +64,9 @@ export default function CycleListPage() {
     <div className="kbt-page">
       <div className="kbt-page-header">
         <div>
-          <span className="amw-eyebrow">Review Calendar</span>
-          <h1>Cycles</h1>
-          <p>Plan performance review periods, connect templates, and monitor evaluation windows.</p>
+          <span className="amw-eyebrow">{t('page.cycles.eyebrow')}</span>
+          <h1>{t('page.cycles.title')}</h1>
+          <p>{t('page.cycles.desc')}</p>
         </div>
         {isAdmin && (
           <button onClick={() => setShowDialog(true)} className="kbt-btn-primary">

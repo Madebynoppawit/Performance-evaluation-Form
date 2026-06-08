@@ -1,13 +1,17 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, CheckCircle2, Gauge, RefreshCw, Search, TrendingUp } from 'lucide-react'
-import { useState } from 'react'
+import { AlertTriangle, ArrowUpRight, CalendarClock, CheckCircle2, FileCheck2, Gauge, Plus, RefreshCw, Search, Send, Trash2, TrendingUp, X } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import api from '@/lib/api'
-import type { Evaluation } from '@/types'
+import type { Cycle, Evaluation, EvaluationType, User } from '@/types'
 import { formatDate, getTypeLabel } from '@/lib/utils'
 import { SkeletonMetricCard, SkeletonTableRows } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
 import EvaluationExportMenu from './components/EvaluationExportMenu'
+import { useAuth } from '@/hooks/useAuth'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
+import { useT } from '@/i18n/languageContext'
+import Spinner from '@/components/Spinner'
 
 const STATUS: Record<string, { cls: string; label: string }> = {
   DRAFT: { cls: 'kbt-badge-neutral', label: 'Draft' },
@@ -18,11 +22,58 @@ const STATUS: Record<string, { cls: string; label: string }> = {
 }
 
 export default function EvaluationListPage() {
+  const qc = useQueryClient()
+  const { isAdmin } = useAuth()
+  const t = useT()
   const [search, setSearch] = useState('')
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<Evaluation | null>(null)
+  const [draft, setDraft] = useState({
+    cycleId: '',
+    evaluateeId: '',
+    evaluatorId: '',
+    type: 'MANAGER' as EvaluationType,
+  })
+  const createModalRef = useFocusTrap<HTMLDivElement>(showCreateDialog, () => setShowCreateDialog(false))
+  const deleteModalRef = useFocusTrap<HTMLDivElement>(!!deleteTarget, () => setDeleteTarget(null))
 
   const { data, isLoading, refetch, isFetching } = useQuery<Evaluation[]>({
     queryKey: ['evaluations'],
     queryFn: () => api.get('/evaluations').then((r) => r.data),
+  })
+
+  const { data: cycles = [], isLoading: cyclesLoading } = useQuery<Cycle[]>({
+    queryKey: ['cycles'],
+    queryFn: () => api.get('/cycles').then((r) => r.data),
+    enabled: isAdmin && showCreateDialog,
+  })
+
+  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
+    queryKey: ['users'],
+    queryFn: () => api.get('/users').then((r) => r.data),
+    enabled: isAdmin && showCreateDialog,
+  })
+
+  const createMutation = useMutation({
+    mutationFn: () => api.post('/evaluations', {
+      cycleId: draft.cycleId || cycles[0]?.id,
+      evaluateeId: draft.evaluateeId || users[0]?.id,
+      evaluatorId: draft.evaluatorId || users[0]?.id,
+      type: draft.type,
+    }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['evaluations'] })
+      setShowCreateDialog(false)
+      setDraft({ cycleId: '', evaluateeId: '', evaluatorId: '', type: 'MANAGER' })
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/evaluations/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['evaluations'] })
+      setDeleteTarget(null)
+    },
   })
 
   const filtered = (data ?? []).filter((ev) => {
@@ -36,21 +87,61 @@ export default function EvaluationListPage() {
     completed: data?.filter((e) => ['SUBMITTED', 'REVIEWED', 'CLOSED'].includes(e.status)).length ?? 0,
     avgScore: scored.length ? (scored.reduce((sum, e) => sum + e.totalScore!, 0) / scored.length).toFixed(2) : '-',
   }
+  const commandQueue = useMemo(() => {
+    const list = data ?? []
+    const now = Date.now()
+    const open = list.filter((ev) => !['REVIEWED', 'CLOSED'].includes(ev.status))
+    const stale = open.filter((ev) => now - new Date(ev.updatedAt).getTime() > 3 * 24 * 60 * 60 * 1000)
+    const readyToClose = list.filter((ev) => ev.status === 'SUBMITTED' && ev.totalScore != null)
+    const activeCycles = list
+      .map((ev) => ev.cycle)
+      .filter((cycle): cycle is NonNullable<Evaluation['cycle']> => !!cycle && cycle.status === 'ACTIVE')
+      .sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime())
+    const nextCycle = activeCycles[0]
+    const departmentPending = open.reduce<Record<string, number>>((acc, ev) => {
+      const department = ev.evaluatee?.department ?? 'Unassigned'
+      acc[department] = (acc[department] ?? 0) + 1
+      return acc
+    }, {})
+    const busiestDepartment = Object.entries(departmentPending).sort((a, b) => b[1] - a[1])[0]
+
+    return {
+      openCount: open.length,
+      staleCount: stale.length,
+      readyToCloseCount: readyToClose.length,
+      nextCycleName: nextCycle?.name ?? 'No active cycle',
+      nextCycleDaysLeft: nextCycle
+        ? Math.max(0, Math.ceil((new Date(nextCycle.endDate).getTime() - now) / (24 * 60 * 60 * 1000)))
+        : null,
+      busiestDepartment: busiestDepartment
+        ? { name: busiestDepartment[0], count: busiestDepartment[1] }
+        : null,
+    }
+  }, [data])
 
   const metricItems = [
     { label: 'Total Evaluations', value: stats.total, icon: <TrendingUp size={16} color="var(--sap-blue)" />, color: 'var(--sap-blue)' },
     { label: 'Completed', value: stats.completed, icon: <CheckCircle2 size={16} color="var(--m-blue)" />, color: 'var(--m-blue)' },
     { label: 'Avg Score', value: stats.avgScore, icon: <Gauge size={16} color="var(--amw-red)" />, color: 'var(--amw-red)', mono: true },
   ]
+  const selectedCycleId = draft.cycleId || cycles[0]?.id || ''
+  const selectedEvaluateeId = draft.evaluateeId || users[0]?.id || ''
+  const selectedEvaluatorId = draft.evaluatorId || users[0]?.id || ''
+  const canCreate = !!selectedCycleId && !!selectedEvaluateeId && !!selectedEvaluatorId && !createMutation.isPending
 
   return (
     <div className="kbt-page">
       <div className="kbt-page-header">
         <div>
-          <span className="amw-eyebrow">Evaluation Control</span>
-          <h1>Evaluations</h1>
-          <p>Monitor active review workflows, ownership, scores, and completion state across the organization.</p>
+          <span className="amw-eyebrow">{t('page.evaluations.eyebrow')}</span>
+          <h1>{t('page.evaluations.title')}</h1>
+          <p>{t('page.evaluations.desc')}</p>
         </div>
+        {isAdmin && (
+          <button onClick={() => setShowCreateDialog(true)} className="kbt-btn-primary">
+            <Plus size={15} /> New Evaluation
+          </button>
+        )}
       </div>
 
       <div className="kbt-metric-grid kbt-metric-grid-3">
@@ -135,6 +226,18 @@ export default function EvaluationListPage() {
                       <Link to={`/evaluations/${ev.id}`} className="kbt-btn-ghost" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem', gap: 4 }}>
                         Open <ArrowUpRight size={11} />
                       </Link>
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTarget(ev)}
+                          className="kbt-btn-danger"
+                          style={{ height: 28, padding: '0 10px', fontSize: '0.75rem' }}
+                          aria-label={`Delete evaluation for ${ev.evaluatee?.name ?? ev.evaluateeId}`}
+                          title="Delete evaluation"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -147,6 +250,188 @@ export default function EvaluationListPage() {
           <div className="kbt-table-footer">Showing {filtered.length} of {data?.length ?? 0}</div>
         )}
       </div>
+
+      {!isLoading && (data?.length ?? 0) > 0 && (
+        <section className="amw-eval-command">
+          <div className="amw-eval-command-head">
+            <div>
+              <span className="amw-eyebrow">Review Command Queue</span>
+              <h2>Next actions</h2>
+            </div>
+            <Link to="/reports" className="kbt-btn-report">
+              <Gauge size={14} /> View performance BI
+            </Link>
+          </div>
+
+          <div className="amw-eval-command-grid">
+            <div className="amw-eval-action-card primary">
+              <div className="amw-eval-action-icon"><Send size={18} /></div>
+              <div>
+                <span>Open workflow</span>
+                <strong>{commandQueue.openCount}</strong>
+                <p>Reviews still moving through draft, in-progress, or submitted states.</p>
+              </div>
+            </div>
+            <div className="amw-eval-action-card">
+              <div className="amw-eval-action-icon warning"><AlertTriangle size={18} /></div>
+              <div>
+                <span>Stale reviews</span>
+                <strong>{commandQueue.staleCount}</strong>
+                <p>Open records not updated in more than 3 days.</p>
+              </div>
+            </div>
+            <div className="amw-eval-action-card">
+              <div className="amw-eval-action-icon success"><FileCheck2 size={18} /></div>
+              <div>
+                <span>Ready to close</span>
+                <strong>{commandQueue.readyToCloseCount}</strong>
+                <p>Submitted and scored records waiting for final review.</p>
+              </div>
+            </div>
+            <div className="amw-eval-action-card">
+              <div className="amw-eval-action-icon"><CalendarClock size={18} /></div>
+              <div>
+                <span>Cycle deadline</span>
+                <strong>{commandQueue.nextCycleDaysLeft == null ? 'n/a' : `${commandQueue.nextCycleDaysLeft}d`}</strong>
+                <p>{commandQueue.nextCycleName}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="amw-eval-command-strip">
+            <div>
+              <span>Highest pending concentration</span>
+              <strong>{commandQueue.busiestDepartment?.name ?? 'No pending department risk'}</strong>
+            </div>
+            <em>{commandQueue.busiestDepartment?.count ?? 0} open</em>
+          </div>
+        </section>
+      )}
+
+      {showCreateDialog && (
+        <div className="kbt-modal-backdrop" onMouseDown={() => setShowCreateDialog(false)}>
+          <div className="kbt-modal" ref={createModalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Add evaluation" onMouseDown={e => e.stopPropagation()}>
+            <div className="kbt-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(10,110,209,0.1)', border: '1px solid rgba(10,110,209,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Plus size={14} color="#0a6ed1" />
+                </div>
+                <span>Add Evaluation</span>
+              </div>
+              <button onClick={() => setShowCreateDialog(false)} className="kbt-btn-ghost" style={{ width: 28, height: 28, padding: 0 }} aria-label="Close add evaluation">
+                <X size={15} />
+              </button>
+            </div>
+            <form
+              className="kbt-modal-body"
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (canCreate) createMutation.mutate()
+              }}
+            >
+              <label>
+                Cycle
+                <select
+                  className="kbt-input"
+                  value={selectedCycleId}
+                  onChange={(e) => setDraft((d) => ({ ...d, cycleId: e.target.value }))}
+                  disabled={cyclesLoading || createMutation.isPending}
+                  required
+                >
+                  {cycles.map((cycle) => (
+                    <option key={cycle.id} value={cycle.id}>{cycle.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Evaluatee
+                <select
+                  className="kbt-input"
+                  value={selectedEvaluateeId}
+                  onChange={(e) => setDraft((d) => ({ ...d, evaluateeId: e.target.value }))}
+                  disabled={usersLoading || createMutation.isPending}
+                  required
+                >
+                  {users.map((person) => (
+                    <option key={person.id} value={person.id}>{person.name} - {person.department ?? person.role}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Evaluator
+                <select
+                  className="kbt-input"
+                  value={selectedEvaluatorId}
+                  onChange={(e) => setDraft((d) => ({ ...d, evaluatorId: e.target.value }))}
+                  disabled={usersLoading || createMutation.isPending}
+                  required
+                >
+                  {users.map((person) => (
+                    <option key={person.id} value={person.id}>{person.name} - {person.role}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Evaluation Type
+                <select
+                  className="kbt-input"
+                  value={draft.type}
+                  onChange={(e) => setDraft((d) => ({ ...d, type: e.target.value as EvaluationType }))}
+                  disabled={createMutation.isPending}
+                >
+                  <option value="MANAGER">Manager Review</option>
+                  <option value="SELF">Self Review</option>
+                  <option value="PEER">Peer Review</option>
+                  <option value="THREE_SIXTY">360 Review</option>
+                </select>
+              </label>
+              <div className="kbt-modal-actions">
+                <button type="button" onClick={() => setShowCreateDialog(false)} className="kbt-btn-ghost">Cancel</button>
+                <button type="submit" disabled={!canCreate} className="kbt-btn-primary">
+                  {createMutation.isPending ? <Spinner size={14} /> : <Plus size={13} />}
+                  Add Evaluation
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="kbt-modal-backdrop" onMouseDown={() => setDeleteTarget(null)}>
+          <div className="kbt-modal" ref={deleteModalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Delete evaluation" onMouseDown={e => e.stopPropagation()}>
+            <div className="kbt-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(237,28,36,0.12)', border: '1px solid rgba(237,28,36,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <AlertTriangle size={14} color="#ed1c24" />
+                </div>
+                <span>Delete Evaluation</span>
+              </div>
+              <button onClick={() => setDeleteTarget(null)} className="kbt-btn-ghost" style={{ width: 28, height: 28, padding: 0 }} aria-label="Close delete evaluation">
+                <X size={15} />
+              </button>
+            </div>
+            <div className="kbt-modal-body">
+              <p style={{ color: 'var(--kbt-text-2)', fontSize: '0.875rem', lineHeight: 1.6 }}>
+                Delete the evaluation for <strong style={{ color: 'var(--kbt-text)' }}>{deleteTarget.evaluatee?.name ?? deleteTarget.evaluateeId}</strong>
+                {' '}in <strong style={{ color: 'var(--kbt-text)' }}>{deleteTarget.cycle?.name ?? deleteTarget.cycleId}</strong>?
+                This removes the evaluation record and its saved answers.
+              </p>
+              <div className="kbt-modal-actions">
+                <button onClick={() => setDeleteTarget(null)} className="kbt-btn-ghost">Cancel</button>
+                <button
+                  onClick={() => deleteMutation.mutate(deleteTarget.id)}
+                  disabled={deleteMutation.isPending}
+                  className="kbt-btn-danger"
+                >
+                  {deleteMutation.isPending ? <Spinner size={14} /> : <Trash2 size={13} />}
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

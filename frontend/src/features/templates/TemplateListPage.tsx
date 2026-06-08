@@ -9,12 +9,14 @@ import type { Template } from '@/types'
 import { SkeletonTableRows } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
+import { useT } from '@/i18n/languageContext'
 import Spinner from '@/components/Spinner'
 
 export default function TemplateListPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const { isAdmin } = useAuth()
+  const t = useT()
   const [deleteTarget, setDeleteTarget] = useState<Template | null>(null)
   const modalRef = useFocusTrap<HTMLDivElement>(!!deleteTarget, () => setDeleteTarget(null))
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -59,9 +61,9 @@ export default function TemplateListPage() {
     <div className="kbt-page">
       <div className="kbt-page-header">
         <div>
-          <span className="amw-eyebrow">Form Library</span>
-          <h1>Templates</h1>
-          <p>Build and manage reusable performance review forms.</p>
+          <span className="amw-eyebrow">{t('page.templates.eyebrow')}</span>
+          <h1>{t('page.templates.title')}</h1>
+          <p>{t('page.templates.desc')}</p>
         </div>
         {isAdmin && (
           <button onClick={() => createMutation.mutate()} disabled={createMutation.isPending} className="kbt-btn-primary">

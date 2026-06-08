@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import ThemeToggle from '@/components/ThemeToggle'
 import Toggle from '@/components/Toggle'
 import { usePreferences, type Preferences } from '@/hooks/usePreferences'
+import { useT } from '@/i18n/languageContext'
 
 const WORKSPACE_OPTS = [
   { value: 'dashboard', label: 'Dashboard overview' },
@@ -24,6 +25,7 @@ const DEADLINE_OPTS = [
 
 export default function SettingsPage() {
   const { prefs, update } = usePreferences()
+  const t = useT()
 
   function Row({ icon, label, hint, control }: { icon: ReactNode; label: string; hint: string; control: ReactNode }) {
     return (
@@ -57,11 +59,11 @@ export default function SettingsPage() {
     <div className="kbt-page">
       <div className="kbt-page-header">
         <div>
-          <span className="amw-eyebrow">User Settings</span>
-          <h1>Settings</h1>
-          <p>Control personal preferences, notification behavior, and account-level access comfort.</p>
+          <span className="amw-eyebrow">{t('page.settings.eyebrow')}</span>
+          <h1>{t('page.settings.title')}</h1>
+          <p>{t('page.settings.desc')}</p>
         </div>
-        <span className="amw-corp-chip amw-corp-chip--cert">Saved locally</span>
+        <span className="amw-corp-chip amw-corp-chip--cert">{t('common.savedLocally')}</span>
       </div>
 
       <section className="amw-settings-hero">

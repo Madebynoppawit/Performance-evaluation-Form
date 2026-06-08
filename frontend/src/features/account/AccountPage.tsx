@@ -15,6 +15,7 @@ import {
   User,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { useT } from '@/i18n/languageContext'
 
 const roleLabel = {
   ADMIN: 'Administrator',
@@ -53,6 +54,7 @@ function getDisplayRole(user: ReturnType<typeof useAuth>['user']) {
 
 export default function AccountPage() {
   const { user } = useAuth()
+  const t = useT()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const storageKey = useMemo(() => `amw-account-photo:${user?.id ?? 'guest'}`, [user?.id])
   const layoutStorageKey = useMemo(() => `amw-account-photo-layout:${user?.id ?? 'guest'}`, [user?.id])
@@ -131,9 +133,9 @@ export default function AccountPage() {
     <div className="kbt-page">
       <div className="kbt-page-header">
         <div>
-          <span className="amw-eyebrow">Account Control</span>
-          <h1>Account User</h1>
-          <p>Manage identity, access level, notification preferences, and legal-tech account readiness.</p>
+          <span className="amw-eyebrow">{t('page.account.eyebrow')}</span>
+          <h1>{t('page.account.title')}</h1>
+          <p>{t('page.account.desc')}</p>
         </div>
       </div>
 
@@ -257,7 +259,7 @@ export default function AccountPage() {
             <strong>Personal Details</strong>
           </div>
           <button type="button" className="kbt-btn-primary" onClick={saveDetails} style={{ height: 34 }}>
-            {savedFlash ? <><CheckCircle2 size={14} /> Saved</> : 'Save changes'}
+            {savedFlash ? <><CheckCircle2 size={14} /> {t('common.saved')}</> : t('common.saveChanges')}
           </button>
         </div>
         <div className="amw-account-edit-grid">

@@ -14,8 +14,10 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { useT } from '@/i18n/languageContext'
 import { useCommandPalette } from './commandPaletteStore'
 import ThemeToggle from './ThemeToggle'
+import LanguageSwitcher from './LanguageSwitcher'
 
 interface NotificationItem {
   title: string
@@ -39,6 +41,7 @@ function getDisplayRole(user: ReturnType<typeof useAuth>['user']) {
 export default function ShellBar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const t = useT()
   const openPalette = useCommandPalette(s => s.setOpen)
   const [menuOpen, setMenuOpen] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
@@ -100,12 +103,13 @@ export default function ShellBar() {
       <div className="amw-search-wrap">
         <button type="button" className="kbt-command" onClick={() => openPalette(true)} aria-haspopup="dialog" aria-label="Open command palette">
           <Search size={16} />
-          <span>Search or jump to...</span>
+          <span>{t('shell.search')}</span>
           <span className="kbt-kbd">CTRL K</span>
         </button>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <LanguageSwitcher />
         <ThemeToggle />
         <div ref={notificationRef} style={{ position: 'relative' }}>
           <button
@@ -125,8 +129,8 @@ export default function ShellBar() {
             <div className="amw-notification-popover" role="dialog" aria-label="Notifications">
               <div className="amw-popover-head">
                 <div>
-                  <span>Notifications <em className="amw-sample-tag">Sample</em></span>
-                  <strong>Preview data</strong>
+                  <span>{t('shell.notifications')} <em className="amw-sample-tag">Sample</em></span>
+                  <strong>{t('shell.preview')}</strong>
                 </div>
                 <button type="button" className="amw-popover-close" onClick={() => setNotificationOpen(false)} aria-label="Close notifications">
                   <X size={14} />
@@ -237,7 +241,7 @@ export default function ShellBar() {
                 onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--kbt-text-2)' }}
               >
                 <User size={14} />
-                Account User
+                {t('shell.accountUser')}
               </button>
 
               <button
@@ -252,7 +256,7 @@ export default function ShellBar() {
                 onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--kbt-text-2)' }}
               >
                 <LogOut size={14} />
-                Sign Out
+                {t('shell.signOut')}
               </button>
             </div>
           )}

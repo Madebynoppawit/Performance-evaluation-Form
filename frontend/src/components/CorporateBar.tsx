@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { BadgeCheck, ChevronRight, Clock3, FileLock2, Scale, ShieldCheck } from 'lucide-react'
+import { useT } from '@/i18n/languageContext'
+import type { TranslationKey } from '@/i18n/translations'
 
-const LABELS: Record<string, string> = {
-  evaluations: 'Evaluations',
-  templates: 'Templates',
-  cycles: 'Cycles',
-  reports: 'Reports',
-  account: 'Account',
-  settings: 'Settings',
-  guidelines: 'Guidelines',
+const PAGE_KEY: Record<string, TranslationKey> = {
+  '': 'nav.dashboard',
+  evaluations: 'nav.evaluations',
+  templates: 'nav.templates',
+  cycles: 'nav.cycles',
+  reports: 'nav.reports',
+  account: 'nav.account',
+  settings: 'nav.settings',
+  guidelines: 'nav.guidelines',
 }
 
 /* Per-section document reference codes (AMW-PEF / <code> / <year>). */
@@ -41,9 +44,10 @@ function useClock() {
    document reference, governance chips, and a live data-freshness clock. */
 export default function CorporateBar() {
   const { pathname } = useLocation()
+  const t = useT()
   const seg = pathname.split('/').filter(Boolean)
   const key = seg[0] ?? ''
-  const current = key === '' ? 'Dashboard' : (LABELS[key] ?? key)
+  const current = t(PAGE_KEY[key] ?? 'nav.dashboard')
   const ref = `AMW-PEF/${REF_CODES[key] ?? 'GEN'}/${new Date().getFullYear()}`
   const time = useClock()
 
@@ -54,18 +58,18 @@ export default function CorporateBar() {
           <span className="amw-corp-env-dot" /> {ENV}
         </span>
         <nav className="amw-corp-breadcrumb" aria-label="Breadcrumb">
-          <Link to="/">Workspace</Link>
+          <Link to="/">{t('nav.workspace')}</Link>
           <ChevronRight size={13} aria-hidden="true" />
           <span aria-current="page">{current}</span>
         </nav>
         <span className="amw-corp-ref" title="Document reference">{ref}</span>
       </div>
       <div className="amw-corp-chips" aria-label="Governance status">
-        <span className="amw-corp-synced"><Clock3 size={11} /> Synced {time}</span>
-        <span className="amw-corp-chip amw-corp-chip--class"><FileLock2 size={11} /> Confidential</span>
-        <span className="amw-corp-chip amw-corp-chip--cert"><BadgeCheck size={11} /> ISO 27001</span>
-        <span className="amw-corp-chip amw-corp-chip--comply"><Scale size={11} /> PDPA · GDPR</span>
-        <span className="amw-corp-chip amw-corp-chip--audit"><ShieldCheck size={11} /> Audit Trail</span>
+        <span className="amw-corp-synced"><Clock3 size={11} /> {t('corp.synced')} {time}</span>
+        <span className="amw-corp-chip amw-corp-chip--class"><FileLock2 size={11} /> {t('corp.confidential')}</span>
+        <span className="amw-corp-chip amw-corp-chip--cert"><BadgeCheck size={11} /> {t('corp.iso')}</span>
+        <span className="amw-corp-chip amw-corp-chip--comply"><Scale size={11} /> {t('corp.compliance')}</span>
+        <span className="amw-corp-chip amw-corp-chip--audit"><ShieldCheck size={11} /> {t('corp.audit')}</span>
       </div>
     </div>
   )
