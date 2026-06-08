@@ -217,6 +217,30 @@ const en = {
   'eval.deleteFor': 'Delete the evaluation for',
   'eval.deleteIn': 'in',
   'eval.deleteWarn': 'This removes the evaluation record and its saved answers.',
+
+  // Templates page
+  'tmpl.new': 'New Template',
+  'tmpl.library': 'Template Library',
+  'tmpl.noneTitle': 'No templates yet',
+  'tmpl.noneDesc': 'Templates define the weighted sections and competencies used across review cycles.',
+  'tmpl.create': 'Create template',
+  'tmpl.deleteTitle': 'Delete Template',
+  'tmpl.deleteConfirm': 'Are you sure you want to delete',
+  'tmpl.deleteUndone': 'This action cannot be undone.',
+
+  // Cycles page
+  'cyc.create': 'Create Cycle',
+  'cyc.createTitle': 'Create Evaluation Cycle',
+  'cyc.noneTitle': 'No cycles yet',
+  'cyc.noneDesc': 'A cycle defines a review period and attaches a template so evaluations can begin.',
+  'cyc.createAction': 'Create cycle',
+  'cyc.selectTemplate': 'Select Template',
+  'cyc.namePlaceholder': 'e.g. Annual Review 2026',
+  'cyc.descPlaceholder': 'Optional description',
+  'table.cycleName': 'Cycle Name',
+  'table.startDate': 'Start Date',
+  'table.endDate': 'End Date',
+  'common.required': 'Required',
 }
 
 const th: typeof en = {
@@ -415,6 +439,28 @@ const th: typeof en = {
   'eval.deleteFor': 'ลบการประเมินของ',
   'eval.deleteIn': 'ในรอบ',
   'eval.deleteWarn': 'การลบนี้จะลบบันทึกการประเมินและคำตอบที่บันทึกไว้',
+
+  'tmpl.new': 'สร้างเทมเพลต',
+  'tmpl.library': 'คลังเทมเพลต',
+  'tmpl.noneTitle': 'ยังไม่มีเทมเพลต',
+  'tmpl.noneDesc': 'เทมเพลตกำหนดส่วนถ่วงน้ำหนักและสมรรถนะที่ใช้ในรอบการประเมิน',
+  'tmpl.create': 'สร้างเทมเพลต',
+  'tmpl.deleteTitle': 'ลบเทมเพลต',
+  'tmpl.deleteConfirm': 'คุณแน่ใจหรือไม่ที่จะลบ',
+  'tmpl.deleteUndone': 'การกระทำนี้ไม่สามารถย้อนกลับได้',
+
+  'cyc.create': 'สร้างรอบ',
+  'cyc.createTitle': 'สร้างรอบการประเมิน',
+  'cyc.noneTitle': 'ยังไม่มีรอบ',
+  'cyc.noneDesc': 'รอบกำหนดช่วงเวลารีวิวและแนบเทมเพลตเพื่อเริ่มการประเมิน',
+  'cyc.createAction': 'สร้างรอบ',
+  'cyc.selectTemplate': 'เลือกเทมเพลต',
+  'cyc.namePlaceholder': 'เช่น ประเมินประจำปี 2569',
+  'cyc.descPlaceholder': 'คำอธิบาย (ไม่บังคับ)',
+  'table.cycleName': 'ชื่อรอบ',
+  'table.startDate': 'วันที่เริ่ม',
+  'table.endDate': 'วันที่สิ้นสุด',
+  'common.required': 'จำเป็น',
 }
 
 const fr: typeof en = {
@@ -613,6 +659,28 @@ const fr: typeof en = {
   'eval.deleteFor': 'Supprimer l’évaluation de',
   'eval.deleteIn': 'dans',
   'eval.deleteWarn': "Cela supprime l'enregistrement de l'évaluation et ses réponses enregistrées.",
+
+  'tmpl.new': 'Nouveau modèle',
+  'tmpl.library': 'Bibliothèque de modèles',
+  'tmpl.noneTitle': 'Aucun modèle',
+  'tmpl.noneDesc': 'Les modèles définissent les sections pondérées et les compétences utilisées dans les cycles.',
+  'tmpl.create': 'Créer un modèle',
+  'tmpl.deleteTitle': 'Supprimer le modèle',
+  'tmpl.deleteConfirm': 'Voulez-vous vraiment supprimer',
+  'tmpl.deleteUndone': 'Cette action est irréversible.',
+
+  'cyc.create': 'Créer un cycle',
+  'cyc.createTitle': "Créer un cycle d'évaluation",
+  'cyc.noneTitle': 'Aucun cycle',
+  'cyc.noneDesc': 'Un cycle définit une période de revue et associe un modèle pour démarrer les évaluations.',
+  'cyc.createAction': 'Créer un cycle',
+  'cyc.selectTemplate': 'Sélectionner un modèle',
+  'cyc.namePlaceholder': 'ex. Revue annuelle 2026',
+  'cyc.descPlaceholder': 'Description (facultatif)',
+  'table.cycleName': 'Nom du cycle',
+  'table.startDate': 'Date de début',
+  'table.endDate': 'Date de fin',
+  'common.required': 'Requis',
 }
 
 export type TranslationKey = keyof typeof en

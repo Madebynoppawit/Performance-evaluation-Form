@@ -4,12 +4,13 @@ import { Link, useNavigate } from 'react-router-dom'
 import { AlertTriangle, LayoutTemplate, Pencil, Plus, RefreshCw, Trash2, X } from 'lucide-react'
 import api from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
-import { formatDate, getTypeLabel } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import type { Template } from '@/types'
 import { SkeletonTableRows } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { useT } from '@/i18n/languageContext'
+import { useLabels } from '@/i18n/useLabels'
 import Spinner from '@/components/Spinner'
 
 export default function TemplateListPage() {
@@ -17,6 +18,7 @@ export default function TemplateListPage() {
   const qc = useQueryClient()
   const { isAdmin } = useAuth()
   const t = useT()
+  const { typeLabel } = useLabels()
   const [deleteTarget, setDeleteTarget] = useState<Template | null>(null)
   const modalRef = useFocusTrap<HTMLDivElement>(!!deleteTarget, () => setDeleteTarget(null))
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -68,14 +70,14 @@ export default function TemplateListPage() {
         {isAdmin && (
           <button onClick={() => createMutation.mutate()} disabled={createMutation.isPending} className="kbt-btn-primary">
             {createMutation.isPending ? <Spinner size={15} /> : <Plus size={15} />}
-            {createMutation.isPending ? 'Creating…' : 'New Template'}
+            {createMutation.isPending ? t('common.creating') : t('tmpl.new')}
           </button>
         )}
       </div>
 
       <div className="kbt-card">
         <div className="kbt-toolbar">
-          <span className="kbt-toolbar-title">Template Library ({data?.length ?? 0})</span>
+          <span className="kbt-toolbar-title">{t('tmpl.library')} ({data?.length ?? 0})</span>
           <div className="kbt-spacer" />
           <button onClick={() => refetch()} disabled={isFetching} className="kbt-btn-ghost" style={{ width: 32, padding: 0 }} aria-label="Refresh templates" title="Refresh">
             <RefreshCw size={13} style={isFetching ? { animation: 'spin 1s linear infinite' } : {}} />
@@ -87,19 +89,19 @@ export default function TemplateListPage() {
         ) : !data?.length ? (
           <EmptyState
             icon={LayoutTemplate}
-            title="No templates yet"
-            description="Templates define the weighted sections and competencies used across review cycles."
-            action={isAdmin ? { label: 'Create template', onClick: () => createMutation.mutate() } : undefined}
+            title={t('tmpl.noneTitle')}
+            description={t('tmpl.noneDesc')}
+            action={isAdmin ? { label: t('tmpl.create'), onClick: () => createMutation.mutate() } : undefined}
           />
         ) : (
           <table className="kbt-table">
             <thead>
               <tr>
-                <th>Template Name</th>
-                <th>Description</th>
-                <th>Type</th>
-                <th style={{ textAlign: 'right' }}>Sections</th>
-                <th>Last Updated</th>
+                <th>{t('table.template')}</th>
+                <th>{t('table.description')}</th>
+                <th>{t('table.type')}</th>
+                <th style={{ textAlign: 'right' }}>{t('table.sections')}</th>
+                <th>{t('table.lastUpdated')}</th>
                 <th></th>
               </tr>
             </thead>
@@ -160,7 +162,7 @@ export default function TemplateListPage() {
                     </div>
                   </td>
                   <td style={{ color: 'var(--kbt-text-2)' }}>{template.description ?? '-'}</td>
-                  <td><span className="kbt-badge-info">{getTypeLabel(template.type)}</span></td>
+                  <td><span className="kbt-badge-info">{typeLabel(template.type)}</span></td>
                   <td style={{ textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, color: 'var(--kbt-text)' }}>
                     {template.sections.length}
                   </td>
@@ -168,7 +170,7 @@ export default function TemplateListPage() {
                   <td>
                     <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                       <Link to={`/templates/${template.id}`} className="kbt-btn-ghost" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem' }}>
-                        Edit
+                        {t('common.edit')}
                       </Link>
                       {isAdmin && (
                         <button onClick={() => setDeleteTarget(template)} className="kbt-btn-danger" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem' }}>
@@ -191,7 +193,7 @@ export default function TemplateListPage() {
                 <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(237,28,36,0.12)', border: '1px solid rgba(237,28,36,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <AlertTriangle size={14} color="#ed1c24" />
                 </div>
-                <span>Delete Template</span>
+                <span>{t('tmpl.deleteTitle')}</span>
               </div>
               <button onClick={() => setDeleteTarget(null)} className="kbt-btn-ghost" style={{ width: 28, height: 28, padding: 0 }}>
                 <X size={15} />
@@ -199,17 +201,17 @@ export default function TemplateListPage() {
             </div>
             <div className="kbt-modal-body">
               <p style={{ color: 'var(--kbt-text-2)', fontSize: '0.875rem', lineHeight: 1.6 }}>
-                Are you sure you want to delete <strong style={{ color: 'var(--kbt-text)' }}>"{deleteTarget.name}"</strong>?
-                This action cannot be undone.
+                {t('tmpl.deleteConfirm')} <strong style={{ color: 'var(--kbt-text)' }}>"{deleteTarget.name}"</strong>?
+                {' '}{t('tmpl.deleteUndone')}
               </p>
               <div className="kbt-modal-actions">
-                <button onClick={() => setDeleteTarget(null)} className="kbt-btn-ghost">Cancel</button>
+                <button onClick={() => setDeleteTarget(null)} className="kbt-btn-ghost">{t('common.cancel')}</button>
                 <button
                   onClick={() => { deleteMutation.mutate(deleteTarget.id); setDeleteTarget(null) }}
                   disabled={deleteMutation.isPending}
                   className="kbt-btn-danger"
                 >
-                  <Trash2 size={13} /> Delete
+                  <Trash2 size={13} /> {t('common.delete')}
                 </button>
               </div>
             </div>

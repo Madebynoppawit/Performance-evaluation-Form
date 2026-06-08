@@ -12,6 +12,7 @@ import { SkeletonTableRows } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { useT } from '@/i18n/languageContext'
+import { useLabels } from '@/i18n/useLabels'
 import Spinner from '@/components/Spinner'
 
 const STATUS: Record<string, { cls: string; label: string }> = {
@@ -36,6 +37,7 @@ export default function CycleListPage() {
   const qc = useQueryClient()
   const { isAdmin } = useAuth()
   const t = useT()
+  const { cycleStatusLabel } = useLabels()
   const [showDialog, setShowDialog] = useState(false)
   const modalRef = useFocusTrap<HTMLDivElement>(showDialog, () => setShowDialog(false))
 
@@ -70,7 +72,7 @@ export default function CycleListPage() {
         </div>
         {isAdmin && (
           <button onClick={() => setShowDialog(true)} className="kbt-btn-primary">
-            <Plus size={15} /> Create Cycle
+            <Plus size={15} /> {t('cyc.create')}
           </button>
         )}
       </div>
@@ -79,12 +81,12 @@ export default function CycleListPage() {
         <table className="kbt-table">
           <thead>
             <tr>
-              <th>Cycle Name</th>
-              <th>Template</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Status</th>
-              <th>Description</th>
+              <th>{t('table.cycleName')}</th>
+              <th>{t('table.template')}</th>
+              <th>{t('table.startDate')}</th>
+              <th>{t('table.endDate')}</th>
+              <th>{t('table.status')}</th>
+              <th>{t('table.description')}</th>
             </tr>
           </thead>
           <tbody>
@@ -95,9 +97,9 @@ export default function CycleListPage() {
                 <td colSpan={6} style={{ padding: 0 }}>
                   <EmptyState
                     icon={Calendar}
-                    title="No cycles yet"
-                    description="A cycle defines a review period and attaches a template so evaluations can begin."
-                    action={isAdmin ? { label: 'Create cycle', onClick: () => setShowDialog(true) } : undefined}
+                    title={t('cyc.noneTitle')}
+                    description={t('cyc.noneDesc')}
+                    action={isAdmin ? { label: t('cyc.createAction'), onClick: () => setShowDialog(true) } : undefined}
                   />
                 </td>
               </tr>
@@ -112,7 +114,7 @@ export default function CycleListPage() {
                 <td style={{ color: 'var(--kbt-text-2)' }}>{cycle.template?.name ?? '-'}</td>
                 <td style={{ color: 'var(--kbt-text-2)', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8125rem' }}>{formatDate(cycle.startDate)}</td>
                 <td style={{ color: 'var(--kbt-text-2)', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8125rem' }}>{formatDate(cycle.endDate)}</td>
-                <td><span className={STATUS[cycle.status]?.cls ?? 'kbt-badge-neutral'}>{STATUS[cycle.status]?.label ?? cycle.status}</span></td>
+                <td><span className={STATUS[cycle.status]?.cls ?? 'kbt-badge-neutral'}>{cycleStatusLabel(cycle.status)}</span></td>
                 <td style={{ color: 'var(--kbt-text-3)' }}>{cycle.description ?? '-'}</td>
               </tr>
             ))}
@@ -126,7 +128,7 @@ export default function CycleListPage() {
             <div className="kbt-modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div className="kbt-metric-icon"><Calendar size={14} color="var(--sap-blue)" /></div>
-                <span>Create Evaluation Cycle</span>
+                <span>{t('cyc.createTitle')}</span>
               </div>
               <button onClick={() => setShowDialog(false)} className="kbt-btn-ghost" style={{ width: 28, height: 28, padding: 0 }}>
                 <X size={15} />
@@ -135,38 +137,38 @@ export default function CycleListPage() {
 
             <form onSubmit={handleSubmit(d => createMutation.mutate(d))} className="kbt-modal-body">
               <div>
-                <label className="kbt-label kbt-label-required">Cycle Name</label>
-                <input {...register('name')} className="kbt-input" placeholder="e.g. Annual Review 2026" />
-                {errors.name && <p className="kbt-field-error">Required</p>}
+                <label className="kbt-label kbt-label-required">{t('table.cycleName')}</label>
+                <input {...register('name')} className="kbt-input" placeholder={t('cyc.namePlaceholder')} />
+                {errors.name && <p className="kbt-field-error">{t('common.required')}</p>}
               </div>
               <div>
-                <label className="kbt-label kbt-label-required">Template</label>
+                <label className="kbt-label kbt-label-required">{t('table.template')}</label>
                 <select {...register('templateId')} className="kbt-select">
-                  <option value="">Select Template</option>
-                  {templates?.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  <option value="">{t('cyc.selectTemplate')}</option>
+                  {templates?.map(tpl => <option key={tpl.id} value={tpl.id}>{tpl.name}</option>)}
                 </select>
-                {errors.templateId && <p className="kbt-field-error">Required</p>}
+                {errors.templateId && <p className="kbt-field-error">{t('common.required')}</p>}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label className="kbt-label kbt-label-required">Start Date</label>
+                  <label className="kbt-label kbt-label-required">{t('table.startDate')}</label>
                   <input {...register('startDate')} type="date" className="kbt-input" />
                 </div>
                 <div>
-                  <label className="kbt-label kbt-label-required">End Date</label>
+                  <label className="kbt-label kbt-label-required">{t('table.endDate')}</label>
                   <input {...register('endDate')} type="date" className="kbt-input" />
                   {errors.endDate && <p className="kbt-field-error">{errors.endDate.message}</p>}
                 </div>
               </div>
               <div>
-                <label className="kbt-label">Description</label>
-                <input {...register('description')} className="kbt-input" placeholder="Optional description" />
+                <label className="kbt-label">{t('table.description')}</label>
+                <input {...register('description')} className="kbt-input" placeholder={t('cyc.descPlaceholder')} />
               </div>
               <div className="kbt-modal-actions">
-                <button type="button" onClick={() => setShowDialog(false)} className="kbt-btn-ghost">Cancel</button>
+                <button type="button" onClick={() => setShowDialog(false)} className="kbt-btn-ghost">{t('common.cancel')}</button>
                 <button type="submit" disabled={isSubmitting} className="kbt-btn-primary">
                   {isSubmitting && <Spinner size={14} />}
-                  {isSubmitting ? 'Creating…' : 'Create Cycle'}
+                  {isSubmitting ? t('common.creating') : t('cyc.create')}
                 </button>
               </div>
             </form>
