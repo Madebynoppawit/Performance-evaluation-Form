@@ -79,16 +79,11 @@ Browser
 Express API
   JWT Auth + RBAC (Developer/Admin/position-based) + Zod validation
   Audit log + rate limit + request IDs
-        |                         employee / org master data (planned)
-        | Prisma ORM                    ⇢  AS/400 · Db2 for i
-        v                                  via an EmployeeDirectory port
+        |
+        | Prisma ORM
+        v
 PostgreSQL  (evaluation workflow: cycles, scores, sign-offs, audit)
 ```
-
-> Employee/org data is planned to be sourced from the company's **AS/400
-> (Db2 for i)** through a ports-and-adapters seam, while the app keeps its own
-> store for the evaluation workflow — see
-> [docs/as400-integration.md](docs/as400-integration.md).
 
 ## Tech Stack
 
@@ -97,7 +92,7 @@ PostgreSQL  (evaluation workflow: cycles, scores, sign-offs, audit)
 | Frontend | React 18, TypeScript, Vite, React Router, TanStack Query |
 | UI | Custom enterprise design system, responsive dashboard, premium export UX |
 | Backend | Node.js, Express, Zod, JWT, Swagger UI |
-| Data | PostgreSQL, Prisma (AS/400 · Db2 for i integration planned) |
+| Data | PostgreSQL, Prisma |
 | i18n | Custom lightweight system — Thai / English / French |
 | Security | Helmet, CORS allowlist, rate limiting, RBAC, no-store API headers |
 | Deploy | Docker (multi-stage) + nginx, docker-compose.prod, GHCR images via CI |
@@ -173,9 +168,6 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 → Postgres integration tests → on `main`, build + **Trivy scan** + publish images
 to `ghcr.io/<owner>/amw-{backend,frontend}`. The deploy step is left to the
 target platform, which pulls those tags.
-
-> **Company database (AS/400 / Db2 for i):** integration design and the IT
-> questionnaire live in [docs/as400-integration.md](docs/as400-integration.md).
 
 ## Release Flavors
 
@@ -283,7 +275,6 @@ Latest local verification for `v0.2.0-rc.1`: passed.
 ## Documentation
 
 - [Changelog](CHANGELOG.md)
-- [AS/400 (Db2 for i) Integration](docs/as400-integration.md)
 - [API Notes](docs/api.md)
 - [Data Model](docs/data-model.md)
 - [Production Readiness](docs/production-readiness.md)
