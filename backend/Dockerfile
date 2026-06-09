@@ -17,10 +17,14 @@ COPY backend/package.json backend/package.json
 COPY frontend/package.json frontend/package.json
 RUN npm ci
 
-# Build the backend: generate the Prisma client, then compile TS -> dist.
+# Build the backend: generate the Prisma client (for tsc types), compile
+# TS -> dist, then drop dev dependencies and re-generate the client so it
+# survives the prune. The `prisma` CLI is a runtime dependency (migrations).
 COPY backend ./backend
 RUN npm run db:generate -w backend \
  && npm run build -w backend \
+ && npm prune --omit=dev \
+ && npm run db:generate -w backend \
  && mkdir -p /app/backend/node_modules
 
 # ---- runtime stage ----
