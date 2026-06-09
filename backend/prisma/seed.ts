@@ -36,6 +36,14 @@ function trainingPayload(position: Position, actualHours: number) {
 }
 
 async function main() {
+  // Guard: this seed creates demo accounts with a well-known password
+  // (P@ssw0rd!). Never let it run against a production database unless an
+  // operator explicitly opts in with ALLOW_PROD_SEED=true.
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PROD_SEED !== 'true') {
+    console.error('[seed] Refusing to seed in production. Set ALLOW_PROD_SEED=true to override (NOT recommended).')
+    process.exit(1)
+  }
+
   const hash = await bcrypt.hash('P@ssw0rd!', 10)
 
   // ─── Users ───────────────────────────────────────────────────────────────

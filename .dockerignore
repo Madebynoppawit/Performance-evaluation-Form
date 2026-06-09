@@ -1,0 +1,16 @@
+# Build context is the repo root for both backend/ and frontend/ images.
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+**/*.log
+**/coverage
+**/.prisma
+.git
+.github
+reports
+.tmp_pdf_review
+docs/screenshots
+test-results
+playwright-report

@@ -1,0 +1,76 @@
+# Production stack: Postgres + one-shot migrate + backend API + nginx frontend.
+#
+#   cp .env.prod.example .env.prod && edit it
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+#
+# The browser hits the frontend (nginx), which serves the SPA and proxies
+# /api to the backend. Migrations run once, before the API starts.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-amw}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.prod}
+      POSTGRES_DB: ${POSTGRES_DB:-performance_eval}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-amw} -d ${POSTGRES_DB:-performance_eval}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # Not published to the host by default — only the app talks to it.
+
+  migrate:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    # One-shot admin task; runs as root so the Prisma CLI can access its
+    # engine files in the (root-owned) node_modules.
+    user: root
+    command: ["npx", "prisma", "migrate", "deploy"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-amw}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-performance_eval}?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-amw}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-performance_eval}?schema=public
+      JWT_SECRET: ${JWT_SECRET:?set a 32+ char JWT_SECRET in .env.prod}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      COMPANY_EMAIL_DOMAIN: ${COMPANY_EMAIL_DOMAIN:-amw-ems.com}
+      CLIENT_URL: ${CLIENT_URL:?set CLIENT_URL (public frontend URL) in .env.prod}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
