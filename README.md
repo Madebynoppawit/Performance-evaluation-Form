@@ -260,6 +260,7 @@ Latest local verification for `v0.2.0-rc.1`: passed.
 |---|---|---|---|
 | GET | `/health` | Public | Liveness, version, and release metadata |
 | GET | `/api/ready` | Public | API/database readiness |
+| GET | `/metrics` | Token/Network | Prometheus metrics (process + HTTP) |
 | GET | `/api/docs/` | Public | Swagger UI |
 | GET | `/api/openapi.json` | Public | OpenAPI spec |
 | POST | `/api/auth/login` | Public | Authenticate and receive JWT |

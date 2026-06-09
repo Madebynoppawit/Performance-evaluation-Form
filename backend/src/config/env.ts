@@ -56,6 +56,13 @@ const schema = z.object({
     v => (v === '' ? undefined : v),
     z.string().url().optional()
   ),
+
+  /* When set, GET /metrics requires this bearer token (recommended in prod).
+     When unset, /metrics is open — restrict it at the network/ingress level. */
+  METRICS_TOKEN: z.preprocess(
+    v => (v === '' ? undefined : v),
+    z.string().min(1).optional()
+  ),
 })
 
 const parsed = schema.safeParse(process.env)

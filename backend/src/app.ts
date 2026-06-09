@@ -9,6 +9,7 @@ import { apiLimiter, authLimiter } from './middleware/rateLimiter'
 import { requestContext } from './middleware/requestContext'
 import { auditLog } from './middleware/auditLog'
 import { noStoreApiResponses } from './middleware/apiSecurity'
+import { metricsMiddleware, registry } from './lib/metrics'
 import authRoutes from './routes/auth'
 import evaluationRoutes from './routes/evaluations'
 import templateRoutes from './routes/templates'
@@ -29,6 +30,7 @@ export function createApp() {
   app.disable('x-powered-by')
   app.set('trust proxy', env.isProd ? 1 : false)
   app.use(requestContext)
+  app.use(metricsMiddleware)
   app.use(helmet({
     contentSecurityPolicy: {
       useDefaults: true,
@@ -93,6 +95,21 @@ export function createApp() {
   app.get('/api/health', healthPayload)
   app.get('/ready', healthPayload)
   app.get('/api/ready', healthPayload)
+
+  // Prometheus metrics. Optionally guarded by METRICS_TOKEN; otherwise restrict
+  // at the network/ingress level.
+  app.get('/metrics', async (req, res) => {
+    if (env.METRICS_TOKEN) {
+      const header = req.get('authorization')
+      const token = header?.startsWith('Bearer ') ? header.slice(7) : req.query.token
+      if (token !== env.METRICS_TOKEN) {
+        res.status(401).json({ message: 'Unauthorized', requestId: req.requestId })
+        return
+      }
+    }
+    res.set('Content-Type', registry.contentType)
+    res.end(await registry.metrics())
+  })
 
   app.use('/api', swaggerRoutes)
   app.use('/api', noStoreApiResponses, apiLimiter, auditLog)
