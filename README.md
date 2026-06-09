@@ -31,26 +31,28 @@ The AI Preview flavor is controlled by environment flags only. No model key or A
 
 ## Why This Exists
 
-AMW Performance Evaluation System turns an annual performance review form into a governed digital workflow:
+AMW Performance Evaluation System turns the company's appraisal forms into a governed digital workflow:
 
-- weighted goals with target levels from 1 to 5
-- position-based competency scoring
-- attendance, disciplinary, salary, and acknowledgement sections
-- role-aware review access for employees, managers, and admins
-- premium CSV/PDF exports for formal records
-- Swagger/OpenAPI documentation for backend handoff
-- release metadata for Standard and AI Preview deployments
+- **position-level appraisal forms** (AMW-01-036 family) — a tailored form per level: Director&Up / Manager / Officer / Supervisor / Production, selected automatically from the evaluatee's position
+- position-based competency scoring (Core Competencies CC1–CC4, plus Management competencies for Manager/Director)
+- weighted goals, attendance, disciplinary, salary, comment, and 3-level sign-off (Employee / Evaluator / MD) sections
+- **role + position based access**: a `DEVELOPER` super-role and `ADMIN` control everything; **Supervisor / Manager / Director (MD, CEO)** can create evaluations and build templates; account creation stays with Developer/Admin
+- **self-service profiles** + an admin/developer **user-management** page
+- **trilingual UI** — Thai / English / French, switchable across the whole app
+- premium CSV/PDF exports, Swagger/OpenAPI docs, and release metadata for Standard / AI Preview deployments
 
 ## Product Surface
 
 | Area | What It Does |
 |---|---|
 | Dashboard | Executive cockpit for completion, score health, readiness, and system status |
-| Evaluations | End-to-end form workflow with requirement readiness before submission |
-| Templates | Reusable review structure for competency, attendance, salary, comments, and acknowledgement |
+| Evaluations | Position-level form workflow (5 form types) with requirement readiness before submission |
+| Templates | Reusable review structure — buildable by Supervisor / Manager / Director and admins |
 | Cycles | Review period setup and lifecycle management |
 | Reports | Summary analytics, department breakdowns, audit-aware exports |
-| Users | Admin-managed users, positions, departments, and manager hierarchy |
+| Users | Developer/Admin user management; every user can self-edit their own profile |
+| Access Control | `DEVELOPER` super-role, `ADMIN`, and position-based create permissions |
+| Localization | Whole-app Thai / English / French switching |
 | API Docs | Swagger UI and OpenAPI JSON for frontend/backend integration |
 
 ## Screenshots
@@ -71,17 +73,22 @@ Regenerate these assets with `npm run screenshots:readme` while the frontend and
 Browser
   React 18 + TypeScript + Vite
   TanStack Query + Zustand + React Hook Form
-        |
+        |                         (prod: served by nginx, which proxies /api)
         | REST /api/*
         v
 Express API
-  JWT Auth + RBAC + Zod validation
+  JWT Auth + RBAC (Developer/Admin/position-based) + Zod validation
   Audit log + rate limit + request IDs
-        |
-        | Prisma ORM
-        v
-PostgreSQL
+        |                         employee / org master data (planned)
+        | Prisma ORM                    ⇢  AS/400 · Db2 for i
+        v                                  via an EmployeeDirectory port
+PostgreSQL  (evaluation workflow: cycles, scores, sign-offs, audit)
 ```
+
+> Employee/org data is planned to be sourced from the company's **AS/400
+> (Db2 for i)** through a ports-and-adapters seam, while the app keeps its own
+> store for the evaluation workflow — see
+> [docs/as400-integration.md](docs/as400-integration.md).
 
 ## Tech Stack
 
@@ -90,8 +97,10 @@ PostgreSQL
 | Frontend | React 18, TypeScript, Vite, React Router, TanStack Query |
 | UI | Custom enterprise design system, responsive dashboard, premium export UX |
 | Backend | Node.js, Express, Zod, JWT, Swagger UI |
-| Data | PostgreSQL, Prisma |
+| Data | PostgreSQL, Prisma (AS/400 · Db2 for i integration planned) |
+| i18n | Custom lightweight system — Thai / English / French |
 | Security | Helmet, CORS allowlist, rate limiting, RBAC, no-store API headers |
+| Deploy | Docker (multi-stage) + nginx, docker-compose.prod, GHCR images via CI |
 | Quality | TypeScript strict checks, Vitest, Node test runner, Playwright E2E |
 
 ## Quick Start
@@ -145,6 +154,29 @@ Open:
 - Swagger UI: `http://localhost:3001/api/docs/`
 - OpenAPI JSON: `http://localhost:3001/api/openapi.json`
 
+## Deployment (Production)
+
+The full stack ships as containers — Postgres, a one-shot migration step, the
+API, and an nginx-served frontend that proxies `/api` to the backend.
+
+```bash
+cp .env.prod.example .env.prod      # set POSTGRES_PASSWORD, JWT_SECRET (32+), CLIENT_URL
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+```
+
+- `backend/Dockerfile` — multi-stage, non-root, healthchecked; Prisma engine pinned for the runtime
+- `frontend/Dockerfile` + `nginx.conf` — static SPA + `/api` reverse proxy, gzip, security headers
+- migrations run as a one-shot `prisma migrate deploy` before the API starts
+- the demo seed **refuses to run in production** unless `ALLOW_PROD_SEED=true`
+
+**CI/CD** (`.github/workflows/ci.yml`): secret scan → lint / test / build / audit
+→ Postgres integration tests → on `main`, build + **Trivy scan** + publish images
+to `ghcr.io/<owner>/amw-{backend,frontend}`. The deploy step is left to the
+target platform, which pulls those tags.
+
+> **Company database (AS/400 / Db2 for i):** integration design and the IT
+> questionnaire live in [docs/as400-integration.md](docs/as400-integration.md).
+
 ## Release Flavors
 
 ### Standard
@@ -187,15 +219,18 @@ Use `AI_PROVIDER=azure-openai` when the preview deployment is wired to Azure Ope
 
 ## Demo Accounts
 
-Development seed data includes:
+Development seed data includes (the seed is **blocked in production**):
 
-| Role | Email | Password |
+| Role / Position | Email | Password |
 |---|---|---|
+| Developer (super-admin) | `developer@amw-ems.com` | `P@ssw0rd!` |
 | Administrator | `admin@amw-ems.com` | `P@ssw0rd!` |
 | Manager | `manager.eng@amw-ems.com` | `P@ssw0rd!` |
-| Employee | `officer1@amw-ems.com` | `P@ssw0rd!` |
+| Supervisor | `supervisor1@amw-ems.com` | `P@ssw0rd!` |
+| Officer | `officer1@amw-ems.com` | `P@ssw0rd!` |
 
-Change credentials and disable public registration before any real rollout.
+Dev-only credentials. The seed refuses to run when `NODE_ENV=production`; change
+credentials and disable public registration before any real rollout.
 
 ## Quality Gate
 
@@ -236,16 +271,19 @@ Latest local verification for `v0.2.0-rc.1`: passed.
 | GET | `/api/docs/` | Public | Swagger UI |
 | GET | `/api/openapi.json` | Public | OpenAPI spec |
 | POST | `/api/auth/login` | Public | Authenticate and receive JWT |
+| PATCH | `/api/auth/me` | Bearer | Self-service profile update |
 | GET | `/api/evaluations` | Bearer | List evaluations scoped by role |
-| POST | `/api/evaluations` | Admin | Create evaluation |
+| POST | `/api/evaluations` | Supervisory+ | Create evaluation (Supervisor / Manager / Director / Admin) |
 | DELETE | `/api/evaluations/:id` | Admin | Delete evaluation |
+| POST | `/api/templates` | Supervisory+ | Build a template |
 | GET | `/api/reports/summary` | Manager/Admin | Summary reporting |
-| GET | `/api/reports/evaluations/:id/export` | Bearer | Export evaluation CSV |
-| GET | `/api/users` | Admin | User management |
+| GET | `/api/users` | Admin/Developer | User management (create/edit/delete) |
+| GET | `/api/users` (list) | Supervisory+ | Read directory to pick an evaluatee |
 
 ## Documentation
 
 - [Changelog](CHANGELOG.md)
+- [AS/400 (Db2 for i) Integration](docs/as400-integration.md)
 - [API Notes](docs/api.md)
 - [Data Model](docs/data-model.md)
 - [Production Readiness](docs/production-readiness.md)
