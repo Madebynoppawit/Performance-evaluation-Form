@@ -16,8 +16,11 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/i18n/languageContext'
+import api from '@/lib/api'
+import type { Position, User as UserType } from '@/types'
 
 const roleLabel = {
+  DEVELOPER: 'Developer',
   ADMIN: 'Administrator',
   MANAGER: 'Manager',
   EMPLOYEE: 'Employee',
@@ -52,8 +55,10 @@ function getDisplayRole(user: ReturnType<typeof useAuth>['user']) {
   return user?.role ? roleLabel[user.role] : '-'
 }
 
+const POSITION_OPTIONS: Position[] = ['DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']
+
 export default function AccountPage() {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const t = useT()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const storageKey = useMemo(() => `amw-account-photo:${user?.id ?? 'guest'}`, [user?.id])
@@ -62,8 +67,13 @@ export default function AccountPage() {
   const [photoLayout, setPhotoLayout] = useState<PhotoLayout>(defaultPhotoLayout)
   const [layoutOpen, setLayoutOpen] = useState(false)
   const profileKey = useMemo(() => `amw-account-profile:${user?.id ?? 'guest'}`, [user?.id])
-  const [details, setDetails] = useState({ displayName: '', phone: '', bio: '' })
+  const [form, setForm] = useState({
+    name: '', email: '', department: '', position: '' as '' | Position, jobTitle: '',
+    phone: '', bio: '', password: '',
+  })
   const [savedFlash, setSavedFlash] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const initials = user?.name
     ?.split(' ')
     .map(part => part[0])
@@ -79,13 +89,43 @@ export default function AccountPage() {
 
   useEffect(() => {
     const saved = localStorage.getItem(profileKey)
-    setDetails(saved ? JSON.parse(saved) : { displayName: user?.name ?? '', phone: '', bio: '' })
-  }, [profileKey, user?.name])
+    const local = saved ? JSON.parse(saved) : {}
+    setForm({
+      name: user?.name ?? '',
+      email: user?.email ?? '',
+      department: user?.department ?? '',
+      position: (user?.position ?? '') as '' | Position,
+      jobTitle: user?.jobTitle ?? '',
+      phone: local.phone ?? '',
+      bio: local.bio ?? '',
+      password: '',
+    })
+  }, [profileKey, user])
 
-  function saveDetails() {
-    localStorage.setItem(profileKey, JSON.stringify(details))
-    setSavedFlash(true)
-    setTimeout(() => setSavedFlash(false), 2000)
+  async function saveDetails() {
+    setSaving(true)
+    setSaveError(null)
+    try {
+      const payload: Record<string, unknown> = {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        department: form.department.trim() || null,
+        position: form.position || null,
+        jobTitle: form.jobTitle.trim() || null,
+      }
+      if (form.password) payload.password = form.password
+      const { data } = await api.patch<UserType>('/auth/me', payload)
+      updateUser(data)
+      localStorage.setItem(profileKey, JSON.stringify({ phone: form.phone, bio: form.bio }))
+      setForm(f => ({ ...f, password: '' }))
+      setSavedFlash(true)
+      setTimeout(() => setSavedFlash(false), 2000)
+    } catch (err) {
+      const res = (err as { response?: { data?: { message?: string; errors?: unknown } } }).response?.data
+      setSaveError(typeof res?.message === 'string' ? res.message : t('acc.saveFailed'))
+    } finally {
+      setSaving(false)
+    }
   }
 
   function updatePhotoLayout(next: Partial<PhotoLayout>) {
@@ -258,30 +298,66 @@ export default function AccountPage() {
             <span>{t('acc.editable')}</span>
             <strong>{t('acc.personalDetails')}</strong>
           </div>
-          <button type="button" className="kbt-btn-primary" onClick={saveDetails} style={{ height: 34 }}>
-            {savedFlash ? <><CheckCircle2 size={14} /> {t('common.saved')}</> : t('common.saveChanges')}
+          <button type="button" className="kbt-btn-primary" onClick={saveDetails} disabled={saving} style={{ height: 34 }}>
+            {saving ? t('common.saving') : savedFlash ? <><CheckCircle2 size={14} /> {t('common.saved')}</> : t('common.saveChanges')}
           </button>
         </div>
+        {saveError && (
+          <div className="kbt-msg-error" style={{ margin: '0 0 12px', fontSize: '0.8125rem' }}>{saveError}</div>
+        )}
         <div className="amw-account-edit-grid">
           <label className="amw-account-edit-field">
-            <span className="kbt-label">{t('acc.displayName')}</span>
-            <input className="kbt-input" value={details.displayName}
-              onChange={e => setDetails(d => ({ ...d, displayName: e.target.value }))}
+            <span className="kbt-label kbt-label-required">{t('acc.displayName')}</span>
+            <input className="kbt-input" value={form.name}
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               placeholder={user?.name ?? ''} />
           </label>
           <label className="amw-account-edit-field">
+            <span className="kbt-label kbt-label-required">{t('acc.email')}</span>
+            <input className="kbt-input" type="email" value={form.email}
+              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              placeholder={user?.email ?? ''} />
+          </label>
+          <label className="amw-account-edit-field">
+            <span className="kbt-label">{t('acc.department')}</span>
+            <input className="kbt-input" value={form.department}
+              onChange={e => setForm(f => ({ ...f, department: e.target.value }))}
+              placeholder={t('acc.notAssigned')} />
+          </label>
+          <label className="amw-account-edit-field">
+            <span className="kbt-label">{t('acc.position')}</span>
+            <select className="kbt-input" value={form.position}
+              onChange={e => setForm(f => ({ ...f, position: e.target.value as '' | Position }))}>
+              <option value="">{t('acc.notAssigned')}</option>
+              {POSITION_OPTIONS.map(p => <option key={p} value={p}>{positionLabel[p]}</option>)}
+            </select>
+          </label>
+          <label className="amw-account-edit-field">
+            <span className="kbt-label">{t('acc.jobTitle')}</span>
+            <input className="kbt-input" value={form.jobTitle}
+              onChange={e => setForm(f => ({ ...f, jobTitle: e.target.value }))}
+              placeholder={t('acc.jobTitlePlaceholder')} />
+          </label>
+          <label className="amw-account-edit-field">
             <span className="kbt-label">{t('acc.contactNumber')}</span>
-            <input className="kbt-input" value={details.phone}
-              onChange={e => setDetails(d => ({ ...d, phone: e.target.value }))}
+            <input className="kbt-input" value={form.phone}
+              onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
               placeholder="+66 ..." />
+          </label>
+          <label className="amw-account-edit-field">
+            <span className="kbt-label">{t('acc.newPassword')}</span>
+            <input className="kbt-input" type="password" value={form.password} autoComplete="new-password"
+              onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+              placeholder={t('acc.newPasswordHint')} />
           </label>
           <label className="amw-account-edit-field amw-account-edit-full">
             <span className="kbt-label">{t('acc.bioTitle')}</span>
-            <textarea className="kbt-textarea" rows={2} value={details.bio}
-              onChange={e => setDetails(d => ({ ...d, bio: e.target.value }))}
+            <textarea className="kbt-textarea" rows={2} value={form.bio}
+              onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
               placeholder={t('acc.bioPlaceholder')} />
           </label>
         </div>
+        <p style={{ margin: '12px 2px 0', fontSize: '0.75rem', color: 'var(--kbt-text-3)' }}>{t('acc.roleManagedNote')}</p>
       </section>
 
       <div className="amw-account-grid">

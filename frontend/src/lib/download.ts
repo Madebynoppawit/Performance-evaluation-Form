@@ -1,5 +1,6 @@
 import api from './api'
 import type { Evaluation } from '@/types'
+import { EVALUATION_REASONS, getFormDefinition, scoreToGrade } from '@/features/evaluations/constants/formDefinitions'
 
 export type ExportLanguage = 'en' | 'fr'
 
@@ -17,9 +18,16 @@ const PDF_COPY: Record<ExportLanguage, Record<string, string>> = {
     summary: 'Evaluation Summary',
     employee: 'Employee',
     department: 'Department',
+    position: 'Position',
+    hireDate: 'Hire Date',
     evaluator: 'Evaluator',
+    evaluatorTitle: 'Evaluator Title',
     status: 'Status',
     evaluationType: 'Evaluation Type',
+    form: 'Form',
+    reason: 'Reason',
+    grade: 'Performance Grade',
+    effectiveDate: 'Effective Date',
     period: 'Period',
     exportedAt: 'Exported At',
     scores: 'Score Summary',
@@ -30,11 +38,15 @@ const PDF_COPY: Record<ExportLanguage, Record<string, string>> = {
     combinedScore: 'combined score',
     weight: 'weight',
     goals: 'Goals',
+    description: 'Description',
+    target: 'Target',
     result: 'Result',
     wig: 'WIG',
     kpiCategory: 'KPI Category',
     score: 'Score',
     competencyId: 'Competency ID',
+    criteria: 'Criteria',
+    category: 'Category',
     training: 'Training',
     minimumHours: 'Minimum Hours',
     actualHours: 'Actual Hours',
@@ -51,6 +63,15 @@ const PDF_COPY: Record<ExportLanguage, Record<string, string>> = {
     disciplinary: 'Disciplinary Level',
     attendanceAvg: 'Attendance Average',
     acknowledgement: 'Acknowledgement',
+    salary: 'Salary / Compensation',
+    oldSalary: 'Old Salary',
+    newSalary: 'New Salary',
+    bonus: 'Bonus',
+    bonusDeduction: 'Bonus Deduction',
+    bonusPolicy: 'Bonus Policy',
+    answers: 'Saved Template Answers',
+    question: 'Question',
+    answer: 'Answer',
     signer: 'Signer',
     signedAt: 'Signed At',
     director: 'Director',
@@ -67,9 +88,16 @@ const PDF_COPY: Record<ExportLanguage, Record<string, string>> = {
     summary: "Synthese de l'evaluation",
     employee: 'Collaborateur',
     department: 'Departement',
+    position: 'Poste',
+    hireDate: "Date d'embauche",
     evaluator: 'Evaluateur',
+    evaluatorTitle: "Titre de l'evaluateur",
     status: 'Statut',
     evaluationType: "Type d'evaluation",
+    form: 'Formulaire',
+    reason: 'Motif',
+    grade: 'Note de performance',
+    effectiveDate: "Date d'effet",
     period: 'Periode',
     exportedAt: 'Exporte le',
     scores: 'Synthese des scores',
@@ -80,11 +108,15 @@ const PDF_COPY: Record<ExportLanguage, Record<string, string>> = {
     combinedScore: 'score combine',
     weight: 'ponderation',
     goals: 'Objectifs',
+    description: 'Description',
+    target: 'Objectif',
     result: 'Resultat',
     wig: 'WIG',
     kpiCategory: 'Categorie KPI',
     score: 'Score',
     competencyId: 'ID competence',
+    criteria: 'Critere',
+    category: 'Categorie',
     training: 'Formation',
     minimumHours: 'Heures minimales',
     actualHours: 'Heures realisees',
@@ -101,6 +133,15 @@ const PDF_COPY: Record<ExportLanguage, Record<string, string>> = {
     disciplinary: 'Niveau disciplinaire',
     attendanceAvg: "Moyenne d'assiduite",
     acknowledgement: 'Validation',
+    salary: 'Salaire / Compensation',
+    oldSalary: 'Ancien salaire',
+    newSalary: 'Nouveau salaire',
+    bonus: 'Prime',
+    bonusDeduction: 'Deduction de prime',
+    bonusPolicy: 'Politique de prime',
+    answers: 'Reponses du modele',
+    question: 'Question',
+    answer: 'Reponse',
     signer: 'Signataire',
     signedAt: 'Signe le',
     director: 'Directeur',
@@ -162,6 +203,15 @@ function date(value?: string | null) {
   return value ? new Date(value).toLocaleDateString('en-US') : '-'
 }
 
+function money(value?: number | null) {
+  return value == null ? '-' : value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function reasonLabel(value?: string | null) {
+  const item = EVALUATION_REASONS.find((reason) => reason.value === value)
+  return item?.en ?? value ?? '-'
+}
+
 export async function downloadEvaluationPdf(evaluationId: string, fallbackName?: string, language: ExportLanguage = 'en') {
   const [{ jsPDF }, evaluationResponse] = await Promise.all([
     import('jspdf'),
@@ -169,6 +219,21 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   ])
   const ev = evaluationResponse.data
   const copy = PDF_COPY[language]
+  const formDef = getFormDefinition(ev.formType)
+  const scoreById = new Map((ev.competencyScores ?? []).map((item) => [item.competencyId, item.score]))
+  const displayEmployee = ev.evaluateeName?.trim() || ev.evaluatee?.name || copy.employeeFallback
+  const displayEvaluator = ev.evaluatorName?.trim() || ev.evaluator?.name || '-'
+  const displayPosition = ev.evaluatee?.jobTitle?.trim() || ev.evaluatee?.position || '-'
+  const selectedGrade = ev.performanceGrade
+    ? formDef.gradeScale.find((grade) => grade.key === ev.performanceGrade)
+    : null
+  const ratedCriteria = formDef.categories.flatMap((category) => category.criteria)
+    .map((criterion) => scoreById.get(criterion.id))
+    .filter((item): item is number => item != null)
+  const calculatedGrade = ratedCriteria.length
+    ? scoreToGrade(ratedCriteria.reduce((sum, item) => sum + item, 0) / ratedCriteria.length, formDef)
+    : null
+  const performanceGrade = selectedGrade ?? calculatedGrade
   const doc = new jsPDF({ unit: 'pt', format: 'a4' })
   let fontFamily = 'helvetica'
   let hasCustomFont = false
@@ -196,6 +261,8 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   const ink: [number, number, number] = [31, 38, 50]
   const muted: [number, number, number] = [99, 111, 128]
   const line: [number, number, number] = [221, 228, 237]
+  const paper: [number, number, number] = [248, 251, 255]
+  const gold: [number, number, number] = [184, 151, 87]
   let y = 46
   const documentId = `AMW-EVAL-${ev.id.slice(0, 8).toUpperCase()}`
 
@@ -211,34 +278,43 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   }
 
   function drawPageChrome() {
+    doc.setFillColor(255, 255, 255)
+    doc.rect(0, 0, pageWidth, pageHeight, 'F')
     doc.setFillColor(...navy)
-    doc.rect(0, 0, pageWidth, 10, 'F')
+    doc.rect(0, 0, pageWidth, 8, 'F')
     doc.setFillColor(...blue)
-    doc.rect(0, 10, pageWidth * 0.74, 3, 'F')
+    doc.rect(0, 8, pageWidth * 0.74, 3, 'F')
     doc.setFillColor(...red)
-    doc.rect(pageWidth * 0.74, 10, pageWidth * 0.26, 3, 'F')
+    doc.rect(pageWidth * 0.74, 8, pageWidth * 0.26, 3, 'F')
+    doc.setFillColor(...paper)
+    doc.rect(0, pageHeight - 44, pageWidth, 44, 'F')
     doc.setDrawColor(...line)
     doc.line(margin, pageHeight - 34, pageWidth - margin, pageHeight - 34)
     setPdfFont('bold')
     doc.setFontSize(7.5)
     doc.setTextColor(...muted)
     doc.text(copy.brand, margin, pageHeight - 18)
+    doc.text(documentId, pageWidth / 2, pageHeight - 18, { align: 'center' })
     doc.text(`${copy.page} ${doc.getNumberOfPages()}`, pageWidth - margin, pageHeight - 18, { align: 'right' })
-    doc.setTextColor(235, 240, 247)
-    doc.setFontSize(32)
-    doc.text('CONFIDENTIAL', pageWidth / 2, pageHeight / 2, { align: 'center', angle: 35 })
+    doc.setTextColor(244, 247, 252)
+    doc.setFontSize(28)
+    doc.text('CONFIDENTIAL', pageWidth / 2, pageHeight / 2 + 18, { align: 'center', angle: 35 })
   }
 
   function sectionTitle(text: string) {
-    addPageIfNeeded(42)
-    y += 6
-    doc.setFillColor(...blue)
-    doc.roundedRect(margin, y, 4, 18, 2, 2, 'F')
+    addPageIfNeeded(50)
+    y += 8
+    doc.setDrawColor(...line)
+    doc.line(margin, y + 23, pageWidth - margin, y + 23)
+    doc.setFillColor(...navy)
+    doc.roundedRect(margin, y, 24, 24, 6, 6, 'F')
+    doc.setFillColor(...gold)
+    doc.circle(margin + 12, y + 12, 3.5, 'F')
     setPdfFont('bold')
-    doc.setFontSize(12)
+    doc.setFontSize(11.5)
     doc.setTextColor(...navy)
-    doc.text(text, margin + 12, y + 13)
-    y += 28
+    doc.text(text.toUpperCase(), margin + 34, y + 16)
+    y += 38
   }
 
   function valueRow(label: string, value?: string | number | null, options?: { wide?: boolean }) {
@@ -259,68 +335,76 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       addPageIfNeeded(cardHeight + 8)
       rowItems.forEach((item, index) => {
         const x = item.x ?? margin + index * (item.width + gap)
-        doc.setFillColor(248, 251, 255)
+        doc.setFillColor(...paper)
         doc.setDrawColor(...line)
-        doc.roundedRect(x, y, item.width, cardHeight, 8, 8, 'FD')
+        doc.roundedRect(x, y, item.width, cardHeight, 7, 7, 'FD')
+        doc.setFillColor(...blue)
+        doc.roundedRect(x, y, 4, cardHeight, 2, 2, 'F')
         setPdfFont('bold')
         doc.setFontSize(7.5)
-        doc.setTextColor(...muted)
-        doc.text(item.label.toUpperCase(), x + 12, y + 18)
+        doc.setTextColor(...blue)
+        doc.text(item.label.toUpperCase(), x + 16, y + 18)
         setPdfFont('normal')
-        doc.setFontSize(10)
+        doc.setFontSize(9.6)
         doc.setTextColor(...ink)
-        doc.text(doc.splitTextToSize(item.value, item.width - 24), x + 12, y + 36)
+        doc.text(doc.splitTextToSize(item.value, item.width - 30), x + 16, y + 37)
       })
       y += cardHeight + 10
     }
   }
 
   function scoreCard(label: string, value: string, weight: string, x: number, w: number, accent: [number, number, number]) {
-    doc.setFillColor(255, 255, 255)
+    doc.setFillColor(...paper)
     doc.setDrawColor(...line)
-    doc.roundedRect(x, y, w, 82, 10, 10, 'FD')
+    doc.roundedRect(x, y, w, 86, 10, 10, 'FD')
     doc.setFillColor(...accent)
-    doc.roundedRect(x, y, w, 4, 2, 2, 'F')
+    doc.roundedRect(x, y, w, 5, 2, 2, 'F')
+    doc.setFillColor(255, 255, 255)
+    doc.circle(x + w - 20, y + 23, 8, 'F')
     setPdfFont('bold')
     doc.setFontSize(7.5)
     doc.setTextColor(...muted)
     doc.text(label.toUpperCase(), x + 12, y + 22)
-    doc.setFontSize(22)
+    doc.setFontSize(24)
     doc.setTextColor(...accent)
-    doc.text(value, x + 12, y + 51)
+    doc.text(value, x + 12, y + 54)
     doc.setFontSize(8)
     doc.setTextColor(...muted)
-    doc.text(weight, x + 12, y + 68)
+    doc.text(weight, x + 12, y + 72)
   }
 
   function table(headers: string[], rows: (string | number | null | undefined)[][], widths: number[]) {
-    const headerHeight = 24
+    const headerHeight = 28
     addPageIfNeeded(headerHeight + 24)
     doc.setFillColor(...navy)
-    doc.roundedRect(margin, y, contentWidth, headerHeight, 6, 6, 'F')
+    doc.roundedRect(margin, y, contentWidth, headerHeight, 7, 7, 'F')
+    doc.setFillColor(...blue)
+    doc.rect(margin, y + headerHeight - 3, contentWidth * 0.78, 3, 'F')
+    doc.setFillColor(...red)
+    doc.rect(margin + contentWidth * 0.78, y + headerHeight - 3, contentWidth * 0.22, 3, 'F')
     setPdfFont('bold')
-    doc.setFontSize(8)
+    doc.setFontSize(7.5)
     doc.setTextColor(255, 255, 255)
     let x = margin
     headers.forEach((header, index) => {
-      doc.text(header.toUpperCase(), x + 10, y + 15)
+      doc.text(header.toUpperCase(), x + 10, y + 17)
       x += widths[index]
     })
     y += headerHeight
 
     rows.forEach((cells, rowIndex) => {
       const splitCells = cells.map((cell, index) => doc.splitTextToSize(String(cell ?? '-'), widths[index] - 20))
-      const rowHeight = Math.max(28, ...splitCells.map((lines) => lines.length * 10 + 16))
+      const rowHeight = Math.max(32, ...splitCells.map((lines) => lines.length * 10 + 18))
       addPageIfNeeded(rowHeight)
-      doc.setFillColor(rowIndex % 2 === 0 ? 250 : 255, rowIndex % 2 === 0 ? 252 : 255, 255)
-      doc.setDrawColor(...line)
+      doc.setFillColor(rowIndex % 2 === 0 ? paper[0] : 255, rowIndex % 2 === 0 ? paper[1] : 255, rowIndex % 2 === 0 ? paper[2] : 255)
+      doc.setDrawColor(226, 233, 242)
       doc.rect(margin, y, contentWidth, rowHeight, 'FD')
       x = margin
       splitCells.forEach((lines, index) => {
         setPdfFont(index === 0 ? 'bold' : 'normal')
-        doc.setFontSize(8.5)
+        doc.setFontSize(8.2)
         doc.setTextColor(...ink)
-        doc.text(lines, x + 10, y + 17)
+        doc.text(lines, x + 10, y + 18)
         x += widths[index]
       })
       y += rowHeight
@@ -330,30 +414,42 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
 
   function banner() {
     doc.setFillColor(...navy)
-    doc.roundedRect(margin, y, contentWidth, 118, 14, 14, 'F')
+    doc.roundedRect(margin, y, contentWidth, 138, 16, 16, 'F')
     doc.setFillColor(...blue)
-    doc.rect(margin, y, contentWidth * 0.72, 5, 'F')
+    doc.rect(margin, y, contentWidth * 0.72, 6, 'F')
     doc.setFillColor(...red)
-    doc.rect(margin + contentWidth * 0.72, y, contentWidth * 0.28, 5, 'F')
+    doc.rect(margin + contentWidth * 0.72, y, contentWidth * 0.28, 6, 'F')
+    doc.setFillColor(255, 255, 255)
+    doc.roundedRect(margin + 22, y + 24, 58, 34, 8, 8, 'F')
+    setPdfFont('bold')
+    doc.setFontSize(14)
+    doc.setTextColor(...navy)
+    doc.text('AMW', margin + 51, y + 46, { align: 'center' })
     setPdfFont('normal')
     doc.setFontSize(8)
     doc.setTextColor(...sky)
-    doc.text(copy.confidential, margin + 22, y + 30)
+    doc.text(copy.confidential, margin + 94, y + 34)
     setPdfFont('bold')
-    doc.setFontSize(22)
+    doc.setFontSize(21)
     doc.setTextColor(255, 255, 255)
-    doc.text(copy.title, margin + 22, y + 57)
-    doc.setFontSize(11)
+    doc.text(copy.title, margin + 94, y + 58)
+    doc.setFillColor(255, 255, 255)
+    doc.setDrawColor(79, 119, 168)
+    doc.roundedRect(pageWidth - margin - 116, y + 26, 94, 82, 12, 12, 'FD')
+    doc.setFontSize(27)
+    doc.setTextColor(...red)
+    doc.text(score(ev.totalScore), pageWidth - margin - 69, y + 64, { align: 'center' })
+    doc.setFontSize(7.5)
+    doc.setTextColor(...muted)
+    doc.text(copy.totalScore, pageWidth - margin - 69, y + 84, { align: 'center' })
+    doc.setFontSize(10)
     doc.setTextColor(221, 231, 244)
-    doc.text(`${ev.evaluatee?.name ?? copy.employeeFallback} - ${ev.cycle?.name ?? copy.cycleFallback}`, margin + 22, y + 79)
-    setPdfFont('bold')
-    doc.setFontSize(28)
-    doc.setTextColor(...sky)
-    doc.text(score(ev.totalScore), pageWidth - margin - 22, y + 57, { align: 'right' })
-    doc.setFontSize(8)
+    doc.text(doc.splitTextToSize(`${displayEmployee} / ${ev.cycle?.name ?? copy.cycleFallback}`, contentWidth - 150), margin + 94, y + 79)
+    setPdfFont('normal')
+    doc.setFontSize(8.5)
     doc.setTextColor(221, 231, 244)
-    doc.text(copy.totalScore, pageWidth - margin - 22, y + 76, { align: 'right' })
-    y += 140
+    doc.text(`${documentId}  |  ${new Date().toLocaleDateString('en-US')}`, margin + 94, y + 115)
+    y += 160
   }
 
   drawPageChrome()
@@ -363,11 +459,18 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   detailGrid([
     valueRow('Document ID', documentId),
     valueRow('Classification', 'Confidential HR record'),
-    valueRow(copy.employee, ev.evaluatee?.name),
+    valueRow(copy.employee, displayEmployee),
     valueRow(copy.department, ev.evaluatee?.department),
-    valueRow(copy.evaluator, ev.evaluator?.name),
+    valueRow(copy.position, displayPosition),
+    valueRow(copy.hireDate, date(ev.evaluatee?.hireDate)),
+    valueRow(copy.evaluator, displayEvaluator),
+    valueRow(copy.evaluatorTitle, ev.evaluatorTitle),
     valueRow(copy.status, ev.status),
     valueRow(copy.evaluationType, ev.type),
+    valueRow(copy.form, `${formDef.code} - ${formDef.titleEn}`, { wide: true }),
+    valueRow(copy.reason, ev.evaluationReason === 'OTHER' ? ev.evaluationReasonOther : reasonLabel(ev.evaluationReason)),
+    valueRow(copy.grade, performanceGrade?.en ?? '-'),
+    valueRow(copy.effectiveDate, date(ev.effectiveDate)),
     valueRow(copy.period, `${date(ev.cycle?.startDate)} - ${date(ev.cycle?.endDate)}`),
     valueRow(copy.exportedAt, new Date().toLocaleString('en-US'), { wide: true }),
   ])
@@ -384,18 +487,35 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   if (ev.goalEntries?.length) {
     sectionTitle(copy.goals)
     table(
-      [copy.goal, copy.wig, copy.kpiCategory, copy.weight, copy.score],
-      ev.goalEntries.map((goal) => [goal.goal, goal.wig ?? '-', goal.kpiCategory ?? '-', `${goal.weight}%`, goal.evaluationScore ?? '-']),
-      [170, 110, 130, 70, contentWidth - 480]
+      [copy.goal, copy.description, copy.wig, copy.kpiCategory, copy.weight, copy.score],
+      ev.goalEntries.map((goal) => [goal.goal, goal.goalDescription ?? '-', goal.wig ?? '-', goal.kpiCategory ?? '-', `${goal.weight}%`, goal.evaluationScore ?? '-']),
+      [110, 150, 78, 92, 52, contentWidth - 482]
+    )
+    table(
+      [copy.goal, `${copy.target} 5`, `${copy.target} 4`, `${copy.target} 3`, `${copy.target} 2`, `${copy.target} 1`, copy.result],
+      ev.goalEntries.map((goal) => [goal.goal, goal.targetRating5, goal.targetRating4, goal.targetRating3, goal.targetRating2, goal.targetRating1, goal.result]),
+      [110, 58, 58, 58, 58, 58, contentWidth - 400]
+    )
+    table(
+      [copy.goal, 'Employee Comment', 'Superior Comment'],
+      ev.goalEntries.map((goal) => [goal.goal, goal.employeeComment, goal.superiorComment]),
+      [120, (contentWidth - 120) / 2, (contentWidth - 120) / 2]
     )
   }
 
   if (ev.competencyScores?.length) {
     sectionTitle(copy.competency)
     table(
-      [copy.competencyId, copy.score],
-      ev.competencyScores.map((item) => [item.competencyId, item.score ?? '-']),
-      [contentWidth - 90, 90]
+      [copy.category, copy.competencyId, copy.criteria, copy.score],
+      formDef.categories.flatMap((category) =>
+        category.criteria.map((criterion) => [
+          `${category.num}. ${category.titleEn}`,
+          criterion.id,
+          criterion.en,
+          scoreById.get(criterion.id) ?? '-',
+        ])
+      ),
+      [108, 48, contentWidth - 216, 60]
     )
   }
 
@@ -437,6 +557,27 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     )
   }
 
+  if (ev.salarySummary) {
+    sectionTitle(copy.salary)
+    detailGrid([
+      valueRow(copy.oldSalary, money(ev.salarySummary.oldSalary)),
+      valueRow(copy.newSalary, money(ev.salarySummary.newSalary)),
+      valueRow(copy.bonus, money(ev.salarySummary.bonus)),
+      valueRow(copy.bonusDeduction, money(ev.salarySummary.bonusDeduction)),
+      valueRow(copy.effectiveDate, date(ev.salarySummary.effectiveDate)),
+      valueRow(copy.bonusPolicy, ev.salarySummary.bonusPolicy, { wide: true }),
+    ])
+  }
+
+  if (ev.answers?.length) {
+    sectionTitle(copy.answers)
+    table(
+      [copy.question, copy.answer, copy.score],
+      ev.answers.map((answer) => [answer.questionId, answer.value, answer.score ?? '-']),
+      [contentWidth * 0.42, contentWidth * 0.42, contentWidth * 0.16]
+    )
+  }
+
   sectionTitle(copy.acknowledgement)
   table(
     [copy.signer, copy.signedAt],
@@ -457,6 +598,6 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     doc.text(`${copy.page} ${page} ${copy.of} ${totalPages}`, pageWidth - margin, pageHeight - 18, { align: 'right' })
   }
 
-  const name = fallbackName ?? `evaluation-${cleanFilePart(ev.evaluatee?.name)}-${ev.id}.pdf`
+  const name = fallbackName ?? `evaluation-${cleanFilePart(displayEmployee)}-${ev.id}.pdf`
   doc.save(name)
 }

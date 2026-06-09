@@ -110,78 +110,9 @@ export const COMPETENCY_DEFINITIONS: CompetencyDef[] = [
       MANAGER: 'Plans resources, manages stakeholders, and maintains governance/compliance.',
     },
   },
-  {
-    id: 'TCO1',
-    name: 'TCO1 - Job-specific technical knowledge',
-    positions: ['OFFICER'],
-    descriptions: { OFFICER: 'Applies role-specific technical knowledge, systems, and tools accurately.' },
-  },
-  {
-    id: 'TCO2',
-    name: 'TCO2 - Process execution & documentation',
-    positions: ['OFFICER'],
-    descriptions: { OFFICER: 'Executes processes accurately and maintains clear documentation/reporting.' },
-  },
-  {
-    id: 'TCO3',
-    name: 'TCO3 - Data, SLA & problem solving',
-    positions: ['OFFICER'],
-    descriptions: { OFFICER: 'Maintains data accuracy, manages SLA/task commitments, and solves work problems.' },
-  },
-  {
-    id: 'TCO4',
-    name: 'TCO4 - Coordination, quality awareness & 5S',
-    positions: ['OFFICER'],
-    descriptions: { OFFICER: 'Coordinates cross-functionally and maintains quality, 5S, and workplace standards.' },
-  },
-  {
-    id: 'TCS1',
-    name: 'TCS1 - Work planning & line control',
-    positions: ['SUPERVISOR'],
-    descriptions: { SUPERVISOR: 'Plans daily work, balances lines, and allocates manpower effectively.' },
-  },
-  {
-    id: 'TCS2',
-    name: 'TCS2 - Quality, safety & OEE monitoring',
-    positions: ['SUPERVISOR'],
-    descriptions: { SUPERVISOR: 'Applies quality/safety controls and monitors OEE or efficiency.' },
-  },
-  {
-    id: 'TCS3',
-    name: 'TCS3 - Maintenance coordination & root cause analysis',
-    positions: ['SUPERVISOR'],
-    descriptions: { SUPERVISOR: 'Coordinates basic maintenance and performs root cause analysis.' },
-  },
-  {
-    id: 'TCS4',
-    name: 'TCS4 - Coaching & production reporting',
-    positions: ['SUPERVISOR'],
-    descriptions: { SUPERVISOR: 'Coaches team skills and maintains accurate daily production reporting.' },
-  },
-  {
-    id: 'TCP1',
-    name: 'TCP1 - Job skill & machine operation',
-    positions: ['PRODUCTION_STAFF'],
-    descriptions: { PRODUCTION_STAFF: 'Demonstrates job skill proficiency and operates assigned machines/equipment safely.' },
-  },
-  {
-    id: 'TCP2',
-    name: 'TCP2 - Work instruction & quality checking',
-    positions: ['PRODUCTION_STAFF'],
-    descriptions: { PRODUCTION_STAFF: 'Follows work instructions and performs required quality checks.' },
-  },
-  {
-    id: 'TCP3',
-    name: 'TCP3 - Defect awareness & basic problem identification',
-    positions: ['PRODUCTION_STAFF'],
-    descriptions: { PRODUCTION_STAFF: 'Identifies defects, basic problems, and uses tools correctly.' },
-  },
-  {
-    id: 'TCP4',
-    name: 'TCP4 - 5S & multi-skill readiness',
-    positions: ['PRODUCTION_STAFF'],
-    descriptions: { PRODUCTION_STAFF: 'Maintains workplace cleanliness and develops multi-skill readiness.' },
-  },
+  // Officer / Supervisor / Production Staff are assessed on the four Core
+  // Competencies (CC1–CC4) only. Management (MC) and management-technical
+  // (TCM) competencies above apply to Manager / Director levels.
 ]
 
 export const RATING_SCALE = [

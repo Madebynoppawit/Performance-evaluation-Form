@@ -16,7 +16,7 @@ import Spinner from '@/components/Spinner'
 export default function TemplateListPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
-  const { isAdmin } = useAuth()
+  const { isAdmin, canManage } = useAuth()
   const t = useT()
   const { typeLabel } = useLabels()
   const [deleteTarget, setDeleteTarget] = useState<Template | null>(null)
@@ -67,7 +67,7 @@ export default function TemplateListPage() {
           <h1>{t('page.templates.title')}</h1>
           <p>{t('page.templates.desc')}</p>
         </div>
-        {isAdmin && (
+        {canManage && (
           <button onClick={() => createMutation.mutate()} disabled={createMutation.isPending} className="kbt-btn-primary">
             {createMutation.isPending ? <Spinner size={15} /> : <Plus size={15} />}
             {createMutation.isPending ? t('common.creating') : t('tmpl.new')}
@@ -91,7 +91,7 @@ export default function TemplateListPage() {
             icon={LayoutTemplate}
             title={t('tmpl.noneTitle')}
             description={t('tmpl.noneDesc')}
-            action={isAdmin ? { label: t('tmpl.create'), onClick: () => createMutation.mutate() } : undefined}
+            action={canManage ? { label: t('tmpl.create'), onClick: () => createMutation.mutate() } : undefined}
           />
         ) : (
           <table className="kbt-table">
@@ -146,7 +146,7 @@ export default function TemplateListPage() {
                           >
                             {template.name}
                           </Link>
-                          {isAdmin && (
+                          {canManage && (
                             <button
                               type="button"
                               className="amw-inline-edit-btn"
@@ -173,7 +173,13 @@ export default function TemplateListPage() {
                         {t('common.edit')}
                       </Link>
                       {isAdmin && (
-                        <button onClick={() => setDeleteTarget(template)} className="kbt-btn-danger" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem' }}>
+                        <button
+                          onClick={() => setDeleteTarget(template)}
+                          className="kbt-btn-danger"
+                          style={{ height: 28, padding: '0 10px', fontSize: '0.75rem' }}
+                          aria-label={`Delete template ${template.name}`}
+                          title="Delete template"
+                        >
                           <Trash2 size={12} />
                         </button>
                       )}

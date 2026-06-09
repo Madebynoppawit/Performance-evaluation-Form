@@ -11,14 +11,14 @@ import {
   saveSummary,
   acknowledge,
 } from '../controllers/evaluationSectionController'
-import { authenticate, authorizeEvaluationAccess, requireRole } from '../middleware/auth'
+import { authenticate, authorizeEvaluationAccess, authorizeSupervisory, requireRole } from '../middleware/auth'
 
 const router = Router()
 
 router.use(authenticate)
 
 router.get('/', list)
-router.post('/', requireRole('ADMIN'), create)
+router.post('/', authorizeSupervisory, create)
 router.get('/:id', authorizeEvaluationAccess, getFullEvaluation)
 router.delete('/:id', requireRole('ADMIN'), remove)
 router.patch('/:id/answers', authorizeEvaluationAccess, saveAnswers)

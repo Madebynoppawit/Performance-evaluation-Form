@@ -6,11 +6,16 @@ export interface AuthRequest extends Request {
   user?: { userId: string; role: string }
 }
 
+/** DEVELOPER is a super-role that has the full control of ADMIN (and above). */
+export function isAdminRole(role: string) {
+  return role === 'ADMIN' || role === 'DEVELOPER'
+}
+
 export function canAccessEvaluation(
   user: { userId: string; role: string },
   evaluation: { evaluateeId: string; evaluatorId: string }
 ) {
-  return user.role === 'ADMIN' || evaluation.evaluateeId === user.userId || evaluation.evaluatorId === user.userId
+  return isAdminRole(user.role) || evaluation.evaluateeId === user.userId || evaluation.evaluatorId === user.userId
 }
 
 export function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
@@ -27,9 +32,42 @@ export function authenticate(req: AuthRequest, res: Response, next: NextFunction
   }
 }
 
+/** Supervisory positions (หัวหน้างานขึ้นไป): Supervisor / Manager / Director-up
+    (MD, CEO). They may create evaluations and build templates. Admins/developers
+    always allowed. */
+const SUPERVISORY_POSITIONS = ['DIRECTOR_UP', 'MANAGER', 'SUPERVISOR']
+
+export async function authorizeSupervisory(req: AuthRequest, res: Response, next: NextFunction) {
+  if (!req.user) {
+    res.status(401).json({ message: 'Unauthorized', requestId: req.requestId })
+    return
+  }
+  if (isAdminRole(req.user.role)) {
+    next()
+    return
+  }
+  try {
+    const actor = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { position: true },
+    })
+    if (actor?.position && SUPERVISORY_POSITIONS.includes(actor.position)) {
+      next()
+      return
+    }
+    res.status(403).json({
+      message: 'Only supervisors, managers or directors can perform this action',
+      requestId: req.requestId,
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
 export function requireRole(...roles: string[]) {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    // DEVELOPER passes every role gate; admins pass any ADMIN-or-lower gate.
+    if (!req.user || !(roles.includes(req.user.role) || req.user.role === 'DEVELOPER')) {
       res.status(403).json({ message: 'Forbidden', requestId: req.requestId })
       return
     }
@@ -43,7 +81,7 @@ export async function authorizeEvaluationAccess(req: AuthRequest, res: Response,
     return
   }
 
-  if (req.user.role === 'ADMIN') {
+  if (isAdminRole(req.user.role)) {
     next()
     return
   }

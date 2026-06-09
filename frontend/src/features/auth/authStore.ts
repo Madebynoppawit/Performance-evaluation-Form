@@ -7,6 +7,7 @@ interface AuthState {
   token: string | null
   expiresAt: number | null
   setAuth: (user: User, token: string) => void
+  updateUser: (user: User) => void
   logout: () => void
   isSessionValid: () => boolean
 }
@@ -20,6 +21,7 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       expiresAt: null,
       setAuth: (user, token) => set({ user, token, expiresAt: Date.now() + SESSION_TTL_MS }),
+      updateUser: (user) => set({ user }),
       logout: () => set({ user: null, token: null, expiresAt: null }),
       isSessionValid: () => {
         const { token, expiresAt } = get()

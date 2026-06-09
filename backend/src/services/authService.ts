@@ -1,3 +1,4 @@
+import { Position } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { comparePassword, hashPassword } from '../utils/hash'
 import { signToken } from '../utils/jwt'
@@ -36,4 +37,42 @@ export async function getProfile(userId: string) {
     select: { id: true, email: true, name: true, role: true, department: true, managerId: true },
   })
   return user
+}
+
+/** Self-service profile update. Excludes `role` — privilege changes stay with
+    admins via the user-management endpoint. */
+export async function updateProfile(
+  userId: string,
+  data: {
+    name?: string
+    email?: string
+    department?: string | null
+    position?: Position | null
+    jobTitle?: string | null
+    password?: string
+  }
+) {
+  if (data.email) {
+    const taken = await prisma.user.findFirst({
+      where: { email: data.email, NOT: { id: userId } },
+      select: { id: true },
+    })
+    if (taken) {
+      const err = new Error('Email is already in use') as Error & { status: number }
+      err.status = 409
+      throw err
+    }
+  }
+
+  const payload: Record<string, unknown> = {}
+  if (data.name !== undefined) payload.name = data.name
+  if (data.email !== undefined) payload.email = data.email
+  if (data.department !== undefined) payload.department = data.department
+  if (data.position !== undefined) payload.position = data.position
+  if (data.jobTitle !== undefined) payload.jobTitle = data.jobTitle
+  if (data.password) payload.password = await hashPassword(data.password)
+
+  const user = await prisma.user.update({ where: { id: userId }, data: payload })
+  const { password: _pw, ...safeUser } = user
+  return safeUser
 }

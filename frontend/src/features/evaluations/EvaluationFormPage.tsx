@@ -72,12 +72,13 @@ export default function EvaluationFormPage() {
   const [salary, setSalary] = useState<SalarySummary>({})
   const [summary, setSummary] = useState<{
     evaluateeName: string | null
+    evaluatorName: string | null
     evaluationReason: string | null
     evaluationReasonOther: string | null
     evaluatorTitle: string | null
     performanceGrade: string | null
     effectiveDate: string | null
-  }>({ evaluateeName: null, evaluationReason: null, evaluationReasonOther: null, evaluatorTitle: null, performanceGrade: null, effectiveDate: null })
+  }>({ evaluateeName: null, evaluatorName: null, evaluationReason: null, evaluationReasonOther: null, evaluatorTitle: null, performanceGrade: null, effectiveDate: null })
   const [section, setSection] = useState('info')
   const [saved, setSaved] = useState(false)
   const [submitErrors, setSubmitErrors] = useState<string[]>([])
@@ -86,6 +87,7 @@ export default function EvaluationFormPage() {
     if (!ev) return
     const e = ev as typeof ev & {
       evaluateeName?: string | null
+      evaluatorName?: string | null
       evaluationReason?: string | null
       evaluationReasonOther?: string | null
       evaluatorTitle?: string | null
@@ -100,6 +102,7 @@ export default function EvaluationFormPage() {
     setSalary(ev.salarySummary ?? {})
     setSummary({
       evaluateeName: e.evaluateeName ?? null,
+      evaluatorName: e.evaluatorName ?? null,
       evaluationReason: e.evaluationReason ?? null,
       evaluationReasonOther: e.evaluationReasonOther ?? null,
       evaluatorTitle: e.evaluatorTitle ?? null,
@@ -137,6 +140,7 @@ export default function EvaluationFormPage() {
         api.patch(`/evaluations/${id}/attendance`, attendance),
         api.patch(`/evaluations/${id}/training`, training),
         api.patch(`/evaluations/${id}/comment`, comment),
+        api.patch(`/evaluations/${id}/summary`, summary),
         ...(isAdmin || isManager ? [api.patch(`/evaluations/${id}/salary`, salary)] : []),
       ])
     },
@@ -169,8 +173,10 @@ export default function EvaluationFormPage() {
   })
 
   const pos = ev?.evaluatee?.position
+  const positionDisplay = ev?.evaluatee?.jobTitle?.trim() || (pos ? POSITION_LABELS[pos] : '-')
   const evHireDate = (ev?.evaluatee as { hireDate?: string | null } | undefined)?.hireDate ?? null
   const displayName = (isOse && summary.evaluateeName?.trim()) ? summary.evaluateeName.trim() : (ev?.evaluatee?.name ?? '')
+  const evaluatorDisplayName = summary.evaluatorName?.trim() || ev?.evaluatorName?.trim() || ev?.evaluator?.name || ''
   const readinessMissing = useMemo(() => {
     if (isOse) {
       const missing: string[] = []
@@ -240,7 +246,7 @@ export default function EvaluationFormPage() {
   if (!ev) return <div className="kbt-msg-error">{t('ef.notFound')}</div>
 
   const factItems = [
-    [t('eval.evaluator'), ev.evaluator?.name],
+    [t('eval.evaluator'), evaluatorDisplayName],
     [t('table.department'), ev.evaluatee?.department],
     [t('ef.fld.periodEnd'), ev.cycle?.endDate ? formatDate(ev.cycle.endDate) : '-'],
     [t('ef.fld.goal'), ev.goalScore != null ? ev.goalScore.toFixed(2) : '-'],
@@ -265,7 +271,7 @@ export default function EvaluationFormPage() {
           <h1 style={{ fontSize: 'clamp(2rem, 3.3vw, 3.5rem)' }}>{dash(displayName)}</h1>
           <p>
             {ev.cycle?.name} · {typeLabel(ev.type)}
-            {pos ? ` · ${POSITION_LABELS[pos]}` : ''}
+            {positionDisplay !== '-' ? ` · ${positionDisplay}` : ''}
           </p>
           <div className="amw-hero-badges">
             {factItems.slice(0, 3).map(([label, value]) => <span key={label}>{label}: {dash(value)}</span>)}
@@ -287,7 +293,7 @@ export default function EvaluationFormPage() {
         </div>
       </section>
 
-      <div className="kbt-card" style={{ padding: 14, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div className="kbt-card amw-eval-actionbar" style={{ padding: 14, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         <EvaluationExportMenu evaluationId={ev.id} employeeName={displayName} />
         {!isReadOnly && (
           <>
@@ -384,9 +390,9 @@ export default function EvaluationFormPage() {
                   {[
                     ...(isOse ? [] : [[t('ef.fld.employee'), ev.evaluatee?.name]] as [string, string | null | undefined][]),
                     [t('table.department'), ev.evaluatee?.department],
-                    [t('acc.position'), pos ? POSITION_LABELS[pos] : '-'],
+                    [t('acc.position'), positionDisplay],
                     ...(isOse ? [[t('ef.fld.hireDate'), evHireDate ? formatDate(evHireDate) : '-']] as [string, string][] : []),
-                    [t('eval.evaluator'), ev.evaluator?.name],
+                    [t('eval.evaluator'), evaluatorDisplayName],
                     [t('eval.evaluationType'), typeLabel(ev.type)],
                     [t('table.cycle'), ev.cycle?.name],
                     [t('table.startDate'), ev.cycle?.startDate ? formatDate(ev.cycle.startDate) : '-'],
@@ -399,6 +405,18 @@ export default function EvaluationFormPage() {
                   ))}
                 </div>
 
+                {!isOse && (
+                  <div className="amw-grid-2" style={{ gap: '16px 32px', marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--kbt-border)' }}>
+                    <div>
+                      <label className="kbt-label">{t('eval.evaluator')}</label>
+                      <input className="kbt-input" disabled={isReadOnly}
+                        value={summary.evaluatorName ?? ''}
+                        onChange={e => setSummary(s => ({ ...s, evaluatorName: e.target.value }))}
+                        placeholder={ev.evaluatorName ?? ev.evaluator?.name ?? t('eval.evaluator')} />
+                    </div>
+                  </div>
+                )}
+
                 {isOse && (
                   <div className="amw-grid-2" style={{ gap: '16px 32px', marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--kbt-border)' }}>
                     <div>
@@ -407,6 +425,13 @@ export default function EvaluationFormPage() {
                         value={summary.evaluateeName ?? ''}
                         onChange={e => setSummary(s => ({ ...s, evaluateeName: e.target.value }))}
                         placeholder={ev.evaluatee?.name ?? t('ef.fld.employee')} />
+                    </div>
+                    <div>
+                      <label className="kbt-label">{t('eval.evaluator')}</label>
+                      <input className="kbt-input" disabled={isReadOnly}
+                        value={summary.evaluatorName ?? ''}
+                        onChange={e => setSummary(s => ({ ...s, evaluatorName: e.target.value }))}
+                        placeholder={ev.evaluatorName ?? ev.evaluator?.name ?? t('eval.evaluator')} />
                     </div>
                     <div>
                       <label className="kbt-label">{t('ef.fld.evaluatorTitle')}</label>

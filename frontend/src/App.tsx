@@ -16,6 +16,7 @@ const TemplateListPage    = lazy(() => import('@/features/templates/TemplateList
 const TemplateBuilderPage = lazy(() => import('@/features/templates/TemplateBuilderPage'))
 const CycleListPage       = lazy(() => import('@/features/cycles/CycleListPage'))
 const ReportsPage         = lazy(() => import('@/features/reports/ReportsPage'))
+const UserManagementPage  = lazy(() => import('@/features/users/UserManagementPage'))
 const AccountPage         = lazy(() => import('@/features/account/AccountPage'))
 const SettingsPage        = lazy(() => import('@/features/settings/SettingsPage'))
 const GuidelinesPage      = lazy(() => import('@/features/guidelines/GuidelinesPage'))
@@ -54,6 +55,7 @@ export default function App() {
             <Route path="templates/:id" element={<TemplateBuilderPage />} />
             <Route path="cycles" element={<CycleListPage />} />
             <Route path="reports" element={<ReportsPage />} />
+            <Route path="users" element={<UserManagementPage />} />
             <Route path="account" element={<AccountPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="guidelines" element={<GuidelinesPage />} />

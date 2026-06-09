@@ -78,3 +78,27 @@ export async function me(req: AuthRequest, res: Response, next: NextFunction) {
     next(err)
   }
 }
+
+const updateMeSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').optional(),
+  email: companyEmailSchema.optional(),
+  department: z.string().trim().max(120).nullable().optional(),
+  position: z.enum(['DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']).nullable().optional(),
+  jobTitle: z.string().trim().max(120).nullable().optional(),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
+    .regex(/[0-9]/, 'Must contain at least one number')
+    .optional(),
+})
+
+export async function updateMe(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const body = updateMeSchema.parse(req.body)
+    const user = await authService.updateProfile(req.user!.userId, body)
+    res.json(user)
+  } catch (err) {
+    next(err)
+  }
+}

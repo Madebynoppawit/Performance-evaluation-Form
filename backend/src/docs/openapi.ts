@@ -178,12 +178,24 @@ export const openApiSpec = {
       },
       EvaluationCreateRequest: {
         type: 'object',
-        required: ['cycleId', 'evaluateeId', 'evaluatorId', 'type'],
+        required: ['cycleId', 'evaluatorId'],
         properties: {
           cycleId: { type: 'string' },
-          evaluateeId: { type: 'string' },
-          evaluatorId: { type: 'string' },
-          type: { type: 'string', enum: ['SELF', 'MANAGER', 'PEER', 'THREE_SIXTY'], example: 'MANAGER' },
+          evaluateeId: { type: 'string', description: 'Existing employee id. Mutually exclusive with newEvaluatee.' },
+          newEvaluatee: {
+            type: 'object',
+            description: 'Inline employee record to create before creating the evaluation.',
+            required: ['name', 'position'],
+            properties: {
+              name: { type: 'string', example: 'Jane Doe' },
+              position: { type: 'string', enum: ['DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF'] },
+              jobTitle: { type: 'string', nullable: true, example: 'Managing Director' },
+              department: { type: 'string', nullable: true, example: 'Operations' },
+            },
+          },
+          evaluatorId: { type: 'string', description: 'Authenticated supervisor/manager/director user id used for ownership and access control.' },
+          evaluatorName: { type: 'string', nullable: true, description: 'Display name typed on the manager form.' },
+          type: { type: 'string', enum: ['SELF', 'MANAGER', 'PEER', 'THREE_SIXTY'], default: 'MANAGER', example: 'MANAGER' },
         },
       },
       Template: {
@@ -379,6 +391,20 @@ export const openApiSpec = {
         },
       },
     },
+    '/templates/{id}': {
+      delete: {
+        tags: ['Templates'],
+        summary: 'Delete an evaluation template.',
+        description: 'Admin only. Removes the template, dependent sections/questions, linked cycles, and evaluations saved under those cycles.',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '204': { description: 'Deleted.' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
     '/cycles': {
       get: {
         tags: ['Cycles'],
@@ -395,6 +421,20 @@ export const openApiSpec = {
         responses: {
           '201': { description: 'Created cycle.' },
           '403': { $ref: '#/components/responses/Forbidden' },
+        },
+      },
+    },
+    '/cycles/{id}': {
+      delete: {
+        tags: ['Cycles'],
+        summary: 'Delete an evaluation cycle.',
+        description: 'Admin only. Removes the cycle and evaluations saved under it.',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '204': { description: 'Deleted.' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
         },
       },
     },

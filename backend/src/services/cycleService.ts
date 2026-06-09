@@ -35,3 +35,10 @@ export async function createCycle(data: {
 export async function updateCycleStatus(id: string, status: CycleStatus) {
   return prisma.cycle.update({ where: { id }, data: { status } })
 }
+
+export async function deleteCycle(id: string) {
+  return prisma.$transaction(async (tx) => {
+    await tx.evaluation.deleteMany({ where: { cycleId: id } })
+    return tx.cycle.delete({ where: { id } })
+  })
+}

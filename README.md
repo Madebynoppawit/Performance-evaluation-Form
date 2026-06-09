@@ -211,6 +211,20 @@ The release gate runs:
 - production build
 - high-severity dependency audit
 
+### Local Integration Test Database
+
+Backend integration tests use `backend/.env.test` and expect a migrated, seeded
+PostgreSQL database named `amw_test`.
+
+```bash
+docker compose up -d postgres
+npm run test:integration:setup
+npm run test:integration
+```
+
+Run `npm run test:integration:setup` again after adding or changing Prisma
+migrations or seed data.
+
 Latest local verification for `v0.2.0-rc.1`: passed.
 
 ## API Snapshot

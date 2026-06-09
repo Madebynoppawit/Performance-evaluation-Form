@@ -10,9 +10,11 @@ type Position = 'DIRECTOR_UP' | 'MANAGER' | 'OFFICER' | 'SUPERVISOR' | 'PRODUCTI
 const POSITION_COMPETENCIES: Record<Position, string[]> = {
   DIRECTOR_UP: ['CC1', 'CC2', 'CC3', 'CC4', 'MC1', 'MC2', 'TCM1', 'TCM2', 'TCM3', 'TCM4'],
   MANAGER: ['CC1', 'CC2', 'CC3', 'CC4', 'MC1', 'MC2', 'TCM1', 'TCM2', 'TCM3', 'TCM4'],
-  OFFICER: ['CC1', 'CC2', 'CC3', 'CC4', 'TCO1', 'TCO2', 'TCO3', 'TCO4'],
-  SUPERVISOR: ['CC1', 'CC2', 'CC3', 'CC4', 'TCS1', 'TCS2', 'TCS3', 'TCS4'],
-  PRODUCTION_STAFF: ['CC1', 'CC2', 'CC3', 'CC4', 'TCP1', 'TCP2', 'TCP3', 'TCP4'],
+  // Officer / Supervisor / Production Staff are assessed on the four Core
+  // Competencies only — no position-specific technical competencies.
+  OFFICER: ['CC1', 'CC2', 'CC3', 'CC4'],
+  SUPERVISOR: ['CC1', 'CC2', 'CC3', 'CC4'],
+  PRODUCTION_STAFF: ['CC1', 'CC2', 'CC3', 'CC4'],
 }
 
 const REQUIRED_TARGET_FIELDS = ['targetRating5', 'targetRating4', 'targetRating3', 'targetRating2', 'targetRating1'] as const
@@ -116,7 +118,7 @@ export async function signAcknowledgement(
   })
 
   const canSign =
-    user.role === 'ADMIN' ||
+    user.role === 'ADMIN' || user.role === 'DEVELOPER' ||
     (signerType === 'employee' && evaluation.evaluateeId === user.userId) ||
     (signerType === 'evaluator' && evaluation.evaluatorId === user.userId)
 
@@ -183,6 +185,7 @@ export async function upsertEvaluationSummary(
   evaluationId: string,
   data: {
     evaluateeName?: NullableText
+    evaluatorName?: NullableText
     evaluationReason?: 'PROBATION' | 'ANNUAL' | 'OTHER' | null
     evaluationReasonOther?: NullableText
     evaluatorTitle?: NullableText
@@ -197,6 +200,7 @@ export async function upsertEvaluationSummary(
     where: { id: evaluationId },
     data: {
       evaluateeName: data.evaluateeName,
+      evaluatorName: data.evaluatorName,
       evaluationReason: data.evaluationReason,
       evaluationReasonOther: data.evaluationReasonOther,
       evaluatorTitle: data.evaluatorTitle,

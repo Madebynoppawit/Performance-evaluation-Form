@@ -1,4 +1,4 @@
-export type Role = 'ADMIN' | 'MANAGER' | 'EMPLOYEE'
+export type Role = 'DEVELOPER' | 'ADMIN' | 'MANAGER' | 'EMPLOYEE'
 export type Position = 'DIRECTOR_UP' | 'MANAGER' | 'OFFICER' | 'SUPERVISOR' | 'PRODUCTION_STAFF'
 export type EvaluationType = 'SELF' | 'MANAGER' | 'PEER' | 'THREE_SIXTY'
 export type EvaluationStatus = 'DRAFT' | 'IN_PROGRESS' | 'SUBMITTED' | 'REVIEWED' | 'CLOSED'
@@ -17,7 +17,9 @@ export interface User {
   role: Role
   position?: Position
   department?: string
+  jobTitle?: string | null
   managerId?: string
+  hireDate?: string | null
 }
 
 export interface Question {
@@ -141,10 +143,18 @@ export interface Evaluation {
   cycle?: Cycle
   evaluateeId: string
   evaluatee?: User
+  evaluateeName?: string | null
   evaluatorId: string
   evaluator?: User
+  evaluatorName?: string | null
   type: EvaluationType
   status: EvaluationStatus
+  formType?: string | null
+  evaluationReason?: 'PROBATION' | 'ANNUAL' | 'OTHER' | null
+  evaluationReasonOther?: string | null
+  evaluatorTitle?: string | null
+  performanceGrade?: 'EXCELLENT' | 'ABOVE_STANDARD' | 'MEETS_STANDARD' | 'ALMOST_STANDARD' | 'BELOW_STANDARD' | null
+  effectiveDate?: string | null
 
   goalWeight: number
   competencyWeight: number

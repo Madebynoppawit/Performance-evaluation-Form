@@ -46,3 +46,10 @@ export async function updateStatus(req: AuthRequest, res: Response, next: NextFu
     res.json(await cycleService.updateCycleStatus(req.params.id, status))
   } catch (err) { next(err) }
 }
+
+export async function remove(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    await cycleService.deleteCycle(req.params.id)
+    res.status(204).send()
+  } catch (err) { next(err) }
+}

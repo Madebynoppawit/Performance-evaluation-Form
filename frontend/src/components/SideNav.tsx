@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { BarChart2, BookOpen, ClipboardList, FileJson2, LayoutDashboard, LayoutTemplate, RefreshCw, Settings, UserRound } from 'lucide-react'
+import { BarChart2, BookOpen, ClipboardList, FileJson2, LayoutDashboard, LayoutTemplate, RefreshCw, Settings, UserCog, UserRound } from 'lucide-react'
 import { APP_VERSION } from '@/config/release'
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/i18n/languageContext'
@@ -17,6 +17,10 @@ const userNav = [
   { to: '/guidelines', labelKey: 'nav.guidelines', subKey: 'nav.guidelines.sub', icon: BookOpen },
   { to: '/account', labelKey: 'nav.account', subKey: 'nav.account.sub', icon: UserRound },
   { to: '/settings', labelKey: 'nav.settings', subKey: 'nav.settings.sub', icon: Settings },
+] as const
+
+const adminPages = [
+  { to: '/users', labelKey: 'nav.users', subKey: 'nav.users.sub', icon: UserCog },
 ] as const
 
 const adminNav = [
@@ -134,6 +138,7 @@ export default function SideNav() {
 
       <nav style={{ padding: '8px 0', flex: 1 }}>
         {workspaceNav.map(item => <NavItem key={item.to} {...item} />)}
+        {isAdmin && adminPages.map(item => <NavItem key={item.to} {...item} />)}
       </nav>
 
       <nav className="kbt-user-nav">

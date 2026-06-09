@@ -27,7 +27,15 @@ export async function updateTemplate(id: string, data: { name?: string; descript
 }
 
 export async function deleteTemplate(id: string) {
-  return prisma.template.delete({ where: { id } })
+  return prisma.$transaction(async (tx) => {
+    const cycles = await tx.cycle.findMany({ where: { templateId: id }, select: { id: true } })
+    const cycleIds = cycles.map((cycle) => cycle.id)
+    if (cycleIds.length > 0) {
+      await tx.evaluation.deleteMany({ where: { cycleId: { in: cycleIds } } })
+      await tx.cycle.deleteMany({ where: { id: { in: cycleIds } } })
+    }
+    return tx.template.delete({ where: { id } })
+  })
 }
 
 export async function addSection(

@@ -318,22 +318,24 @@ body,
   .kbt-modal-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 300;
+    z-index: 1200;
     padding: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow-y: auto;
     background: rgba(0,0,0,0.62);
     backdrop-filter: blur(8px);
   }
 
   .kbt-modal {
     width: min(100%, 460px);
+    max-height: calc(100vh - 32px);
     border: 1px solid rgba(10,110,209,0.2);
     border-radius: 16px;
     background: var(--kbt-card);
     box-shadow: 0 40px 100px rgba(0,0,0,0.56), 0 0 0 1px rgba(10,110,209,0.08), var(--glow-blue);
-    overflow: hidden;
+    overflow: auto;
     animation: scale-in 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
@@ -5278,8 +5280,32 @@ body,
   z-index: 120;
 }
 
+.amw-create-longfield {
+  min-height: 54px;
+  max-height: 148px;
+  resize: vertical;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .kbt-card:has(.amw-export-menu) {
   overflow: visible;
+}
+
+.amw-eval-actionbar {
+  position: relative;
+  z-index: 30;
+}
+
+.amw-eval-actionbar .amw-export-menu {
+  z-index: 40;
+}
+
+.amw-eval-actionbar .amw-export-popover {
+  top: auto;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: auto;
 }
 
 .amw-export-menu.compact .kbt-btn-ghost {

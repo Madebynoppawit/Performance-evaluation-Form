@@ -6,9 +6,9 @@ const prisma = new PrismaClient()
 const COMPETENCY_IDS_BY_POSITION: Record<Position, string[]> = {
   [Position.DIRECTOR_UP]: ['CC1', 'CC2', 'CC3', 'CC4', 'MC1', 'MC2', 'TCM1', 'TCM2', 'TCM3', 'TCM4'],
   [Position.MANAGER]: ['CC1', 'CC2', 'CC3', 'CC4', 'MC1', 'MC2', 'TCM1', 'TCM2', 'TCM3', 'TCM4'],
-  [Position.OFFICER]: ['CC1', 'CC2', 'CC3', 'CC4', 'TCO1', 'TCO2', 'TCO3', 'TCO4'],
-  [Position.SUPERVISOR]: ['CC1', 'CC2', 'CC3', 'CC4', 'TCS1', 'TCS2', 'TCS3', 'TCS4'],
-  [Position.PRODUCTION_STAFF]: ['CC1', 'CC2', 'CC3', 'CC4', 'TCP1', 'TCP2', 'TCP3', 'TCP4'],
+  [Position.OFFICER]: ['CC1', 'CC2', 'CC3', 'CC4'],
+  [Position.SUPERVISOR]: ['CC1', 'CC2', 'CC3', 'CC4'],
+  [Position.PRODUCTION_STAFF]: ['CC1', 'CC2', 'CC3', 'CC4'],
 }
 
 function minimumTrainingHours(position: Position) {

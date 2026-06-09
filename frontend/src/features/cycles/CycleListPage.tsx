@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState } from 'react'
-import { Calendar, Plus, RefreshCw, X } from 'lucide-react'
+import { AlertTriangle, Calendar, Plus, RefreshCw, Trash2, X } from 'lucide-react'
 import api from '@/lib/api'
 import type { Cycle, Template } from '@/types'
 import { formatDate } from '@/lib/utils'
@@ -39,7 +39,9 @@ export default function CycleListPage() {
   const t = useT()
   const { cycleStatusLabel } = useLabels()
   const [showDialog, setShowDialog] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<Cycle | null>(null)
   const modalRef = useFocusTrap<HTMLDivElement>(showDialog, () => setShowDialog(false))
+  const deleteModalRef = useFocusTrap<HTMLDivElement>(!!deleteTarget, () => setDeleteTarget(null))
 
   const { data: cycles, isLoading } = useQuery<Cycle[]>({
     queryKey: ['cycles'],
@@ -59,6 +61,15 @@ export default function CycleListPage() {
       qc.invalidateQueries({ queryKey: ['cycles'] })
       reset()
       setShowDialog(false)
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/cycles/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['cycles'] })
+      qc.invalidateQueries({ queryKey: ['evaluations'] })
+      setDeleteTarget(null)
     },
   })
 
@@ -87,14 +98,15 @@ export default function CycleListPage() {
               <th>{t('table.endDate')}</th>
               <th>{t('table.status')}</th>
               <th>{t('table.description')}</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
-              <SkeletonTableRows rows={4} cols={6} />
+              <SkeletonTableRows rows={4} cols={7} />
             ) : !cycles?.length ? (
               <tr>
-                <td colSpan={6} style={{ padding: 0 }}>
+                <td colSpan={7} style={{ padding: 0 }}>
                   <EmptyState
                     icon={Calendar}
                     title={t('cyc.noneTitle')}
@@ -116,6 +128,22 @@ export default function CycleListPage() {
                 <td style={{ color: 'var(--kbt-text-2)', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8125rem' }}>{formatDate(cycle.endDate)}</td>
                 <td><span className={STATUS[cycle.status]?.cls ?? 'kbt-badge-neutral'}>{cycleStatusLabel(cycle.status)}</span></td>
                 <td style={{ color: 'var(--kbt-text-3)' }}>{cycle.description ?? '-'}</td>
+                <td>
+                  {isAdmin && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteTarget(cycle)}
+                        className="kbt-btn-danger"
+                        style={{ height: 28, padding: '0 10px', fontSize: '0.75rem' }}
+                        aria-label={`Delete cycle ${cycle.name}`}
+                        title="Delete cycle"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -143,7 +171,7 @@ export default function CycleListPage() {
               </div>
               <div>
                 <label className="kbt-label kbt-label-required">{t('table.template')}</label>
-                <select {...register('templateId')} className="kbt-select">
+                <select {...register('templateId')} className="kbt-select" aria-label={t('table.template')}>
                   <option value="">{t('cyc.selectTemplate')}</option>
                   {templates?.map(tpl => <option key={tpl.id} value={tpl.id}>{tpl.name}</option>)}
                 </select>
@@ -152,11 +180,11 @@ export default function CycleListPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label className="kbt-label kbt-label-required">{t('table.startDate')}</label>
-                  <input {...register('startDate')} type="date" className="kbt-input" />
+                  <input {...register('startDate')} type="date" className="kbt-input" aria-label={t('table.startDate')} />
                 </div>
                 <div>
                   <label className="kbt-label kbt-label-required">{t('table.endDate')}</label>
-                  <input {...register('endDate')} type="date" className="kbt-input" />
+                  <input {...register('endDate')} type="date" className="kbt-input" aria-label={t('table.endDate')} />
                   {errors.endDate && <p className="kbt-field-error">{errors.endDate.message}</p>}
                 </div>
               </div>
@@ -172,6 +200,41 @@ export default function CycleListPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="kbt-modal-backdrop" onMouseDown={() => setDeleteTarget(null)}>
+          <div className="kbt-modal" ref={deleteModalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Delete cycle" onMouseDown={e => e.stopPropagation()}>
+            <div className="kbt-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(237,28,36,0.12)', border: '1px solid rgba(237,28,36,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <AlertTriangle size={14} color="#ed1c24" />
+                </div>
+                <span>{t('cyc.deleteTitle')}</span>
+              </div>
+              <button onClick={() => setDeleteTarget(null)} className="kbt-btn-ghost" style={{ width: 28, height: 28, padding: 0 }} aria-label="Close delete cycle">
+                <X size={15} />
+              </button>
+            </div>
+            <div className="kbt-modal-body">
+              <p style={{ color: 'var(--kbt-text-2)', fontSize: '0.875rem', lineHeight: 1.6 }}>
+                {t('cyc.deleteConfirm')} <strong style={{ color: 'var(--kbt-text)' }}>"{deleteTarget.name}"</strong>?
+                {' '}{t('cyc.deleteWarn')}
+              </p>
+              <div className="kbt-modal-actions">
+                <button onClick={() => setDeleteTarget(null)} className="kbt-btn-ghost">{t('common.cancel')}</button>
+                <button
+                  onClick={() => deleteMutation.mutate(deleteTarget.id)}
+                  disabled={deleteMutation.isPending}
+                  className="kbt-btn-danger"
+                >
+                  {deleteMutation.isPending ? <Spinner size={14} /> : <Trash2 size={13} />}
+                  {t('common.delete')}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

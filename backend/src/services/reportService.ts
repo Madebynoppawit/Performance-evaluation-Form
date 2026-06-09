@@ -124,7 +124,7 @@ export async function exportEvaluationCsv(
     throw err
   }
 
-  const includeSalary = user.role === 'ADMIN' || user.role === 'MANAGER'
+  const includeSalary = user.role === 'ADMIN' || user.role === 'MANAGER' || user.role === 'DEVELOPER'
   const exportedAt = new Date().toISOString()
   const rows = [
     csvRow('AMW PERFORMANCE EVALUATION EXPORT'),

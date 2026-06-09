@@ -13,8 +13,16 @@ function createRequestId() {
   return `web-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
 }
 
+// Login / register need no token and must never be blocked or redirected by
+// a stale session — the login form handles their errors itself.
+const isAuthEndpoint = (url?: string) => !!url && /\/auth\/(login|register)\b/.test(url)
+
 api.interceptors.request.use((config) => {
   const auth = useAuthStore.getState()
+  if (isAuthEndpoint(config.url)) {
+    config.headers['X-Request-Id'] = createRequestId()
+    return config
+  }
   if (auth.token && !auth.isSessionValid()) {
     auth.logout()
     window.location.href = '/login'
@@ -29,7 +37,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    if (err.response?.status === 401 && !isAuthEndpoint(err.config?.url)) {
       useAuthStore.getState().logout()
       window.location.href = '/login'
     }

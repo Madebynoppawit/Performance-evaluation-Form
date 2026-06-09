@@ -81,6 +81,7 @@ const acknowledgementSchema = z.object({
 
 const summarySchema = z.object({
   evaluateeName: z.string().trim().max(200).nullable().optional(),
+  evaluatorName: z.string().trim().max(200).nullable().optional(),
   evaluationReason: z.enum(['PROBATION', 'ANNUAL', 'OTHER']).nullable().optional(),
   evaluationReasonOther: nullableText,
   evaluatorTitle: z.string().trim().max(200).nullable().optional(),

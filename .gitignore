@@ -34,3 +34,7 @@ coverage/
 # Playwright
 test-results/
 playwright-report/
+
+# Local test runs & scratch artifacts
+reports/
+.tmp_pdf_review/

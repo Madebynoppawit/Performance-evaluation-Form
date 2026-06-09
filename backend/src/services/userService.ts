@@ -6,7 +6,7 @@ export async function getAllUsers() {
   return prisma.user.findMany({
     select: {
       id: true, email: true, name: true, role: true,
-      position: true, department: true, managerId: true,
+      position: true, department: true, jobTitle: true, managerId: true,
       createdAt: true, updatedAt: true,
       manager: { select: { id: true, name: true } },
       _count: {
@@ -47,7 +47,7 @@ export async function createUser(data: {
   const password = await hashPassword(data.password)
   return prisma.user.create({
     data: { ...data, password },
-    select: { id: true, email: true, name: true, role: true, position: true, department: true },
+    select: { id: true, email: true, name: true, role: true, position: true, department: true, jobTitle: true },
   })
 }
 
@@ -71,7 +71,7 @@ export async function updateUser(
   return prisma.user.update({
     where: { id },
     data: payload,
-    select: { id: true, email: true, name: true, role: true, position: true, department: true },
+    select: { id: true, email: true, name: true, role: true, position: true, department: true, jobTitle: true },
   })
 }
 

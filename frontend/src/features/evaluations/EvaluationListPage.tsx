@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom'
 import { AlertTriangle, ArrowUpRight, CalendarClock, CheckCircle2, FileCheck2, Gauge, Plus, RefreshCw, Search, Send, Trash2, TrendingUp, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import api from '@/lib/api'
-import type { Cycle, Evaluation, EvaluationType, Position, User } from '@/types'
+import type { Cycle, Evaluation, Position, User } from '@/types'
 import { formatDate } from '@/lib/utils'
 import { SkeletonMetricCard, SkeletonTableRows } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
 import EvaluationExportMenu from './components/EvaluationExportMenu'
+import { POSITION_LABELS } from './constants/competency'
 import { useAuth } from '@/hooks/useAuth'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { useT } from '@/i18n/languageContext'
@@ -22,13 +23,19 @@ const STATUS: Record<string, { cls: string; label: string }> = {
   CLOSED: { cls: 'kbt-badge-neutral', label: 'Closed' },
 }
 
-/* Only supervisory levels (หัวหน้างานขึ้นไป) may act as the evaluator; the
-   evaluatee can be anyone. Kept in sync with the backend guard. */
-const EVALUATOR_POSITIONS: Position[] = ['DIRECTOR_UP', 'MANAGER', 'SUPERVISOR']
+const CREATE_POSITION_OPTIONS: Array<{ value: string; label: string; position: Position; jobTitle?: string; skipDepartment?: boolean }> = [
+  { value: 'CEO', label: 'CEO', position: 'DIRECTOR_UP', jobTitle: 'CEO', skipDepartment: true },
+  { value: 'MANAGING_DIRECTOR', label: 'Managing Director', position: 'DIRECTOR_UP', jobTitle: 'Managing Director', skipDepartment: true },
+  { value: 'DIRECTOR_UP', label: POSITION_LABELS.DIRECTOR_UP, position: 'DIRECTOR_UP' },
+  { value: 'MANAGER', label: POSITION_LABELS.MANAGER, position: 'MANAGER' },
+  { value: 'OFFICER', label: POSITION_LABELS.OFFICER, position: 'OFFICER' },
+  { value: 'SUPERVISOR', label: POSITION_LABELS.SUPERVISOR, position: 'SUPERVISOR' },
+  { value: 'PRODUCTION_STAFF', label: POSITION_LABELS.PRODUCTION_STAFF, position: 'PRODUCTION_STAFF' },
+]
 
 export default function EvaluationListPage() {
   const qc = useQueryClient()
-  const { isAdmin } = useAuth()
+  const { isAdmin, user, canManage } = useAuth()
   const t = useT()
   const { statusLabel, typeLabel } = useLabels()
   const [search, setSearch] = useState('')
@@ -37,11 +44,21 @@ export default function EvaluationListPage() {
   const [draft, setDraft] = useState({
     cycleId: '',
     evaluateeId: '',
-    evaluatorId: '',
-    type: 'MANAGER' as EvaluationType,
+    evaluatorName: '',
+    evaluateeMode: 'new' as 'existing' | 'new',
+    newName: '',
+    newPositionOption: 'OFFICER',
+    newDepartment: '',
+  })
+  const resetDraft = () => setDraft({
+    cycleId: '', evaluateeId: '', evaluatorName: '',
+    evaluateeMode: 'new', newName: '', newPositionOption: 'OFFICER', newDepartment: '',
   })
   const createModalRef = useFocusTrap<HTMLDivElement>(showCreateDialog, () => setShowCreateDialog(false))
   const deleteModalRef = useFocusTrap<HTMLDivElement>(!!deleteTarget, () => setDeleteTarget(null))
+  // Creating a new employee account is admin/developer-only; everyone else
+  // must pick an existing evaluatee.
+  const evaluateeMode: 'existing' | 'new' = isAdmin ? draft.evaluateeMode : 'existing'
 
   const { data, isLoading, refetch, isFetching } = useQuery<Evaluation[]>({
     queryKey: ['evaluations'],
@@ -51,32 +68,39 @@ export default function EvaluationListPage() {
   const { data: cycles = [], isLoading: cyclesLoading } = useQuery<Cycle[]>({
     queryKey: ['cycles'],
     queryFn: () => api.get('/cycles').then((r) => r.data),
-    enabled: isAdmin && showCreateDialog,
+    enabled: canManage && showCreateDialog,
   })
 
   const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ['users'],
     queryFn: () => api.get('/users').then((r) => r.data),
-    enabled: isAdmin && showCreateDialog,
+    enabled: canManage && showCreateDialog,
   })
 
-  // Evaluator must be a supervisor/manager/director; evaluatee can be anyone.
-  const evaluatorUsers = useMemo(
-    () => users.filter((u) => u.position && EVALUATOR_POSITIONS.includes(u.position)),
-    [users]
-  )
-
   const createMutation = useMutation({
-    mutationFn: () => api.post('/evaluations', {
-      cycleId: draft.cycleId || cycles[0]?.id,
-      evaluateeId: draft.evaluateeId || users[0]?.id,
-      evaluatorId: draft.evaluatorId || evaluatorUsers[0]?.id,
-      type: draft.type,
-    }),
+    mutationFn: () => {
+      const selectedPosition = CREATE_POSITION_OPTIONS.find((option) => option.value === draft.newPositionOption) ?? CREATE_POSITION_OPTIONS[4]
+      return api.post('/evaluations', {
+        cycleId: draft.cycleId || cycles[0]?.id,
+        evaluatorId: user?.id,
+        evaluatorName: draft.evaluatorName.trim() || undefined,
+        ...(evaluateeMode === 'new'
+          ? {
+              newEvaluatee: {
+                name: draft.newName.trim(),
+                position: selectedPosition.position,
+                jobTitle: selectedPosition.jobTitle,
+                department: selectedPosition.skipDepartment ? undefined : draft.newDepartment.trim() || undefined,
+              },
+            }
+          : { evaluateeId: draft.evaluateeId || users[0]?.id }),
+      })
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['evaluations'] })
+      qc.invalidateQueries({ queryKey: ['users'] })
       setShowCreateDialog(false)
-      setDraft({ cycleId: '', evaluateeId: '', evaluatorId: '', type: 'MANAGER' })
+      resetDraft()
     },
   })
 
@@ -138,8 +162,9 @@ export default function EvaluationListPage() {
   ]
   const selectedCycleId = draft.cycleId || cycles[0]?.id || ''
   const selectedEvaluateeId = draft.evaluateeId || users[0]?.id || ''
-  const selectedEvaluatorId = draft.evaluatorId || evaluatorUsers[0]?.id || ''
-  const canCreate = !!selectedCycleId && !!selectedEvaluateeId && !!selectedEvaluatorId && !createMutation.isPending
+  const selectedPosition = CREATE_POSITION_OPTIONS.find((option) => option.value === draft.newPositionOption) ?? CREATE_POSITION_OPTIONS[4]
+  const evaluateeOk = evaluateeMode === 'new' ? draft.newName.trim().length > 0 : !!selectedEvaluateeId
+  const canCreate = !!selectedCycleId && evaluateeOk && draft.evaluatorName.trim().length > 0 && !!user?.id && !createMutation.isPending
 
   return (
     <div className="kbt-page">
@@ -149,7 +174,7 @@ export default function EvaluationListPage() {
           <h1>{t('page.evaluations.title')}</h1>
           <p>{t('page.evaluations.desc')}</p>
         </div>
-        {isAdmin && (
+        {canManage && (
           <button onClick={() => setShowCreateDialog(true)} className="kbt-btn-primary">
             <Plus size={15} /> {t('eval.new')}
           </button>
@@ -353,48 +378,84 @@ export default function EvaluationListPage() {
                   ))}
                 </select>
               </label>
-              <label>
-                {t('table.evaluatee')}
-                <select
-                  className="kbt-input"
-                  value={selectedEvaluateeId}
-                  onChange={(e) => setDraft((d) => ({ ...d, evaluateeId: e.target.value }))}
-                  disabled={usersLoading || createMutation.isPending}
-                  required
-                >
-                  {users.map((person) => (
-                    <option key={person.id} value={person.id}>{person.name} - {person.department ?? person.role}</option>
-                  ))}
-                </select>
-              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>{t('table.evaluatee')}</span>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => setDraft((d) => ({ ...d, evaluateeMode: d.evaluateeMode === 'new' ? 'existing' : 'new' }))}
+                      style={{ background: 'none', border: 'none', color: 'var(--sap-blue)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, padding: 0, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                    >
+                      {draft.evaluateeMode === 'new'
+                        ? (<><X size={11} /> {t('eval.pickExisting')}</>)
+                        : (<><Plus size={11} /> {t('eval.addEmployee')}</>)}
+                    </button>
+                  )}
+                </div>
+                {evaluateeMode === 'existing' ? (
+                  <select
+                    className="kbt-input"
+                    value={selectedEvaluateeId}
+                    onChange={(e) => setDraft((d) => ({ ...d, evaluateeId: e.target.value }))}
+                    disabled={usersLoading || createMutation.isPending}
+                    required
+                  >
+                    {users.map((person) => (
+                      <option key={person.id} value={person.id}>{person.name} - {person.department ?? person.role}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <textarea
+                      className="kbt-textarea amw-create-longfield"
+                      placeholder={t('eval.employeeName')}
+                      value={draft.newName}
+                      onChange={(e) => setDraft((d) => ({ ...d, newName: e.target.value }))}
+                      disabled={createMutation.isPending}
+                      autoFocus
+                      required
+                    />
+                    <select
+                      className="kbt-input"
+                      value={draft.newPositionOption}
+                      onChange={(e) => {
+                        const option = CREATE_POSITION_OPTIONS.find((item) => item.value === e.target.value)
+                        setDraft((d) => ({
+                          ...d,
+                          newPositionOption: e.target.value,
+                          newDepartment: option?.skipDepartment ? '' : d.newDepartment,
+                        }))
+                      }}
+                      disabled={createMutation.isPending}
+                      aria-label={t('acc.position')}
+                    >
+                      {CREATE_POSITION_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                    {!selectedPosition.skipDepartment && (
+                      <textarea
+                        className="kbt-textarea amw-create-longfield"
+                        placeholder={t('eval.employeeDept')}
+                        value={draft.newDepartment}
+                        onChange={(e) => setDraft((d) => ({ ...d, newDepartment: e.target.value }))}
+                        disabled={createMutation.isPending}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
               <label>
                 {t('eval.evaluator')}
-                <select
-                  className="kbt-input"
-                  value={selectedEvaluatorId}
-                  onChange={(e) => setDraft((d) => ({ ...d, evaluatorId: e.target.value }))}
-                  disabled={usersLoading || createMutation.isPending || evaluatorUsers.length === 0}
-                  required
-                >
-                  {evaluatorUsers.length === 0 && <option value="">{t('eval.noEvaluators')}</option>}
-                  {evaluatorUsers.map((person) => (
-                    <option key={person.id} value={person.id}>{person.name} - {person.position ?? person.role}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                {t('eval.evaluationType')}
-                <select
-                  className="kbt-input"
-                  value={draft.type}
-                  onChange={(e) => setDraft((d) => ({ ...d, type: e.target.value as EvaluationType }))}
+                <textarea
+                  className="kbt-textarea amw-create-longfield"
+                  placeholder={t('eval.evaluatorNamePlaceholder')}
+                  value={draft.evaluatorName}
+                  onChange={(e) => setDraft((d) => ({ ...d, evaluatorName: e.target.value }))}
                   disabled={createMutation.isPending}
-                >
-                  <option value="MANAGER">{typeLabel('MANAGER')}</option>
-                  <option value="SELF">{typeLabel('SELF')}</option>
-                  <option value="PEER">{typeLabel('PEER')}</option>
-                  <option value="THREE_SIXTY">{typeLabel('THREE_SIXTY')}</option>
-                </select>
+                  required
+                />
               </label>
               <div className="kbt-modal-actions">
                 <button type="button" onClick={() => setShowCreateDialog(false)} className="kbt-btn-ghost">{t('common.cancel')}</button>

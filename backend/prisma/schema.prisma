@@ -8,6 +8,7 @@ datasource db {
 }
 
 enum Role {
+  DEVELOPER
   ADMIN
   MANAGER
   EMPLOYEE
@@ -183,6 +184,7 @@ model Evaluation {
   submittedAt     DateTime?
 
   evaluateeName         String?
+  evaluatorName         String?
   evaluationReason      EvaluationReason?
   evaluationReasonOther String?
   evaluatorTitle        String?

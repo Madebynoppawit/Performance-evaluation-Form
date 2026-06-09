@@ -1,5 +1,8 @@
+import { randomBytes } from 'crypto'
 import { prisma } from '../lib/prisma'
 import { EvaluationStatus, EvaluationType, FormType, Position } from '@prisma/client'
+import { hashPassword } from '../utils/hash'
+import { env } from '../config/env'
 
 /** Each employee level uses its own appraisal form. */
 const POSITION_FORM_TYPE: Record<Position, FormType> = {
@@ -46,13 +49,13 @@ const EVALUATION_INCLUDE = {
       },
     },
   },
-  evaluatee: { select: { id: true, name: true, email: true, department: true } },
+  evaluatee: { select: { id: true, name: true, email: true, department: true, position: true, jobTitle: true } },
   evaluator: { select: { id: true, name: true, email: true } },
   answers: true,
 }
 
 export async function getEvaluationsForUser(userId: string, role: string) {
-  if (role === 'ADMIN') {
+  if (role === 'ADMIN' || role === 'DEVELOPER') {
     return prisma.evaluation.findMany({ include: EVALUATION_INCLUDE, orderBy: { updatedAt: 'desc' } })
   }
   if (role === 'MANAGER') {
@@ -73,23 +76,53 @@ export async function getEvaluationById(id: string) {
   return prisma.evaluation.findUniqueOrThrow({ where: { id }, include: EVALUATION_INCLUDE })
 }
 
+/* Create a lightweight employee record for an inline-added evaluatee. The
+   person is a real User (role EMPLOYEE) with an auto-allocated company email
+   and a random password — enough to be referenced and re-used as an evaluatee;
+   they are not expected to log in until an admin sets their credentials. */
+async function createEvaluateeUser(input: { name: string; position: Position; department?: string; jobTitle?: string }) {
+  const domain = env.COMPANY_EMAIL_DOMAIN.toLowerCase()
+  let email = ''
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const candidate = `emp.${randomBytes(4).toString('hex')}@${domain}`
+    const exists = await prisma.user.findUnique({ where: { email: candidate }, select: { id: true } })
+    if (!exists) { email = candidate; break }
+  }
+  if (!email) throw badRequest('Could not allocate an employee email — please try again.')
+
+  const password = await hashPassword(randomBytes(12).toString('hex'))
+  return prisma.user.create({
+    data: { email, name: input.name, password, role: 'EMPLOYEE', position: input.position, department: input.department, jobTitle: input.jobTitle },
+    select: { id: true, position: true },
+  })
+}
+
 export async function createEvaluation(data: {
   cycleId: string
-  evaluateeId: string
   evaluatorId: string
+  evaluatorName?: string
   type: EvaluationType
+  evaluateeId?: string
+  newEvaluatee?: { name: string; position: Position; department?: string; jobTitle?: string }
 }) {
-  const [evaluatee, evaluator] = await Promise.all([
-    prisma.user.findUniqueOrThrow({ where: { id: data.evaluateeId }, select: { position: true } }),
-    prisma.user.findUniqueOrThrow({ where: { id: data.evaluatorId }, select: { position: true } }),
-  ])
-
+  const evaluator = await prisma.user.findUniqueOrThrow({ where: { id: data.evaluatorId }, select: { position: true } })
   if (!evaluator.position || !EVALUATOR_POSITIONS.includes(evaluator.position)) {
     throw badRequest('Evaluator must be a supervisor, manager or director.')
   }
 
+  const evaluatee = data.newEvaluatee
+    ? await createEvaluateeUser(data.newEvaluatee)
+    : await prisma.user.findUniqueOrThrow({ where: { id: data.evaluateeId! }, select: { id: true, position: true } })
+
   return prisma.evaluation.create({
-    data: { ...data, formType: formTypeForPosition(evaluatee.position) },
+    data: {
+      cycleId: data.cycleId,
+      evaluatorId: data.evaluatorId,
+      evaluatorName: data.evaluatorName?.trim() || null,
+      type: data.type,
+      evaluateeId: evaluatee.id,
+      formType: formTypeForPosition(evaluatee.position),
+    },
     include: EVALUATION_INCLUDE,
   })
 }

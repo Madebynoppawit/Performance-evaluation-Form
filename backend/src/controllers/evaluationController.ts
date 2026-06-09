@@ -1,16 +1,34 @@
 import { Response, NextFunction } from 'express'
 import { EvaluationType } from '@prisma/client'
 import { z } from 'zod'
-import { AuthRequest } from '../middleware/auth'
+import { AuthRequest, isAdminRole } from '../middleware/auth'
 import * as evaluationService from '../services/evaluationService'
 import { assertEvaluationReadyForSubmit } from '../services/evaluationSectionService'
 
-const createSchema = z.object({
-  cycleId: z.string().min(1, 'Cycle is required'),
-  evaluateeId: z.string().min(1, 'Evaluatee is required'),
-  evaluatorId: z.string().min(1, 'Evaluator is required'),
-  type: z.nativeEnum(EvaluationType),
-})
+const positionEnum = z.enum(['DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF'])
+
+const createSchema = z
+  .object({
+    cycleId: z.string().min(1, 'Cycle is required'),
+    evaluatorId: z.string().min(1, 'Evaluator is required'),
+    evaluatorName: z.string().trim().max(500).optional(),
+    type: z.nativeEnum(EvaluationType).optional().default(EvaluationType.MANAGER),
+    // Either pick an existing employee…
+    evaluateeId: z.string().min(1).optional(),
+    // …or add a new one inline (a real employee record is created).
+    newEvaluatee: z
+      .object({
+        name: z.string().trim().min(1, 'Employee name is required').max(500),
+        position: positionEnum,
+        department: z.string().trim().max(500).optional(),
+        jobTitle: z.string().trim().max(200).optional(),
+      })
+      .optional(),
+  })
+  .refine((d) => Boolean(d.evaluateeId) !== Boolean(d.newEvaluatee), {
+    message: 'Provide either an existing evaluatee or a new employee.',
+    path: ['evaluateeId'],
+  })
 
 export async function list(req: AuthRequest, res: Response, next: NextFunction) {
   try {
@@ -33,6 +51,15 @@ export async function getOne(req: AuthRequest, res: Response, next: NextFunction
 export async function create(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const body = createSchema.parse(req.body)
+    // Creating an employee account is reserved for Developer/admin — others
+    // must pick an existing evaluatee.
+    if (body.newEvaluatee && !isAdminRole(req.user!.role)) {
+      res.status(403).json({
+        message: 'Only Developer/admin can create new employee accounts. Please select an existing employee.',
+        requestId: req.requestId,
+      })
+      return
+    }
     res.status(201).json(await evaluationService.createEvaluation(body))
   } catch (err) {
     next(err)

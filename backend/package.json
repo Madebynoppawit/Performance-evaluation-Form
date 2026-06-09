@@ -9,9 +9,12 @@
     "test": "cross-env NODE_ENV=test tsx --test \"src/**/*.test.ts\"",
     "test:watch": "cross-env NODE_ENV=test tsx --test --watch \"src/**/*.test.ts\"",
     "test:integration": "cross-env NODE_ENV=test tsx --test \"src/**/*.itest.ts\"",
+    "test:integration:setup": "npm run db:test:deploy && npm run db:test:seed",
     "start": "node dist/index.js",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
+    "db:test:deploy": "cross-env DATABASE_URL=postgresql://postgres:postgres@localhost:5432/amw_test prisma migrate deploy",
+    "db:test:seed": "cross-env NODE_ENV=test DATABASE_URL=postgresql://postgres:postgres@localhost:5432/amw_test tsx prisma/seed.ts",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate"

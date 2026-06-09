@@ -92,6 +92,16 @@ const evaluation = {
   updatedAt: '2026-06-01T12:00:00.000Z',
 }
 
+const template = {
+  id: 'template-1',
+  name: 'Executive Review Template',
+  description: 'Leadership evaluation template',
+  type: 'MANAGER',
+  sections: [],
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-06-01T00:00:00.000Z',
+}
+
 async function mockApi(page: Page) {
   await page.route('**/api/**', async (route) => {
     const method = route.request().method()
@@ -148,7 +158,45 @@ async function mockApi(page: Page) {
     }
 
     if (path === '/cycles') {
+      if (method === 'POST') {
+        await route.fulfill({
+          status: 201,
+          json: {
+            ...evaluation.cycle,
+            id: 'cycle-new',
+            name: 'Annual Review 2027',
+            template,
+            startDate: '2027-01-01T00:00:00.000Z',
+            endDate: '2027-12-31T00:00:00.000Z',
+          },
+        })
+        return
+      }
       await route.fulfill({ json: [evaluation.cycle] })
+      return
+    }
+
+    if (path === '/cycles/cycle-1' && method === 'DELETE') {
+      await route.fulfill({ status: 204, body: '' })
+      return
+    }
+
+    if (path === '/templates') {
+      if (method === 'POST') {
+        await route.fulfill({ status: 201, json: { ...template, id: 'template-new', name: 'New Template', type: 'SELF' } })
+        return
+      }
+      await route.fulfill({ json: [template] })
+      return
+    }
+
+    if (path === '/templates/template-1' && method === 'DELETE') {
+      await route.fulfill({ status: 204, body: '' })
+      return
+    }
+
+    if (path === '/templates/template-new' || path === '/templates/template-1') {
+      await route.fulfill({ json: path.endsWith('template-new') ? { ...template, id: 'template-new', name: 'New Template', type: 'SELF' } : template })
       return
     }
 
@@ -313,7 +361,8 @@ test.describe('executive frontend experience', () => {
 
     await page.getByRole('button', { name: 'New Evaluation' }).click()
     await expect(page.getByRole('dialog', { name: 'Add evaluation' })).toBeVisible()
-    await page.getByLabel('Evaluator').selectOption('manager-2')
+    await page.getByPlaceholder('Employee name').fill('Mina Laurent')
+    await page.getByPlaceholder('Type evaluator name').fill('K. Somchai Jaidee')
     await page.getByRole('button', { name: 'Add Evaluation', exact: true }).click()
     await expect(page.getByRole('dialog', { name: 'Add evaluation' })).toBeHidden()
 
@@ -321,6 +370,40 @@ test.describe('executive frontend experience', () => {
     await expect(page.getByRole('dialog', { name: 'Delete evaluation' })).toBeVisible()
     await page.getByRole('button', { name: 'Delete', exact: true }).click()
     await expect(page.getByRole('dialog', { name: 'Delete evaluation' })).toBeHidden()
+    await expectNoHorizontalOverflow(page)
+  })
+
+  test('supports admin add and delete cycle actions', async ({ page }) => {
+    await openAuthed(page, '/cycles')
+
+    await page.getByRole('button', { name: 'Create Cycle' }).click()
+    await expect(page.getByRole('dialog', { name: 'Create evaluation cycle' })).toBeVisible()
+    await page.getByPlaceholder('e.g. Annual Review 2026').fill('Annual Review 2027')
+    await page.getByLabel('Template').selectOption('template-1')
+    await page.getByLabel('Start Date').fill('2027-01-01')
+    await page.getByLabel('End Date').fill('2027-12-31')
+    await page.getByRole('dialog', { name: 'Create evaluation cycle' }).getByRole('button', { name: 'Create Cycle', exact: true }).click()
+    await expect(page.getByRole('dialog', { name: 'Create evaluation cycle' })).toBeHidden()
+
+    await page.getByRole('button', { name: 'Delete cycle FY2026 Leadership Review' }).click()
+    await expect(page.getByRole('dialog', { name: 'Delete cycle' })).toBeVisible()
+    await page.getByRole('button', { name: 'Delete', exact: true }).click()
+    await expect(page.getByRole('dialog', { name: 'Delete cycle' })).toBeHidden()
+    await expectNoHorizontalOverflow(page)
+  })
+
+  test('supports admin add and delete template actions', async ({ page }) => {
+    await openAuthed(page, '/templates')
+
+    await page.getByRole('button', { name: 'New Template' }).click()
+    await expect(page).toHaveURL(/\/templates\/template-new$/)
+
+    await page.goto('/templates')
+    await expect(page.getByText('Executive Review Template')).toBeVisible()
+    await page.getByRole('button', { name: 'Delete template Executive Review Template' }).click()
+    await expect(page.getByRole('dialog', { name: 'Delete template' })).toBeVisible()
+    await page.getByRole('button', { name: 'Delete', exact: true }).click()
+    await expect(page.getByRole('dialog', { name: 'Delete template' })).toBeHidden()
     await expectNoHorizontalOverflow(page)
   })
 
