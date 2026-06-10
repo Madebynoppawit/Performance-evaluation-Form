@@ -432,7 +432,7 @@ export default function UserManagementPage() {
               <p style={{ fontSize: '0.875rem', color: 'var(--kbt-text-2)' }}>
                 {t('users.deleteConfirm')} <strong style={{ color: 'var(--kbt-text)' }}>{deleteTarget.name}</strong>?
               </p>
-              {deleteMutation.isError && <div className="kbt-msg-error" style={{ fontSize: '0.8125rem' }}>{t('users.deleteFailed')}</div>}
+              {deleteMutation.isError && <div className="kbt-msg-error" style={{ fontSize: '0.8125rem' }}>{(deleteMutation.error as { response?: { data?: { message?: string } } })?.response?.data?.message ?? t('users.deleteFailed')}</div>}
               <div className="kbt-modal-actions">
                 <button type="button" onClick={() => setDeleteTarget(null)} className="kbt-btn-ghost">{t('common.cancel')}</button>
                 <button type="button" className="kbt-btn-danger" disabled={deleteMutation.isPending}

@@ -76,7 +76,19 @@ export async function updateUser(
   })
 }
 
+export class LastAdminError extends Error {
+  constructor() { super('LAST_ADMIN') }
+}
+
 export async function deleteUser(id: string) {
+  // Guard against locking everyone out: never delete the final privileged
+  // (ADMIN/DEVELOPER) account.
+  const target = await prisma.user.findUnique({ where: { id }, select: { role: true } })
+  if (target && (target.role === 'ADMIN' || target.role === 'DEVELOPER')) {
+    const privileged = await prisma.user.count({ where: { role: { in: ['ADMIN', 'DEVELOPER'] } } })
+    if (privileged <= 1) throw new LastAdminError()
+  }
+
   // Evaluations reference the user as evaluatee/evaluator with a Restrict FK, so
   // they must be cleared first. Subordinates (managerId) and audit events detach
   // automatically via SetNull. Everything runs in one transaction.

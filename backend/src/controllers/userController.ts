@@ -52,7 +52,13 @@ export async function remove(req: AuthRequest, res: Response, next: NextFunction
   try {
     await userService.deleteUser(req.params.id)
     res.status(204).send()
-  } catch (err) { next(err) }
+  } catch (err) {
+    if (err instanceof userService.LastAdminError) {
+      res.status(409).json({ message: 'Cannot delete the last administrator account.', requestId: req.requestId })
+      return
+    }
+    next(err)
+  }
 }
 
 export async function importEmployees(req: AuthRequest, res: Response, next: NextFunction) {
