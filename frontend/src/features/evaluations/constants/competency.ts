@@ -180,6 +180,13 @@ export const DISCIPLINARY_OPTIONS = [
   { value: 'MULTIPLE_WARNING_OR_SUSPENSION', label: '>2 Warning หรือ Suspension' },
 ]
 
+/** CEO and Managing Director are evaluated on the "Director and up" competency
+    set — collapse them so competencies and descriptions resolve correctly. */
+export function competencyPosition(position: Position): Position {
+  return position === 'CEO' || position === 'MANAGING_DIRECTOR' ? 'DIRECTOR_UP' : position
+}
+
 export function getCompetenciesForPosition(position: Position): CompetencyDef[] {
-  return COMPETENCY_DEFINITIONS.filter((c) => c.positions.includes(position))
+  const p = competencyPosition(position)
+  return COMPETENCY_DEFINITIONS.filter((c) => c.positions.includes(p))
 }

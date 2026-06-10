@@ -1,5 +1,5 @@
 import type { CompetencyScore, Position } from '@/types'
-import { getCompetenciesForPosition } from '../constants/competency'
+import { getCompetenciesForPosition, competencyPosition } from '../constants/competency'
 import { useT } from '@/i18n/languageContext'
 
 interface Props {
@@ -93,7 +93,7 @@ export default function CompetencySection({ position, scores, readOnly, onChange
               borderTop: '1px solid var(--kbt-border)',
             }}>
               <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--kbt-text-2)' }}>{c.name}</p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)', lineHeight: 1.5 }}>{c.descriptions[position]}</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)', lineHeight: 1.5 }}>{c.descriptions[competencyPosition(position)]}</p>
 
               <div
                 role="radiogroup"
