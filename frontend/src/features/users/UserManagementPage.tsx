@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Pencil, Plus, Search, ShieldAlert, Trash2, UserCog, X } from 'lucide-react'
+import { CheckCircle2, Pencil, Plus, Search, ShieldAlert, Trash2, Upload, UserCog, X } from 'lucide-react'
 import api from '@/lib/api'
 import type { Position, Role } from '@/types'
 import { useAuth } from '@/hooks/useAuth'
@@ -19,6 +19,15 @@ interface ManagedUser {
   department?: string | null
   jobTitle?: string | null
   _count?: { evaluationsAsEvaluatee: number; evaluationsAsEvaluator: number }
+}
+
+interface ImportSummary {
+  importId: string
+  totalRows: number
+  created: number
+  updated: number
+  failed: number
+  errors: { row: number; reason: string; employeeNo?: string; email?: string }[]
 }
 
 const ROLE_OPTIONS: Role[] = ['DEVELOPER', 'ADMIN', 'MANAGER', 'EMPLOYEE']
@@ -52,8 +61,11 @@ export default function UserManagementPage() {
   const [draft, setDraft] = useState<Draft | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ManagedUser | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
+  const [importOpen, setImportOpen] = useState(false)
+  const [importResult, setImportResult] = useState<ImportSummary | null>(null)
   const editRef = useFocusTrap<HTMLDivElement>(!!draft, () => setDraft(null))
   const deleteRef = useFocusTrap<HTMLDivElement>(!!deleteTarget, () => setDeleteTarget(null))
+  const importRef = useFocusTrap<HTMLDivElement>(importOpen, () => setImportOpen(false))
 
   const { data: users = [], isLoading } = useQuery<ManagedUser[]>({
     queryKey: ['users'],
@@ -89,6 +101,27 @@ export default function UserManagementPage() {
     mutationFn: (id: string) => api.delete(`/users/${id}`),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); setDeleteTarget(null) },
   })
+
+  const importMutation = useMutation({
+    mutationFn: async (payload: { text: string; filename: string }) => {
+      const { data } = await api.post<ImportSummary>('/users/import', payload.text, {
+        params: { filename: payload.filename },
+        headers: { 'Content-Type': 'text/csv' },
+      })
+      return data
+    },
+    onSuccess: data => { qc.invalidateQueries({ queryKey: ['users'] }); setImportResult(data) },
+  })
+
+  function onImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImportResult(null)
+    const reader = new FileReader()
+    reader.onload = () => importMutation.mutate({ text: String(reader.result ?? ''), filename: file.name })
+    reader.readAsText(file)
+    e.target.value = ''
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -127,9 +160,14 @@ export default function UserManagementPage() {
           <h1>{t('page.users.title')}</h1>
           <p>{t('page.users.desc')}</p>
         </div>
-        <button onClick={openCreate} className="kbt-btn-primary">
-          <Plus size={15} /> {t('users.new')}
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => { setImportResult(null); setImportOpen(true) }} className="kbt-btn-outline">
+            <Upload size={15} /> {t('users.import')}
+          </button>
+          <button onClick={openCreate} className="kbt-btn-primary">
+            <Plus size={15} /> {t('users.new')}
+          </button>
+        </div>
       </div>
 
       <div className="kbt-card" style={{ padding: 0 }}>
@@ -274,6 +312,73 @@ export default function UserManagementPage() {
                   onClick={() => deleteMutation.mutate(deleteTarget.id)}>
                   {deleteMutation.isPending ? <Spinner size={14} /> : <Trash2 size={13} />} {t('users.delete')}
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {importOpen && (
+        <div className="kbt-modal-backdrop" onMouseDown={() => setImportOpen(false)}>
+          <div className="kbt-modal" ref={importRef} tabIndex={-1} role="dialog" aria-modal="true" onMouseDown={e => e.stopPropagation()}>
+            <div className="kbt-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(10,110,209,0.1)', border: '1px solid rgba(10,110,209,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Upload size={14} color="#0a6ed1" />
+                </div>
+                <span>{t('users.importTitle')}</span>
+              </div>
+              <button onClick={() => setImportOpen(false)} className="kbt-btn-ghost" style={{ width: 28, height: 28, padding: 0 }}><X size={15} /></button>
+            </div>
+            <div className="kbt-modal-body">
+              <p style={{ fontSize: '0.8125rem', color: 'var(--kbt-text-3)', lineHeight: 1.55 }}>{t('users.importDesc')}</p>
+
+              <label className={`amw-import-drop${importMutation.isPending ? ' is-busy' : ''}`}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '24px 16px', border: '1px dashed var(--kbt-border)', borderRadius: 10, cursor: 'pointer', background: 'var(--control-bg)' }}>
+                {importMutation.isPending ? <Spinner size={18} /> : <Upload size={18} color="var(--sap-blue)" />}
+                <strong style={{ fontSize: '0.8125rem' }}>{importMutation.isPending ? t('common.saving') : t('users.importChoose')}</strong>
+                <span style={{ fontSize: '0.6875rem', color: 'var(--kbt-text-3)' }}>CSV / TSV · .csv .tsv .txt</span>
+                <input type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" onChange={onImportFile}
+                  disabled={importMutation.isPending} style={{ display: 'none' }} />
+              </label>
+
+              {importMutation.isError && (
+                <div className="kbt-msg-error" style={{ fontSize: '0.8125rem' }}>{t('users.importFailed')}</div>
+              )}
+
+              {importResult && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--m-light-blue)', fontWeight: 700, fontSize: '0.875rem' }}>
+                    <CheckCircle2 size={16} /> {t('users.importDone')}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                    {[
+                      { k: t('users.importTotal'), v: importResult.totalRows, c: 'var(--kbt-text)' },
+                      { k: t('users.importCreated'), v: importResult.created, c: 'var(--m-light-blue)' },
+                      { k: t('users.importUpdated'), v: importResult.updated, c: 'var(--sap-blue)' },
+                      { k: t('users.importFailedN'), v: importResult.failed, c: importResult.failed ? 'var(--amw-red)' : 'var(--kbt-text-3)' },
+                    ].map(s => (
+                      <div key={s.k} style={{ padding: '10px 8px', borderRadius: 8, border: '1px solid var(--kbt-border)', textAlign: 'center' }}>
+                        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, fontSize: '1.1rem', color: s.c }}>{s.v}</div>
+                        <div style={{ fontSize: '0.625rem', color: 'var(--kbt-text-3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.k}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {importResult.errors.length > 0 && (
+                    <div style={{ maxHeight: 160, overflowY: 'auto', border: '1px solid var(--kbt-border)', borderRadius: 8 }}>
+                      {importResult.errors.slice(0, 50).map((e, i) => (
+                        <div key={i} style={{ display: 'flex', gap: 8, padding: '6px 10px', borderTop: i ? '1px solid var(--kbt-border)' : 'none', fontSize: '0.75rem' }}>
+                          <span style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--kbt-text-3)', flexShrink: 0 }}>#{e.row}</span>
+                          <span style={{ color: 'var(--kbt-text-2)' }}>{e.reason}{e.email ? ` (${e.email})` : ''}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="kbt-modal-actions">
+                <button type="button" onClick={() => setImportOpen(false)} className="kbt-btn-ghost">{t('common.close')}</button>
               </div>
             </div>
           </div>

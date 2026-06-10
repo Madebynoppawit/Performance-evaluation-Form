@@ -80,6 +80,10 @@ model User {
   hireDate   DateTime?
   jobTitle   String?
 
+  // Employee master-file key + the full raw imported row (nothing is dropped).
+  employeeNo String? @unique
+  sourceData Json?
+
   manager   User?  @relation("ManagerEmployee", fields: [managerId], references: [id])
   employees User[] @relation("ManagerEmployee")
 
@@ -327,4 +331,19 @@ model EvaluationAcknowledgement {
   employeeSignedAt  DateTime?
   evaluatorSignedAt DateTime?
   directorSignedAt  DateTime?
+}
+
+/// One row per employee-master import run. Stores the full raw file as a log
+/// plus a per-row outcome summary, so nothing imported is ever lost.
+model EmployeeImport {
+  id           String   @id @default(cuid())
+  filename     String?
+  importedById String?
+  totalRows    Int      @default(0)
+  created      Int      @default(0)
+  updated      Int      @default(0)
+  failed       Int      @default(0)
+  errors       Json?
+  raw          String   @db.Text
+  createdAt    DateTime @default(now())
 }

@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express'
 import { z } from 'zod'
 import { AuthRequest } from '../middleware/auth'
 import * as userService from '../services/userService'
+import * as employeeImport from '../services/employeeImportService'
 import { companyEmailSchema } from '../utils/companyEmail'
 
 const createSchema = z.object({
@@ -52,4 +53,22 @@ export async function remove(req: AuthRequest, res: Response, next: NextFunction
     await userService.deleteUser(req.params.id)
     res.status(204).send()
   } catch (err) { next(err) }
+}
+
+export async function importEmployees(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const text = typeof req.body === 'string' ? req.body : ''
+    if (!text.trim()) {
+      res.status(400).json({ message: 'Empty file — paste or upload a CSV/TSV employee export.', requestId: req.requestId })
+      return
+    }
+    const filename = typeof req.query.filename === 'string' ? req.query.filename : undefined
+    const summary = await employeeImport.importEmployees(text, filename, req.user!.userId)
+    res.status(201).json(summary)
+  } catch (err) { next(err) }
+}
+
+export async function importHistory(_req: AuthRequest, res: Response, next: NextFunction) {
+  try { res.json(await employeeImport.getImportHistory()) }
+  catch (err) { next(err) }
 }
