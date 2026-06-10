@@ -1,6 +1,6 @@
 import { Router, text } from 'express'
 import { authenticate, authorizeSupervisory, requireRole } from '../middleware/auth'
-import { list, getOne, create, update, remove, importEmployees, importHistory } from '../controllers/userController'
+import { list, getOne, create, update, remove, importEmployees, importHistory, resetPassword } from '../controllers/userController'
 
 const router = Router()
 
@@ -15,6 +15,7 @@ router.post('/import', requireRole('ADMIN'), text({ type: () => true, limit: '15
 router.get('/:id',     requireRole('ADMIN'), getOne)
 router.post('/',       requireRole('ADMIN'), create)
 router.patch('/:id',   requireRole('ADMIN'), update)
+router.post('/:id/reset-password', requireRole('ADMIN'), resetPassword)
 router.delete('/:id',  requireRole('ADMIN'), remove)
 
 export default router

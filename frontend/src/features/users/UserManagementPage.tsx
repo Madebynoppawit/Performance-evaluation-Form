@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, Pencil, Plus, Search, ShieldAlert, Trash2, Upload, UserCog, X } from 'lucide-react'
+import { CheckCircle2, KeyRound, Pencil, Plus, Search, ShieldAlert, Trash2, Upload, UserCog, X } from 'lucide-react'
 import api from '@/lib/api'
 import type { Position, Role } from '@/types'
 import { useAuth } from '@/hooks/useAuth'
@@ -19,6 +19,7 @@ interface ManagedUser {
   department?: string | null
   jobTitle?: string | null
   employeeNo?: string | null
+  mustChangePassword?: boolean
   _count?: { evaluationsAsEvaluatee: number; evaluationsAsEvaluator: number }
 }
 
@@ -110,8 +111,11 @@ export default function UserManagementPage() {
   const [formError, setFormError] = useState<string | null>(null)
   const [importOpen, setImportOpen] = useState(false)
   const [importResult, setImportResult] = useState<ImportSummary | null>(null)
+  const [resetTarget, setResetTarget] = useState<ManagedUser | null>(null)
+  const [resetDone, setResetDone] = useState<string | null>(null)
   const editRef = useFocusTrap<HTMLDivElement>(!!draft, () => setDraft(null))
   const deleteRef = useFocusTrap<HTMLDivElement>(!!deleteTarget, () => setDeleteTarget(null))
+  const resetRef = useFocusTrap<HTMLDivElement>(!!resetTarget, () => setResetTarget(null))
   const importRef = useFocusTrap<HTMLDivElement>(importOpen, () => setImportOpen(false))
 
   const { data: users = [], isLoading } = useQuery<ManagedUser[]>({
@@ -147,6 +151,11 @@ export default function UserManagementPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/users/${id}`),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); setDeleteTarget(null) },
+  })
+
+  const resetMutation = useMutation({
+    mutationFn: (id: string) => api.post<{ defaultPassword: string }>(`/users/${id}/reset-password`).then(r => r.data),
+    onSuccess: data => { qc.invalidateQueries({ queryKey: ['users'] }); setResetDone(data.defaultPassword) },
   })
 
   const importMutation = useMutation({
@@ -327,7 +336,16 @@ export default function UserManagementPage() {
                 {filtered.map(u => (
                   <tr key={u.id}>
                     <td style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8125rem', color: u.employeeNo ? 'var(--kbt-text-2)' : 'var(--kbt-text-3)' }}>{u.employeeNo ?? '—'}</td>
-                    <td style={{ fontWeight: 700 }}>{u.name}</td>
+                    <td style={{ fontWeight: 700 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {u.name}
+                        {u.mustChangePassword && (
+                          <span title={t('users.defaultPwHint')} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '1px 7px', borderRadius: 999, fontSize: '0.625rem', fontWeight: 800, whiteSpace: 'nowrap', background: 'rgba(245,158,11,0.14)', border: '1px solid rgba(245,158,11,0.4)', color: '#fbbf24' }}>
+                            <KeyRound size={10} /> {t('users.defaultPw')}
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td style={{ color: 'var(--kbt-text-2)', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8125rem' }}>{u.email}</td>
                     <td><RoleBadge role={u.role} /></td>
                     <td><PositionBadge position={u.position} /></td>
@@ -336,6 +354,11 @@ export default function UserManagementPage() {
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                         <button className="kbt-btn-ghost" style={{ height: 30, padding: '0 10px', gap: 5 }} onClick={() => openEdit(u)}>
                           <Pencil size={13} /> {t('common.edit')}
+                        </button>
+                        <button className="kbt-btn-ghost" style={{ height: 30, width: 30, padding: 0 }}
+                          title={t('users.resetPw')}
+                          onClick={() => { setResetDone(null); setResetTarget(u) }}>
+                          <KeyRound size={13} />
                         </button>
                         <button className="kbt-btn-ghost" style={{ height: 30, width: 30, padding: 0 }}
                           disabled={u.id === user?.id}
@@ -440,6 +463,55 @@ export default function UserManagementPage() {
                   {deleteMutation.isPending ? <Spinner size={14} /> : <Trash2 size={13} />} {t('users.delete')}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {resetTarget && (
+        <div className="kbt-modal-backdrop" onMouseDown={() => setResetTarget(null)}>
+          <div className="kbt-modal" ref={resetRef} tabIndex={-1} role="dialog" aria-modal="true" onMouseDown={e => e.stopPropagation()}>
+            <div className="kbt-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(245,158,11,0.13)', border: '1px solid rgba(245,158,11,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <KeyRound size={14} color="#fbbf24" />
+                </div>
+                <span>{t('users.resetPw')}</span>
+              </div>
+              <button onClick={() => setResetTarget(null)} className="kbt-btn-ghost" style={{ width: 28, height: 28, padding: 0 }}><X size={15} /></button>
+            </div>
+            <div className="kbt-modal-body">
+              {resetDone ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--m-light-blue)', fontWeight: 700, fontSize: '0.875rem' }}>
+                    <CheckCircle2 size={16} /> {t('users.resetDone')}
+                  </div>
+                  <p style={{ fontSize: '0.8125rem', color: 'var(--kbt-text-2)', lineHeight: 1.55 }}>
+                    {t('users.resetDoneDesc')} <strong style={{ color: 'var(--kbt-text)' }}>{resetTarget.name}</strong>
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, background: 'var(--control-bg)', border: '1px solid var(--kbt-border)' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)' }}>{t('users.resetPwValue')}</span>
+                    <strong style={{ fontFamily: 'JetBrains Mono, monospace', color: '#fbbf24' }}>{resetDone}</strong>
+                  </div>
+                  <div className="kbt-modal-actions">
+                    <button type="button" onClick={() => setResetTarget(null)} className="kbt-btn-primary">{t('common.close')}</button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--kbt-text-2)', lineHeight: 1.55 }}>
+                    {t('users.resetConfirm')} <strong style={{ color: 'var(--kbt-text)' }}>{resetTarget.name}</strong>? {t('users.resetConfirmHint')}
+                  </p>
+                  {resetMutation.isError && <div className="kbt-msg-error" style={{ fontSize: '0.8125rem' }}>{t('users.resetFailed')}</div>}
+                  <div className="kbt-modal-actions">
+                    <button type="button" onClick={() => setResetTarget(null)} className="kbt-btn-ghost">{t('common.cancel')}</button>
+                    <button type="button" className="kbt-btn-primary" disabled={resetMutation.isPending}
+                      onClick={() => resetMutation.mutate(resetTarget.id)}>
+                      {resetMutation.isPending ? <Spinner size={14} /> : <KeyRound size={13} />} {t('users.resetPw')}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

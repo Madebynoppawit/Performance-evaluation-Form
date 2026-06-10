@@ -1,13 +1,14 @@
 import { prisma } from '../lib/prisma'
 import { Role, Position } from '@prisma/client'
 import { hashPassword } from '../utils/hash'
+import { env } from '../config/env'
 
 export async function getAllUsers() {
   return prisma.user.findMany({
     select: {
       id: true, email: true, name: true, role: true,
       position: true, department: true, jobTitle: true, managerId: true,
-      employeeNo: true,
+      employeeNo: true, mustChangePassword: true,
       createdAt: true, updatedAt: true,
       manager: { select: { id: true, name: true } },
       _count: {
@@ -78,6 +79,16 @@ export async function updateUser(
 
 export class LastAdminError extends Error {
   constructor() { super('LAST_ADMIN') }
+}
+
+/** Admin action: reset a user back to the shared default password and force a
+    change on their next login. Returns the default password for display. */
+export async function resetPassword(id: string) {
+  await prisma.user.update({
+    where: { id },
+    data: { password: await hashPassword(env.EMPLOYEE_DEFAULT_PASSWORD), mustChangePassword: true },
+  })
+  return { defaultPassword: env.EMPLOYEE_DEFAULT_PASSWORD }
 }
 
 export async function deleteUser(id: string) {

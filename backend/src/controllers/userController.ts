@@ -4,6 +4,7 @@ import { AuthRequest } from '../middleware/auth'
 import * as userService from '../services/userService'
 import * as employeeImport from '../services/employeeImportService'
 import { companyEmailSchema } from '../utils/companyEmail'
+import { recordAuditEventBestEffort } from '../services/auditEventService'
 
 const createSchema = z.object({
   email:      companyEmailSchema,
@@ -59,6 +60,25 @@ export async function remove(req: AuthRequest, res: Response, next: NextFunction
     }
     next(err)
   }
+}
+
+export async function resetPassword(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const result = await userService.resetPassword(req.params.id)
+    recordAuditEventBestEffort({
+      eventType: 'admin_reset_password',
+      actor: { userId: req.user!.userId, role: req.user!.role },
+      requestId: req.requestId,
+      method: req.method,
+      path: req.originalUrl,
+      statusCode: 200,
+      targetType: 'user',
+      targetId: req.params.id,
+      ip: req.ip,
+      userAgent: req.get('user-agent') ?? null,
+    })
+    res.json(result)
+  } catch (err) { next(err) }
 }
 
 export async function importEmployees(req: AuthRequest, res: Response, next: NextFunction) {
