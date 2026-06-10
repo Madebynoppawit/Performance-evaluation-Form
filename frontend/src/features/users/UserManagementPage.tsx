@@ -56,8 +56,9 @@ function RoleBadge({ role }: { role: Role }) {
 
 // Distinct colour per position — CEO/Director/Manager/Supervisor read apart.
 const POSITION_STYLE: Record<Position, { bg: string; border: string; color: string }> = {
-  CEO:              { bg: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.45)',  color: '#fbbf24' },
-  DIRECTOR_UP:      { bg: 'rgba(168,85,247,0.13)',  border: 'rgba(168,85,247,0.4)',   color: '#c084fc' },
+  CEO:               { bg: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.45)',  color: '#fbbf24' },
+  MANAGING_DIRECTOR: { bg: 'rgba(244,63,94,0.14)',   border: 'rgba(244,63,94,0.42)',   color: '#fb7185' },
+  DIRECTOR_UP:       { bg: 'rgba(168,85,247,0.13)',  border: 'rgba(168,85,247,0.4)',   color: '#c084fc' },
   MANAGER:          { bg: 'rgba(10,110,209,0.16)',  border: 'rgba(10,110,209,0.45)',  color: '#4d9fe8' },
   SUPERVISOR:       { bg: 'rgba(20,184,166,0.15)',  border: 'rgba(20,184,166,0.42)',  color: '#2dd4bf' },
   OFFICER:          { bg: 'rgba(34,197,94,0.14)',   border: 'rgba(34,197,94,0.4)',    color: '#4ade80' },

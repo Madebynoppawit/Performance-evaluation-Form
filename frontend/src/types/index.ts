@@ -1,5 +1,5 @@
 export type Role = 'DEVELOPER' | 'ADMIN' | 'MANAGER' | 'EMPLOYEE'
-export type Position = 'CEO' | 'DIRECTOR_UP' | 'MANAGER' | 'OFFICER' | 'SUPERVISOR' | 'PRODUCTION_STAFF'
+export type Position = 'CEO' | 'MANAGING_DIRECTOR' | 'DIRECTOR_UP' | 'MANAGER' | 'OFFICER' | 'SUPERVISOR' | 'PRODUCTION_STAFF'
 export type EvaluationType = 'SELF' | 'MANAGER' | 'PEER' | 'THREE_SIXTY'
 export type EvaluationStatus = 'DRAFT' | 'IN_PROGRESS' | 'SUBMITTED' | 'REVIEWED' | 'CLOSED'
 export type CycleStatus = 'UPCOMING' | 'ACTIVE' | 'CLOSED'

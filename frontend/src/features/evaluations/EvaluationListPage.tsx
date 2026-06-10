@@ -25,7 +25,7 @@ const STATUS: Record<string, { cls: string; label: string }> = {
 
 const CREATE_POSITION_OPTIONS: Array<{ value: string; label: string; position: Position; jobTitle?: string; skipDepartment?: boolean }> = [
   { value: 'CEO', label: 'CEO', position: 'CEO', jobTitle: 'CEO', skipDepartment: true },
-  { value: 'MANAGING_DIRECTOR', label: 'Managing Director', position: 'DIRECTOR_UP', jobTitle: 'Managing Director', skipDepartment: true },
+  { value: 'MANAGING_DIRECTOR', label: 'Managing Director', position: 'MANAGING_DIRECTOR', jobTitle: 'Managing Director', skipDepartment: true },
   { value: 'DIRECTOR_UP', label: POSITION_LABELS.DIRECTOR_UP, position: 'DIRECTOR_UP' },
   { value: 'MANAGER', label: POSITION_LABELS.MANAGER, position: 'MANAGER' },
   { value: 'OFFICER', label: POSITION_LABELS.OFFICER, position: 'OFFICER' },

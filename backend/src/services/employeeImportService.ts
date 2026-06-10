@@ -78,7 +78,8 @@ function pick(row: Record<string, string>, ...names: string[]): string {
 export function mapPositionLevel(level: string): Position | null {
   const v = (level || '').toUpperCase()
   if (v.includes('PRESIDENT')) return 'CEO'
-  if (v.includes('DIRECTOR') || v.includes('MANAGING')) return 'DIRECTOR_UP'
+  if (v.includes('MANAGING')) return 'MANAGING_DIRECTOR'
+  if (v.includes('DIRECTOR')) return 'DIRECTOR_UP'
   if (v.includes('MANAGER')) return 'MANAGER'
   if (v.includes('SUPERVISOR')) return 'SUPERVISOR'
   if (v.includes('OPERATOR')) return 'PRODUCTION_STAFF'

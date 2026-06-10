@@ -165,7 +165,8 @@ export const RATING_SCALE = [
 
 export const POSITION_LABELS: Record<Position, string> = {
   CEO: 'CEO',
-  DIRECTOR_UP: 'Director and up',
+  MANAGING_DIRECTOR: 'Managing Director',
+  DIRECTOR_UP: 'Director',
   MANAGER: 'Manager',
   OFFICER: 'Officer',
   SUPERVISOR: 'Supervisor',
