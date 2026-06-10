@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, Pencil, Plus, Search, ShieldAlert, Trash2, Upload, UserCog, X } from 'lucide-react'
 import api from '@/lib/api'
@@ -32,8 +32,10 @@ interface ImportSummary {
 }
 
 const ROLE_OPTIONS: Role[] = ['DEVELOPER', 'ADMIN', 'MANAGER', 'EMPLOYEE']
-// Filter chips: workforce roles first, system roles (Developer/Admin) grouped at the end.
-const ROLE_FILTER_ORDER: Role[] = ['MANAGER', 'EMPLOYEE', 'DEVELOPER', 'ADMIN']
+// Filter chips show the workforce roles individually; Developer + Admin are
+// folded into a single "Other" (system-roles) chip.
+const ROLE_FILTER_ORDER: Role[] = ['MANAGER', 'EMPLOYEE']
+const OTHER_ROLES: Role[] = ['DEVELOPER', 'ADMIN']
 const ROLE_LABEL: Record<Role, string> = {
   DEVELOPER: 'Developer', ADMIN: 'Administrator', MANAGER: 'Manager', EMPLOYEE: 'Employee',
 }
@@ -100,7 +102,7 @@ export default function UserManagementPage() {
   const qc = useQueryClient()
   const { isAdmin, user } = useAuth()
   const [search, setSearch] = useState('')
-  const [roleFilter, setRoleFilter] = useState<'ALL' | Role>('ALL')
+  const [roleFilter, setRoleFilter] = useState<'ALL' | Role | 'OTHER'>('ALL')
   const [positionFilter, setPositionFilter] = useState<'ALL' | Position>('ALL')
   const [deptFilter, setDeptFilter] = useState<string>('ALL')
   const [draft, setDraft] = useState<Draft | null>(null)
@@ -178,7 +180,8 @@ export default function UserManagementPage() {
     const q = search.trim().toLowerCase()
     return users
       .filter(u => {
-        if (roleFilter !== 'ALL' && u.role !== roleFilter) return false
+        if (roleFilter === 'OTHER') { if (!OTHER_ROLES.includes(u.role)) return false }
+        else if (roleFilter !== 'ALL' && u.role !== roleFilter) return false
         if (positionFilter !== 'ALL' && u.position !== positionFilter) return false
         if (deptFilter !== 'ALL' && (u.department ?? '') !== deptFilter) return false
         if (!q) return true
@@ -272,24 +275,33 @@ export default function UserManagementPage() {
             {ROLE_FILTER_ORDER.map(r => {
               const s = ROLE_STYLE[r]
               const active = roleFilter === r
-              // Divider before the system-role group (Developer/Admin).
-              const divider = r === 'DEVELOPER'
-                ? <span key="div" style={{ width: 1, height: 18, background: 'var(--kbt-border)', margin: '0 4px' }} />
-                : null
               return (
-                <Fragment key={r}>
-                  {divider}
-                  <button onClick={() => setRoleFilter(active ? 'ALL' : r)}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 28, padding: '0 12px', borderRadius: 999,
-                      fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
-                      border: `1px solid ${active ? s.border : 'var(--kbt-border)'}`,
-                      background: active ? s.bg : 'transparent', color: active ? s.color : 'var(--kbt-text-2)' }}>
-                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: s.dot }} />
-                    {ROLE_LABEL[r]} · {roleCounts[r] ?? 0}
-                  </button>
-                </Fragment>
+                <button key={r} onClick={() => setRoleFilter(active ? 'ALL' : r)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 28, padding: '0 12px', borderRadius: 999,
+                    fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
+                    border: `1px solid ${active ? s.border : 'var(--kbt-border)'}`,
+                    background: active ? s.bg : 'transparent', color: active ? s.color : 'var(--kbt-text-2)' }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: s.dot }} />
+                  {ROLE_LABEL[r]} · {roleCounts[r] ?? 0}
+                </button>
               )
             })}
+            <span style={{ width: 1, height: 18, background: 'var(--kbt-border)', margin: '0 4px' }} />
+            {(() => {
+              const active = roleFilter === 'OTHER'
+              const otherCount = OTHER_ROLES.reduce((n, r) => n + (roleCounts[r] ?? 0), 0)
+              return (
+                <button onClick={() => setRoleFilter(active ? 'ALL' : 'OTHER')}
+                  title={OTHER_ROLES.map(r => ROLE_LABEL[r]).join(' · ')}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 28, padding: '0 12px', borderRadius: 999,
+                    fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
+                    border: `1px solid ${active ? 'rgba(110,135,160,0.5)' : 'var(--kbt-border)'}`,
+                    background: active ? 'rgba(53,74,95,0.4)' : 'transparent', color: active ? '#8aa1b8' : 'var(--kbt-text-2)' }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#6e87a0' }} />
+                  {t('users.roleOther')} · {otherCount}
+                </button>
+              )
+            })()}
           </div>
         </div>
 
