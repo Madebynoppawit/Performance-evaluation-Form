@@ -150,14 +150,21 @@ export default function UserManagementPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return users.filter(u => {
-      if (roleFilter !== 'ALL' && u.role !== roleFilter) return false
-      if (positionFilter !== 'ALL' && u.position !== positionFilter) return false
-      if (deptFilter !== 'ALL' && (u.department ?? '') !== deptFilter) return false
-      if (!q) return true
-      return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
-        || (u.department ?? '').toLowerCase().includes(q) || (u.employeeNo ?? '').toLowerCase().includes(q)
-    })
+    return users
+      .filter(u => {
+        if (roleFilter !== 'ALL' && u.role !== roleFilter) return false
+        if (positionFilter !== 'ALL' && u.position !== positionFilter) return false
+        if (deptFilter !== 'ALL' && (u.department ?? '') !== deptFilter) return false
+        if (!q) return true
+        return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+          || (u.department ?? '').toLowerCase().includes(q) || (u.employeeNo ?? '').toLowerCase().includes(q)
+      })
+      // Sort by employee number numerically; rows without one sink to the end by name.
+      .sort((a, b) => {
+        const na = a.employeeNo ? parseInt(a.employeeNo, 10) : Infinity
+        const nb = b.employeeNo ? parseInt(b.employeeNo, 10) : Infinity
+        return na !== nb ? na - nb : a.name.localeCompare(b.name)
+      })
   }, [users, search, roleFilter, positionFilter, deptFilter])
 
   const roleCounts = useMemo(() => {
