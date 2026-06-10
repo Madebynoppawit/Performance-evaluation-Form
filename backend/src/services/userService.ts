@@ -76,5 +76,12 @@ export async function updateUser(
 }
 
 export async function deleteUser(id: string) {
-  return prisma.user.delete({ where: { id } })
+  // Evaluations reference the user as evaluatee/evaluator with a Restrict FK, so
+  // they must be cleared first. Subordinates (managerId) and audit events detach
+  // automatically via SetNull. Everything runs in one transaction.
+  return prisma.$transaction(async tx => {
+    await tx.user.updateMany({ where: { managerId: id }, data: { managerId: null } })
+    await tx.evaluation.deleteMany({ where: { OR: [{ evaluateeId: id }, { evaluatorId: id }] } })
+    return tx.user.delete({ where: { id } })
+  })
 }
