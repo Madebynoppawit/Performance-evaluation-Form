@@ -18,6 +18,7 @@ interface ManagedUser {
   position?: Position | null
   department?: string | null
   jobTitle?: string | null
+  employeeNo?: string | null
   _count?: { evaluationsAsEvaluatee: number; evaluationsAsEvaluator: number }
 }
 
@@ -34,8 +35,23 @@ const ROLE_OPTIONS: Role[] = ['DEVELOPER', 'ADMIN', 'MANAGER', 'EMPLOYEE']
 const ROLE_LABEL: Record<Role, string> = {
   DEVELOPER: 'Developer', ADMIN: 'Administrator', MANAGER: 'Manager', EMPLOYEE: 'Employee',
 }
-const ROLE_BADGE: Record<Role, string> = {
-  DEVELOPER: 'kbt-badge-info', ADMIN: 'kbt-badge-success', MANAGER: 'kbt-badge-warning', EMPLOYEE: 'kbt-badge-neutral',
+// Distinct colour per role so they read apart at a glance.
+const ROLE_STYLE: Record<Role, { bg: string; border: string; color: string; dot: string }> = {
+  DEVELOPER: { bg: 'rgba(168,85,247,0.13)', border: 'rgba(168,85,247,0.4)', color: '#c084fc', dot: '#a855f7' },
+  ADMIN:     { bg: 'rgba(237,28,36,0.13)',  border: 'rgba(237,28,36,0.4)',  color: '#f87171', dot: '#ed1c24' },
+  MANAGER:   { bg: 'rgba(10,110,209,0.16)', border: 'rgba(10,110,209,0.45)', color: '#4d9fe8', dot: '#0a6ed1' },
+  EMPLOYEE:  { bg: 'rgba(148,163,184,0.13)', border: 'rgba(148,163,184,0.32)', color: '#94a3b8', dot: '#94a3b8' },
+}
+
+function RoleBadge({ role }: { role: Role }) {
+  const s = ROLE_STYLE[role]
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '2px 10px', borderRadius: 999,
+      fontSize: '0.6875rem', fontWeight: 700, whiteSpace: 'nowrap',
+      background: s.bg, border: `1px solid ${s.border}`, color: s.color }}>
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: s.dot }} />{ROLE_LABEL[role]}
+    </span>
+  )
 }
 
 type Draft = {
@@ -58,6 +74,9 @@ export default function UserManagementPage() {
   const qc = useQueryClient()
   const { isAdmin, user } = useAuth()
   const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState<'ALL' | Role>('ALL')
+  const [positionFilter, setPositionFilter] = useState<'ALL' | Position>('ALL')
+  const [deptFilter, setDeptFilter] = useState<string>('ALL')
   const [draft, setDraft] = useState<Draft | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ManagedUser | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
@@ -123,13 +142,29 @@ export default function UserManagementPage() {
     e.target.value = ''
   }
 
+  const departments = useMemo(() => {
+    const set = new Set<string>()
+    users.forEach(u => { if (u.department) set.add(u.department) })
+    return Array.from(set).sort()
+  }, [users])
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    if (!q) return users
-    return users.filter(u =>
-      u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || (u.department ?? '').toLowerCase().includes(q)
-    )
-  }, [users, search])
+    return users.filter(u => {
+      if (roleFilter !== 'ALL' && u.role !== roleFilter) return false
+      if (positionFilter !== 'ALL' && u.position !== positionFilter) return false
+      if (deptFilter !== 'ALL' && (u.department ?? '') !== deptFilter) return false
+      if (!q) return true
+      return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+        || (u.department ?? '').toLowerCase().includes(q) || (u.employeeNo ?? '').toLowerCase().includes(q)
+    })
+  }, [users, search, roleFilter, positionFilter, deptFilter])
+
+  const roleCounts = useMemo(() => {
+    const c: Record<string, number> = {}
+    users.forEach(u => { c[u.role] = (c[u.role] ?? 0) + 1 })
+    return c
+  }, [users])
 
   function openCreate() { setFormError(null); setDraft(emptyDraft()) }
   function openEdit(u: ManagedUser) {
@@ -171,13 +206,51 @@ export default function UserManagementPage() {
       </div>
 
       <div className="kbt-card" style={{ padding: 0 }}>
-        <div style={{ padding: 14, borderBottom: '1px solid var(--kbt-border)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ position: 'relative', flex: 1, maxWidth: 360 }}>
-            <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--kbt-text-3)' }} />
-            <input className="kbt-input" style={{ paddingLeft: 34 }} placeholder={t('users.search')}
-              value={search} onChange={e => setSearch(e.target.value)} />
+        <div style={{ padding: 14, borderBottom: '1px solid var(--kbt-border)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ position: 'relative', flex: 1, maxWidth: 360 }}>
+              <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--kbt-text-3)' }} />
+              <input className="kbt-input" style={{ paddingLeft: 34 }} placeholder={t('users.search')}
+                value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+            <select className="kbt-input" style={{ maxWidth: 190 }} value={positionFilter}
+              onChange={e => setPositionFilter(e.target.value as 'ALL' | Position)}>
+              <option value="ALL">{t('users.allPositions')}</option>
+              {(Object.keys(POSITION_LABELS) as Position[]).map(p => (
+                <option key={p} value={p}>{POSITION_LABELS[p]}</option>
+              ))}
+            </select>
+            <select className="kbt-input" style={{ maxWidth: 210 }} value={deptFilter}
+              onChange={e => setDeptFilter(e.target.value)}>
+              <option value="ALL">{t('users.allTeams')}</option>
+              {departments.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+            <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{filtered.length} / {users.length}</span>
           </div>
-          <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)' }}>{filtered.length} / {users.length}</span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <button onClick={() => setRoleFilter('ALL')}
+              style={{ height: 28, padding: '0 12px', borderRadius: 999, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
+                border: `1px solid ${roleFilter === 'ALL' ? 'var(--sap-blue)' : 'var(--kbt-border)'}`,
+                background: roleFilter === 'ALL' ? 'rgba(10,110,209,0.15)' : 'transparent',
+                color: roleFilter === 'ALL' ? '#4d9fe8' : 'var(--kbt-text-2)' }}>
+              {t('common.all')} · {users.length}
+            </button>
+            {ROLE_OPTIONS.map(r => {
+              const s = ROLE_STYLE[r]
+              const active = roleFilter === r
+              return (
+                <button key={r} onClick={() => setRoleFilter(active ? 'ALL' : r)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 28, padding: '0 12px', borderRadius: 999,
+                    fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
+                    border: `1px solid ${active ? s.border : 'var(--kbt-border)'}`,
+                    background: active ? s.bg : 'transparent', color: active ? s.color : 'var(--kbt-text-2)' }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: s.dot }} />
+                  {ROLE_LABEL[r]} · {roleCounts[r] ?? 0}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {isLoading ? (
@@ -189,6 +262,7 @@ export default function UserManagementPage() {
             <table className="kbt-table">
               <thead>
                 <tr>
+                  <th>{t('users.empNo')}</th>
                   <th>{t('acc.displayName')}</th>
                   <th>{t('acc.email')}</th>
                   <th>{t('acc.role')}</th>
@@ -200,9 +274,10 @@ export default function UserManagementPage() {
               <tbody>
                 {filtered.map(u => (
                   <tr key={u.id}>
+                    <td style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8125rem', color: u.employeeNo ? 'var(--kbt-text-2)' : 'var(--kbt-text-3)' }}>{u.employeeNo ?? '—'}</td>
                     <td style={{ fontWeight: 700 }}>{u.name}</td>
                     <td style={{ color: 'var(--kbt-text-2)', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8125rem' }}>{u.email}</td>
-                    <td><span className={ROLE_BADGE[u.role]}>{ROLE_LABEL[u.role]}</span></td>
+                    <td><RoleBadge role={u.role} /></td>
                     <td style={{ color: 'var(--kbt-text-2)' }}>{u.position ? POSITION_LABELS[u.position] : '-'}</td>
                     <td style={{ color: 'var(--kbt-text-2)' }}>{u.department ?? '-'}</td>
                     <td>

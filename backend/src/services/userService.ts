@@ -7,6 +7,7 @@ export async function getAllUsers() {
     select: {
       id: true, email: true, name: true, role: true,
       position: true, department: true, jobTitle: true, managerId: true,
+      employeeNo: true,
       createdAt: true, updatedAt: true,
       manager: { select: { id: true, name: true } },
       _count: {
