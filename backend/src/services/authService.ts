@@ -39,7 +39,7 @@ export async function register(data: {
 export async function getProfile(userId: string) {
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { id: true, email: true, name: true, role: true, department: true, managerId: true },
+    select: { id: true, email: true, name: true, role: true, department: true, managerId: true, position: true, jobTitle: true, employeeNo: true, mustChangePassword: true },
   })
   return user
 }
@@ -75,7 +75,11 @@ export async function updateProfile(
   if (data.department !== undefined) payload.department = data.department
   if (data.position !== undefined) payload.position = data.position
   if (data.jobTitle !== undefined) payload.jobTitle = data.jobTitle
-  if (data.password) payload.password = await hashPassword(data.password)
+  // Changing the password also clears the forced-change flag.
+  if (data.password) {
+    payload.password = await hashPassword(data.password)
+    payload.mustChangePassword = false
+  }
 
   const user = await prisma.user.update({ where: { id: userId }, data: payload })
   const { password: _pw, ...safeUser } = user

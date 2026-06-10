@@ -20,6 +20,8 @@ export interface User {
   jobTitle?: string | null
   managerId?: string
   hireDate?: string | null
+  employeeNo?: string | null
+  mustChangePassword?: boolean
 }
 
 export interface Question {

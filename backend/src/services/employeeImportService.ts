@@ -1,7 +1,7 @@
-import { randomBytes } from 'crypto'
 import { Position, Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { hashPassword } from '../utils/hash'
+import { env } from '../config/env'
 
 /* Employee master-file importer.
    Parses a delimited export (CSV or TSV) of the company's employee list and
@@ -102,6 +102,9 @@ export async function importEmployees(
   const errors: ImportRowError[] = []
   let created = 0
   let updated = 0
+  // Everyone imported gets the same initial password and must change it on
+  // first login. Hash once per run.
+  const defaultPasswordHash = await hashPassword(env.EMPLOYEE_DEFAULT_PASSWORD)
 
   for (let i = 0; i < rows.length; i += 1) {
     const raw = rows[i]
@@ -143,7 +146,8 @@ export async function importEmployees(
               email: email || `emp.${employeeNo}@import.local`,
               employeeNo,
               role: 'EMPLOYEE',
-              password: await hashPassword(randomBytes(12).toString('hex')),
+              password: defaultPasswordHash,
+              mustChangePassword: true,
             },
           })
           created += 1
@@ -155,7 +159,7 @@ export async function importEmployees(
           updated += 1
         } else {
           await prisma.user.create({
-            data: { ...data, email, role: 'EMPLOYEE', password: await hashPassword(randomBytes(12).toString('hex')) },
+            data: { ...data, email, role: 'EMPLOYEE', password: defaultPasswordHash, mustChangePassword: true },
           })
           created += 1
         }

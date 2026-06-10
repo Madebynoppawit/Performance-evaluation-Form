@@ -100,6 +100,20 @@ export async function updateMe(req: AuthRequest, res: Response, next: NextFuncti
   try {
     const body = updateMeSchema.parse(req.body)
     const user = await authService.updateProfile(req.user!.userId, body)
+    if (body.password) {
+      recordAuditEventBestEffort({
+        eventType: 'auth_password_changed',
+        actor: { userId: req.user!.userId, role: req.user!.role },
+        requestId: req.requestId,
+        method: req.method,
+        path: req.originalUrl,
+        statusCode: 200,
+        targetType: 'user',
+        targetId: req.user!.userId,
+        ip: req.ip,
+        userAgent: req.get('user-agent') ?? null,
+      })
+    }
     res.json(user)
   } catch (err) {
     next(err)

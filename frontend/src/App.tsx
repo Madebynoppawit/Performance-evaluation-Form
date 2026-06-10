@@ -9,6 +9,7 @@ import RouteFallback from '@/components/RouteFallback'
 /* Route components are code-split — each loads only when first visited.
    Heavy deps (e.g. recharts on Dashboard/Reports) stay out of the initial bundle. */
 const LoginPage           = lazy(() => import('@/features/auth/LoginPage'))
+const ChangePasswordPage  = lazy(() => import('@/features/auth/ChangePasswordPage'))
 const DashboardPage       = lazy(() => import('@/features/dashboard/DashboardPage'))
 const EvaluationListPage  = lazy(() => import('@/features/evaluations/EvaluationListPage'))
 const EvaluationFormPage  = lazy(() => import('@/features/evaluations/EvaluationFormPage'))
@@ -25,7 +26,21 @@ const NotFoundPage        = lazy(() => import('@/pages/NotFoundPage'))
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token)
   const isSessionValid = useAuthStore((s) => s.isSessionValid)
-  return token && isSessionValid() ? <>{children}</> : <Navigate to="/login" replace />
+  const mustChange = useAuthStore((s) => s.user?.mustChangePassword)
+  if (!token || !isSessionValid()) return <Navigate to="/login" replace />
+  if (mustChange) return <Navigate to="/change-password" replace />
+  return <>{children}</>
+}
+
+// Forced first-login password change: only reachable while authenticated and
+// flagged; otherwise bounce to login or the app.
+function ChangePasswordRoute() {
+  const token = useAuthStore((s) => s.token)
+  const isSessionValid = useAuthStore((s) => s.isSessionValid)
+  const mustChange = useAuthStore((s) => s.user?.mustChangePassword)
+  if (!token || !isSessionValid()) return <Navigate to="/login" replace />
+  if (!mustChange) return <Navigate to="/" replace />
+  return <ChangePasswordPage />
 }
 
 export default function App() {
@@ -40,6 +55,7 @@ export default function App() {
         <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/change-password" element={<ChangePasswordRoute />} />
           <Route
             path="/"
             element={

@@ -33,6 +33,10 @@ const schema = z.object({
   ALLOW_PUBLIC_REGISTRATION: boolEnv,
   COMPANY_EMAIL_DOMAIN: z.string().trim().min(1).default('amw-ems.com'),
 
+  /* Shared initial password set on imported employees; they're forced to
+     change it on first login. */
+  EMPLOYEE_DEFAULT_PASSWORD: z.string().min(1).default('Amw@1234'),
+
   /* Accept CLIENT_URL (single) or CORS_ORIGINS (list); both feed the allowlist. */
   CLIENT_URL: z.string().url().default('http://localhost:5173'),
   CORS_ORIGINS: csv.optional(),
