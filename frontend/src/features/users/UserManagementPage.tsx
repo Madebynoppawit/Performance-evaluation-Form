@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, Pencil, Plus, Search, ShieldAlert, Trash2, Upload, UserCog, X } from 'lucide-react'
 import api from '@/lib/api'
@@ -32,6 +32,8 @@ interface ImportSummary {
 }
 
 const ROLE_OPTIONS: Role[] = ['DEVELOPER', 'ADMIN', 'MANAGER', 'EMPLOYEE']
+// Filter chips: workforce roles first, system roles (Developer/Admin) grouped at the end.
+const ROLE_FILTER_ORDER: Role[] = ['MANAGER', 'EMPLOYEE', 'DEVELOPER', 'ADMIN']
 const ROLE_LABEL: Record<Role, string> = {
   DEVELOPER: 'Developer', ADMIN: 'Administrator', MANAGER: 'Manager', EMPLOYEE: 'Employee',
 }
@@ -267,18 +269,25 @@ export default function UserManagementPage() {
                 color: roleFilter === 'ALL' ? '#4d9fe8' : 'var(--kbt-text-2)' }}>
               {t('common.all')} · {users.length}
             </button>
-            {ROLE_OPTIONS.map(r => {
+            {ROLE_FILTER_ORDER.map(r => {
               const s = ROLE_STYLE[r]
               const active = roleFilter === r
+              // Divider before the system-role group (Developer/Admin).
+              const divider = r === 'DEVELOPER'
+                ? <span key="div" style={{ width: 1, height: 18, background: 'var(--kbt-border)', margin: '0 4px' }} />
+                : null
               return (
-                <button key={r} onClick={() => setRoleFilter(active ? 'ALL' : r)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 28, padding: '0 12px', borderRadius: 999,
-                    fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
-                    border: `1px solid ${active ? s.border : 'var(--kbt-border)'}`,
-                    background: active ? s.bg : 'transparent', color: active ? s.color : 'var(--kbt-text-2)' }}>
-                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: s.dot }} />
-                  {ROLE_LABEL[r]} · {roleCounts[r] ?? 0}
-                </button>
+                <Fragment key={r}>
+                  {divider}
+                  <button onClick={() => setRoleFilter(active ? 'ALL' : r)}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 28, padding: '0 12px', borderRadius: 999,
+                      fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
+                      border: `1px solid ${active ? s.border : 'var(--kbt-border)'}`,
+                      background: active ? s.bg : 'transparent', color: active ? s.color : 'var(--kbt-text-2)' }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: s.dot }} />
+                    {ROLE_LABEL[r]} · {roleCounts[r] ?? 0}
+                  </button>
+                </Fragment>
               )
             })}
           </div>
