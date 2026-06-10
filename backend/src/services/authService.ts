@@ -3,8 +3,13 @@ import { prisma } from '../lib/prisma'
 import { comparePassword, hashPassword } from '../utils/hash'
 import { signToken } from '../utils/jwt'
 
-export async function login(email: string, password: string) {
-  const user = await prisma.user.findUnique({ where: { email } })
+export async function login(identifier: string, password: string) {
+  // Accept either an employee number or an email (admins/dev accounts have no
+  // employee number), so neither group is locked out.
+  const id = identifier.trim()
+  const user = await prisma.user.findFirst({
+    where: { OR: [{ employeeNo: id }, { email: id.toLowerCase() }] },
+  })
   if (!user) throw new Error('Invalid credentials')
 
   const valid = await comparePassword(password, user.password)

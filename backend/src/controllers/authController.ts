@@ -6,10 +6,13 @@ import { env } from '../config/env'
 import { companyEmailSchema } from '../utils/companyEmail'
 import { recordAuditEventBestEffort } from '../services/auditEventService'
 
+// Login identifier is an employee number or an email (back-compat: still
+// accepts an `email` field from older clients).
 const loginSchema = z.object({
-  email: z.string().email().transform((email) => email.trim().toLowerCase()),
+  identifier: z.string().trim().min(1).optional(),
+  email: z.string().trim().min(1).optional(),
   password: z.string().min(1),
-})
+}).refine((d) => d.identifier || d.email, { message: 'Employee number or email is required', path: ['identifier'] })
 
 const registerSchema = z.object({
   email: companyEmailSchema,
@@ -24,7 +27,7 @@ const registerSchema = z.object({
 export async function login(req: Request, res: Response, next: NextFunction) {
   try {
     const body = loginSchema.parse(req.body)
-    const result = await authService.login(body.email, body.password)
+    const result = await authService.login((body.identifier ?? body.email)!, body.password)
     recordAuditEventBestEffort({
       eventType: 'auth_login_success',
       actor: { userId: result.user.id, role: result.user.role },
@@ -46,9 +49,9 @@ export async function login(req: Request, res: Response, next: NextFunction) {
         statusCode: 401,
         ip: req.ip,
         userAgent: req.get('user-agent') ?? null,
-        metadata: { email: typeof req.body?.email === 'string' ? req.body.email : undefined },
+        metadata: { identifier: typeof req.body?.identifier === 'string' ? req.body.identifier : (typeof req.body?.email === 'string' ? req.body.email : undefined) },
       })
-      res.status(401).json({ message: 'Incorrect email or password', requestId: req.requestId })
+      res.status(401).json({ message: 'Incorrect employee number or password', requestId: req.requestId })
       return
     }
     next(err)
@@ -83,7 +86,7 @@ const updateMeSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').optional(),
   email: companyEmailSchema.optional(),
   department: z.string().trim().max(120).nullable().optional(),
-  position: z.enum(['DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']).nullable().optional(),
+  position: z.enum(['CEO', 'MANAGING_DIRECTOR', 'DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']).nullable().optional(),
   jobTitle: z.string().trim().max(120).nullable().optional(),
   password: z
     .string()

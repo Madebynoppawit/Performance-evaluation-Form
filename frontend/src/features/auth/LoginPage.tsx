@@ -2,16 +2,13 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, CheckCircle2, Loader2, Lock, Mail, ShieldCheck } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Hash, Loader2, Lock, ShieldCheck } from 'lucide-react'
 import api from '@/lib/api'
 import ThemeToggle from '@/components/ThemeToggle'
 import { useAuthStore } from './authStore'
 
 const schema = z.object({
-  email: z
-    .string()
-    .email('Invalid email address')
-    .refine((email) => email.toLowerCase().endsWith('@amw-ems.com'), 'Use your @amw-ems.com email'),
+  identifier: z.string().trim().min(1, 'Enter your employee number'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 })
 type FormData = z.infer<typeof schema>
@@ -29,7 +26,7 @@ export default function LoginPage() {
       setAuth(res.data.user, res.data.token)
       navigate('/')
     } catch {
-      setError('root', { message: 'Incorrect email or password' })
+      setError('root', { message: 'Incorrect employee number or password' })
     }
   }
 
@@ -112,7 +109,7 @@ export default function LoginPage() {
             Sign in to <span className="kbt-gradient-text">AMW Command</span>
           </h2>
           <p style={{ marginTop: 7, fontSize: '0.875rem', color: 'var(--kbt-text-3)', lineHeight: 1.55 }}>
-            Use your company account to continue.
+            Sign in with your employee number to continue.
           </p>
         </div>
 
@@ -126,19 +123,20 @@ export default function LoginPage() {
             )}
 
             <div>
-              <label className="kbt-label kbt-label-required">Email Address</label>
+              <label className="kbt-label kbt-label-required">Employee Number</label>
               <div style={{ position: 'relative' }}>
-                <Mail size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--kbt-text-3)', pointerEvents: 'none' }} />
+                <Hash size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--kbt-text-3)', pointerEvents: 'none' }} />
                 <input
-                  {...register('email')}
-                  type="email"
+                  {...register('identifier')}
+                  type="text"
                   className="kbt-input"
                   style={{ paddingLeft: 36 }}
-                  placeholder="user@amw-ems.com"
-                  autoComplete="email"
+                  placeholder="e.g. 1024"
+                  autoComplete="username"
+                  autoFocus
                 />
               </div>
-              {errors.email && <p style={{ color: '#ed1c24', fontSize: '0.75rem', marginTop: 4 }}>{errors.email.message}</p>}
+              {errors.identifier && <p style={{ color: '#ed1c24', fontSize: '0.75rem', marginTop: 4 }}>{errors.identifier.message}</p>}
             </div>
 
             <div>
@@ -179,7 +177,7 @@ export default function LoginPage() {
 
           <div style={{ marginTop: 22, paddingTop: 16, borderTop: '1px solid var(--kbt-border)' }}>
             <p style={{ fontSize: '0.6875rem', color: 'var(--kbt-text-3)', marginBottom: 9, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800 }}>
-              Demo Access
+              Demo Access · admins sign in with email
             </p>
             {[
               { role: 'Admin', email: 'admin@amw-ems.com' },
