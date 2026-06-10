@@ -104,7 +104,9 @@ export async function importEmployees(
   for (let i = 0; i < rows.length; i += 1) {
     const raw = rows[i]
     const rowNo = i + 2 // header is row 1
-    const employeeNo = pick(raw, 'No', 'Employee No', 'EmployeeNo', 'EMP NO', 'Code No')
+    // Employee numbers past 999 come quoted with a thousands comma ("1,015") —
+    // strip separators so the key is a clean "1015".
+    const employeeNo = pick(raw, 'No', 'Employee No', 'EmployeeNo', 'EMP NO', 'Code No').replace(/[,\s]/g, '')
     const email = pick(raw, 'Email', 'E-mail').toLowerCase()
     const first = pick(raw, 'Name')
     const last = pick(raw, 'Surname')
@@ -119,7 +121,7 @@ export async function importEmployees(
     const data = {
       name,
       department: pick(raw, 'Department') || null,
-      jobTitle: pick(raw, 'Position') || null,
+      jobTitle: pick(raw, 'Position', 'Positiion', 'Job Title') || null,
       position: mapPositionLevel(pick(raw, 'Position Level', 'Position level')),
       hireDate: parseDate(pick(raw, 'Start date', 'Start Date')),
       sourceData: raw as Prisma.InputJsonValue,
