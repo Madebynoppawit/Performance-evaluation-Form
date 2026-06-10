@@ -6,6 +6,7 @@ import { env } from '../config/env'
 
 /** Each employee level uses its own appraisal form. */
 const POSITION_FORM_TYPE: Record<Position, FormType> = {
+  CEO: 'DIRECTOR_LEVEL',
   DIRECTOR_UP: 'DIRECTOR_LEVEL',
   MANAGER: 'MANAGER_LEVEL',
   OFFICER: 'OFFICER_LEVEL',
@@ -19,7 +20,7 @@ function formTypeForPosition(position: Position | null): FormType {
 
 /* The evaluator must be a supervisor / manager / director — the evaluatee can
    be anyone. Kept in sync with the frontend EVALUATOR_POSITIONS list. */
-const EVALUATOR_POSITIONS: Position[] = ['DIRECTOR_UP', 'MANAGER', 'SUPERVISOR']
+const EVALUATOR_POSITIONS: Position[] = ['CEO', 'DIRECTOR_UP', 'MANAGER', 'SUPERVISOR']
 
 function badRequest(message: string) {
   const err = new Error(message) as Error & { status: number }

@@ -27,6 +27,7 @@ const roleLabel = {
 }
 
 const positionLabel = {
+  CEO: 'CEO',
   DIRECTOR_UP: 'Director Up',
   MANAGER: 'Manager',
   OFFICER: 'Officer',
@@ -51,11 +52,12 @@ const defaultPhotoLayout: PhotoLayout = {
 }
 
 function getDisplayRole(user: ReturnType<typeof useAuth>['user']) {
+  if (user?.position === 'CEO') return 'CEO'
   if (user?.position === 'DIRECTOR_UP') return 'Director'
   return user?.role ? roleLabel[user.role] : '-'
 }
 
-const POSITION_OPTIONS: Position[] = ['DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']
+const POSITION_OPTIONS: Position[] = ['CEO', 'DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']
 
 export default function AccountPage() {
   const { user, updateUser } = useAuth()

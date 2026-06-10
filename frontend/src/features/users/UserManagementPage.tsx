@@ -54,6 +54,28 @@ function RoleBadge({ role }: { role: Role }) {
   )
 }
 
+// Distinct colour per position — CEO/Director/Manager/Supervisor read apart.
+const POSITION_STYLE: Record<Position, { bg: string; border: string; color: string }> = {
+  CEO:              { bg: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.45)',  color: '#fbbf24' },
+  DIRECTOR_UP:      { bg: 'rgba(168,85,247,0.13)',  border: 'rgba(168,85,247,0.4)',   color: '#c084fc' },
+  MANAGER:          { bg: 'rgba(10,110,209,0.16)',  border: 'rgba(10,110,209,0.45)',  color: '#4d9fe8' },
+  SUPERVISOR:       { bg: 'rgba(20,184,166,0.15)',  border: 'rgba(20,184,166,0.42)',  color: '#2dd4bf' },
+  OFFICER:          { bg: 'rgba(34,197,94,0.14)',   border: 'rgba(34,197,94,0.4)',    color: '#4ade80' },
+  PRODUCTION_STAFF: { bg: 'rgba(148,163,184,0.13)', border: 'rgba(148,163,184,0.32)', color: '#94a3b8' },
+}
+
+function PositionBadge({ position }: { position?: Position | null }) {
+  if (!position) return <span style={{ color: 'var(--kbt-text-3)' }}>—</span>
+  const s = POSITION_STYLE[position]
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 10px', borderRadius: 999,
+      fontSize: '0.6875rem', fontWeight: 700, whiteSpace: 'nowrap',
+      background: s.bg, border: `1px solid ${s.border}`, color: s.color }}>
+      {POSITION_LABELS[position]}
+    </span>
+  )
+}
+
 type Draft = {
   id: string | null
   name: string
@@ -285,7 +307,7 @@ export default function UserManagementPage() {
                     <td style={{ fontWeight: 700 }}>{u.name}</td>
                     <td style={{ color: 'var(--kbt-text-2)', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8125rem' }}>{u.email}</td>
                     <td><RoleBadge role={u.role} /></td>
-                    <td style={{ color: 'var(--kbt-text-2)' }}>{u.position ? POSITION_LABELS[u.position] : '-'}</td>
+                    <td><PositionBadge position={u.position} /></td>
                     <td style={{ color: 'var(--kbt-text-2)' }}>{u.department ?? '-'}</td>
                     <td>
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>

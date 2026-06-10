@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 const COMPETENCY_IDS_BY_POSITION: Record<Position, string[]> = {
+  [Position.CEO]: ['CC1', 'CC2', 'CC3', 'CC4', 'MC1', 'MC2', 'TCM1', 'TCM2', 'TCM3', 'TCM4'],
   [Position.DIRECTOR_UP]: ['CC1', 'CC2', 'CC3', 'CC4', 'MC1', 'MC2', 'TCM1', 'TCM2', 'TCM3', 'TCM4'],
   [Position.MANAGER]: ['CC1', 'CC2', 'CC3', 'CC4', 'MC1', 'MC2', 'TCM1', 'TCM2', 'TCM3', 'TCM4'],
   [Position.OFFICER]: ['CC1', 'CC2', 'CC3', 'CC4'],
@@ -12,7 +13,7 @@ const COMPETENCY_IDS_BY_POSITION: Record<Position, string[]> = {
 }
 
 function minimumTrainingHours(position: Position) {
-  if (position === Position.MANAGER || position === Position.DIRECTOR_UP) return 12
+  if (position === Position.MANAGER || position === Position.DIRECTOR_UP || position === Position.CEO) return 12
   if (position === Position.PRODUCTION_STAFF) return 8
   return 10
 }

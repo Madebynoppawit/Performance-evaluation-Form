@@ -35,7 +35,7 @@ export function authenticate(req: AuthRequest, res: Response, next: NextFunction
 /** Supervisory positions (หัวหน้างานขึ้นไป): Supervisor / Manager / Director-up
     (MD, CEO). They may create evaluations and build templates. Admins/developers
     always allowed. */
-const SUPERVISORY_POSITIONS = ['DIRECTOR_UP', 'MANAGER', 'SUPERVISOR']
+const SUPERVISORY_POSITIONS = ['CEO', 'DIRECTOR_UP', 'MANAGER', 'SUPERVISOR']
 
 export async function authorizeSupervisory(req: AuthRequest, res: Response, next: NextFunction) {
   if (!req.user) {

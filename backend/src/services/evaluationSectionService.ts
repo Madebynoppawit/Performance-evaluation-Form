@@ -5,9 +5,10 @@ import { calculateCompetencyScore } from './competencyService'
 type SignerType = 'employee' | 'evaluator' | 'director'
 type SectionUser = { userId: string; role: string }
 type NullableText = string | null
-type Position = 'DIRECTOR_UP' | 'MANAGER' | 'OFFICER' | 'SUPERVISOR' | 'PRODUCTION_STAFF'
+type Position = 'CEO' | 'DIRECTOR_UP' | 'MANAGER' | 'OFFICER' | 'SUPERVISOR' | 'PRODUCTION_STAFF'
 
 const POSITION_COMPETENCIES: Record<Position, string[]> = {
+  CEO: ['CC1', 'CC2', 'CC3', 'CC4', 'MC1', 'MC2', 'TCM1', 'TCM2', 'TCM3', 'TCM4'],
   DIRECTOR_UP: ['CC1', 'CC2', 'CC3', 'CC4', 'MC1', 'MC2', 'TCM1', 'TCM2', 'TCM3', 'TCM4'],
   MANAGER: ['CC1', 'CC2', 'CC3', 'CC4', 'MC1', 'MC2', 'TCM1', 'TCM2', 'TCM3', 'TCM4'],
   // Officer / Supervisor / Production Staff are assessed on the four Core

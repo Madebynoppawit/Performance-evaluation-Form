@@ -10,7 +10,7 @@ const createSchema = z.object({
   name:       z.string().min(1),
   password:   z.string().min(6),
   role:       z.enum(['DEVELOPER', 'ADMIN', 'MANAGER', 'EMPLOYEE']),
-  position:   z.enum(['DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']).optional(),
+  position:   z.enum(['CEO', 'DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']).optional(),
   department: z.string().optional(),
   managerId:  z.string().optional(),
 })
@@ -18,7 +18,7 @@ const createSchema = z.object({
 const updateSchema = z.object({
   name:       z.string().min(1).optional(),
   role:       z.enum(['DEVELOPER', 'ADMIN', 'MANAGER', 'EMPLOYEE']).optional(),
-  position:   z.enum(['DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']).optional(),
+  position:   z.enum(['CEO', 'DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']).optional(),
   department: z.string().optional(),
   managerId:  z.string().nullable().optional(),
   password:   z.string().min(6).optional(),

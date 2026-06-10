@@ -293,6 +293,7 @@ export const DEFAULT_FORM_TYPE: FormTypeId = 'OFFICER_LEVEL'
 
 /** Each employee level uses its own form. */
 export const POSITION_FORM_TYPE: Record<Position, FormTypeId> = {
+  CEO: 'DIRECTOR_LEVEL',
   DIRECTOR_UP: 'DIRECTOR_LEVEL',
   MANAGER: 'MANAGER_LEVEL',
   OFFICER: 'OFFICER_LEVEL',
