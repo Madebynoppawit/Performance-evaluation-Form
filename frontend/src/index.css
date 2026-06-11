@@ -74,7 +74,7 @@
   --chart-tooltip-border: rgba(92,86,144,0.28);
   --chart-tooltip-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 24px rgba(92,86,144,0.12);
   --elevated-shadow: 0 18px 50px rgba(3,11,22,0.34);
-  --radius:          8px;
+  --radius:          16px;
   --glow-blue:       0 0 24px rgba(92,86,144,0.5), 0 0 60px rgba(92,86,144,0.22);
   --glow-lambo:      0 0 18px rgba(92,86,144,0.2), 0 0 42px rgba(92,86,144,0.08);
   --glow-accent:     0 0 20px rgba(229,35,33,0.22),  0 0 42px rgba(229,35,33,0.08);
@@ -150,7 +150,7 @@ body,
 :where(a, button, [role='button'], [role='radio'], [role='tab'], [tabindex]):focus-visible {
   outline: 2px solid var(--sap-blue);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 12px;
 }
 :where(.kbt-input, .kbt-textarea, .kbt-select):focus-visible {
   outline: none;
@@ -234,7 +234,7 @@ body,
   .kbt-metric-icon {
     width: 30px;
     height: 30px;
-    border-radius: 8px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -385,7 +385,7 @@ body,
     gap: 10px;
     padding: 9px 12px;
     border: 1px solid transparent;
-    border-radius: 8px;
+    border-radius: 14px;
     background: transparent;
     color: var(--kbt-text-3);
     text-align: left;
@@ -434,7 +434,7 @@ body,
     justify-content: center;
     width: 30px;
     height: 30px;
-    border-radius: 8px;
+    border-radius: 14px;
     background: var(--brand-gradient);
     color: #ffffff;
     font-family: 'JetBrains Mono', monospace;
@@ -453,7 +453,7 @@ body,
   .kbt-instruction-row span {
     width: 28px;
     height: 28px;
-    border-radius: 8px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -654,7 +654,7 @@ body,
     min-height: 46px;
     padding: 10px 14px;
     margin: 3px 10px;
-    border-radius: 8px;
+    border-radius: 14px;
     font-size: 0.95rem;
     cursor: pointer;
     text-decoration: none;
@@ -810,7 +810,7 @@ body,
     gap: 6px;
     padding: 0 16px;
     height: 36px;
-    border-radius: 6px;
+    border-radius: 12px;
     font-size: 0.875rem;
     font-weight: 500;
     border: none;
@@ -831,13 +831,13 @@ body,
     padding: 0 18px;
     min-width: 150px;
     height: 44px;
-    border-radius: 6px;
+    border-radius: 12px;
     font-size: 0.95rem;
     font-weight: 850;
     border: none;
     cursor: pointer;
     white-space: nowrap;
-    transition: all 0.2s ease;
+    transition: transform var(--spring), box-shadow var(--transition-med), background var(--transition-med);
     text-decoration: none;
     user-select: none;
     background:
@@ -871,7 +871,7 @@ body,
       0 0 0 1px rgba(255,255,255,0.22) inset,
       0 1px 0 rgba(255,255,255,0.4) inset,
       0 0 42px rgba(229,35,33,0.36);
-    transform: translateY(-2px);
+    transform: translateY(-2px) scale(1.025);
   }
   .kbt-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -896,7 +896,7 @@ body,
     gap: 6px;
     padding: 0 16px;
     height: 36px;
-    border-radius: 6px;
+    border-radius: 12px;
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
@@ -923,7 +923,7 @@ body,
     min-width: 150px;
     height: 44px;
     padding: 0 20px;
-    border-radius: 6px;
+    border-radius: 12px;
     border: 1px solid rgba(92,86,144,0.74);
     background: linear-gradient(135deg, var(--amw-navy) 0%, var(--m-blue) 52%, var(--sap-blue) 100%);
     color: #ffffff;
@@ -959,7 +959,7 @@ body,
     gap: 6px;
     padding: 0 12px;
     height: 32px;
-    border-radius: 6px;
+    border-radius: 12px;
     font-size: 0.8125rem;
     font-weight: 400;
     cursor: pointer;
@@ -984,7 +984,7 @@ body,
     gap: 6px;
     padding: 0 16px;
     height: 36px;
-    border-radius: 6px;
+    border-radius: 12px;
     font-size: 0.875rem;
     font-weight: 500;
     border: none;
@@ -1011,13 +1011,13 @@ body,
     color: var(--kbt-text);
     background: var(--kbt-surface);
     border: 1px solid var(--kbt-border-2);
-    border-radius: 8px;
+    border-radius: 14px;
     transition: border-color 0.15s, box-shadow 0.15s;
     outline: none;
   }
   .kbt-input:focus {
-    border-color: var(--sap-blue);
-    box-shadow: 0 0 0 4px rgba(92,86,144,0.18), 0 0 0 1px rgba(92,86,144,0.6);
+    border-color: var(--amw-red);
+    box-shadow: 0 0 0 4px rgba(229,35,33,0.16), 0 0 0 1px rgba(229,35,33,0.55), 0 0 18px rgba(229,35,33,0.12);
   }
   .kbt-input:disabled {
     opacity: 0.4;
@@ -1036,7 +1036,7 @@ body,
     color: var(--kbt-text);
     background: var(--kbt-surface);
     border: 1px solid var(--kbt-border-2);
-    border-radius: 8px;
+    border-radius: 14px;
     transition: border-color 0.15s, box-shadow 0.15s;
     outline: none;
     resize: vertical;
@@ -1057,7 +1057,7 @@ body,
     color: var(--kbt-text);
     background: var(--kbt-surface);
     border: 1px solid var(--kbt-border-2);
-    border-radius: 8px;
+    border-radius: 14px;
     transition: border-color 0.15s;
     outline: none;
     appearance: none;
@@ -1219,7 +1219,7 @@ body,
     align-items: flex-start;
     gap: 10px;
     padding: 12px 16px;
-    border-radius: 8px;
+    border-radius: 14px;
     font-size: 0.875rem;
     background: rgba(92,86,144,0.08);
     border: 1px solid rgba(92,86,144,0.2);
@@ -1230,7 +1230,7 @@ body,
     align-items: flex-start;
     gap: 10px;
     padding: 12px 16px;
-    border-radius: 8px;
+    border-radius: 14px;
     font-size: 0.875rem;
     background: rgba(92,86,144,0.08);
     border: 1px solid rgba(150,144,196,0.2);
@@ -1241,7 +1241,7 @@ body,
     align-items: flex-start;
     gap: 10px;
     padding: 12px 16px;
-    border-radius: 8px;
+    border-radius: 14px;
     font-size: 0.875rem;
     background: rgba(229,35,33,0.08);
     border: 1px solid rgba(229,35,33,0.2);
@@ -1252,7 +1252,7 @@ body,
     align-items: flex-start;
     gap: 10px;
     padding: 12px 16px;
-    border-radius: 8px;
+    border-radius: 14px;
     font-size: 0.875rem;
     background: rgba(229,35,33,0.08);
     border: 1px solid rgba(229,35,33,0.2);
@@ -1340,7 +1340,7 @@ body,
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
+    border-radius: 14px;
     background: var(--control-bg);
     border: 1px solid var(--kbt-border);
     color: var(--kbt-text-2);
@@ -1366,7 +1366,7 @@ body,
     align-items: center;
     gap: 9px;
     padding: 0 14px;
-    border-radius: 10px;
+    border-radius: 16px;
     background: var(--control-bg);
     border: 1px solid var(--kbt-border);
     color: var(--kbt-text-3);
@@ -1466,7 +1466,7 @@ body,
     gap: 10px;
     padding: 0 13px;
     border: 1px solid rgba(150,144,196,0.3);
-    border-radius: 10px;
+    border-radius: 16px;
     background: rgba(92,86,144,0.08);
     color: var(--m-light-blue);
   }
@@ -1524,7 +1524,7 @@ body,
     gap: 12px;
     padding: 12px;
     border: 1px solid transparent;
-    border-radius: 10px;
+    border-radius: 16px;
     background: transparent;
     color: inherit;
     text-align: left;
@@ -1543,7 +1543,7 @@ body,
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 10px;
+    border-radius: 16px;
     border: 1px solid rgba(150,144,196,0.22);
     background: rgba(92,86,144,0.12);
     color: var(--m-light-blue);
@@ -2639,7 +2639,7 @@ body,
     );
     background-size: 200% 100%;
     animation: shimmer 1.8s ease infinite;
-    border-radius: 6px;
+    border-radius: 12px;
   }
 
   /* ── Animated Progress Bar ───────────────────────────────────────────────── */
@@ -2763,7 +2763,7 @@ body,
     bottom: 8px;
     width: 30px;
     height: 30px;
-    border-radius: 10px;
+    border-radius: 16px;
     display: grid;
     place-items: center;
     color: #ffffff;
@@ -2840,7 +2840,7 @@ body,
   .amw-photo-layout-group button {
     min-height: 30px;
     padding: 5px 7px;
-    border-radius: 8px;
+    border-radius: 14px;
     border: 1px solid rgba(92,86,144,0.13);
     background: rgba(248,251,255,0.84);
     color: var(--kbt-text-2);
@@ -2977,7 +2977,7 @@ body,
     justify-content: center;
     width: 24px;
     height: 24px;
-    border-radius: 6px;
+    border-radius: 12px;
     border: 1px solid transparent;
     background: transparent;
     color: var(--kbt-text-3);
@@ -3023,7 +3023,7 @@ body,
     align-items: center;
     min-height: 52px;
     padding: 10px;
-    border-radius: 10px;
+    border-radius: 16px;
     border: 1px solid rgba(92,86,144,0.12);
     background: rgba(255,255,255,0.58);
   }
@@ -3032,7 +3032,7 @@ body,
   .amw-timeline-item > svg {
     width: 38px;
     height: 38px;
-    border-radius: 10px;
+    border-radius: 16px;
     display: grid;
     place-items: center;
     color: var(--sap-blue);
@@ -3163,14 +3163,14 @@ body,
     align-items: center;
     min-height: 58px;
     padding: 10px;
-    border-radius: 10px;
+    border-radius: 16px;
     border: 1px solid rgba(92,86,144,0.12);
     background: rgba(255,255,255,0.58);
   }
   .amw-settings-icon {
     width: 38px;
     height: 38px;
-    border-radius: 10px;
+    border-radius: 16px;
     display: grid;
     place-items: center;
     color: var(--sap-blue);
@@ -3218,7 +3218,7 @@ body,
   .amw-settings-static {
     white-space: nowrap;
     padding: 5px 10px;
-    border-radius: 8px;
+    border-radius: 14px;
     font-size: 0.7rem;
     font-weight: 850;
     letter-spacing: 0.02em;
@@ -3406,7 +3406,7 @@ body,
     width: 26px;
     height: 26px;
     flex-shrink: 0;
-    border-radius: 8px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3472,7 +3472,7 @@ body,
   .amw-chart-tooltip {
     padding: 10px 14px;
     border: 1px solid var(--chart-tooltip-border);
-    border-radius: 10px;
+    border-radius: 16px;
     background: var(--chart-tooltip-bg);
     box-shadow: var(--chart-tooltip-shadow);
     backdrop-filter: blur(20px);
@@ -3603,7 +3603,7 @@ body,
     width: 30px;
     height: 30px;
     flex-shrink: 0;
-    border-radius: 8px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3712,7 +3712,7 @@ body,
     flex-direction: column;
     gap: 2px;
     padding: 11px 12px;
-    border-radius: 10px;
+    border-radius: 16px;
     border: 1px solid transparent;
     transition: background 0.14s ease, border-color 0.14s ease;
   }
@@ -4063,7 +4063,7 @@ body,
     gap: 12px;
     padding: 10px 12px;
     border: 1px solid transparent;
-    border-radius: 10px;
+    border-radius: 16px;
     background: none;
     color: var(--kbt-text-2);
     text-align: left;
@@ -4082,7 +4082,7 @@ body,
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
+    border-radius: 14px;
     background: var(--control-bg);
     border: 1px solid var(--kbt-border);
     color: var(--kbt-text-2);
@@ -4210,7 +4210,7 @@ body,
     }
     .amw-corporate-seal::before {
       inset: 7px;
-      border-radius: 10px;
+      border-radius: 16px;
     }
     .amw-corporate-seal::after {
       left: 12px;
@@ -4646,7 +4646,7 @@ body,
   z-index: 10000;
   transform: translateY(-160%);
   padding: 9px 12px;
-  border-radius: 8px;
+  border-radius: 14px;
   background: var(--kbt-card);
   color: var(--kbt-text);
   border: 1px solid var(--kbt-border);
@@ -4797,7 +4797,7 @@ body,
   gap: 5px;
   flex-shrink: 0;
   padding: 3px 9px;
-  border-radius: 6px;
+  border-radius: 12px;
   font-size: 0.62rem;
   font-weight: 900;
   letter-spacing: 0.1em;
@@ -4976,7 +4976,7 @@ body,
 .kbt-metric,
 .amw-login-form-card,
 .amw-studio-hero {
-  border-radius: 10px;
+  border-radius: 16px;
 }
 
 .kbt-card-header {
@@ -5139,7 +5139,7 @@ body,
   gap: 8px;
   min-height: 34px;
   padding: 7px 8px;
-  border-radius: 8px;
+  border-radius: 14px;
   background: rgba(255,255,255,0.055);
   border: 1px solid rgba(255,255,255,0.08);
 }
@@ -5178,7 +5178,7 @@ body,
   min-height: 74px;
   padding: 13px 14px;
   border: 1px solid var(--kbt-border);
-  border-radius: 10px;
+  border-radius: 16px;
   background:
     linear-gradient(135deg, rgba(92,86,144,0.075), rgba(255,255,255,0.025)),
     color-mix(in srgb, var(--kbt-card) 88%, transparent);
@@ -5198,7 +5198,7 @@ body,
   width: 34px;
   height: 34px;
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 14px;
   color: var(--m-light-blue);
   background: rgba(92,86,144,0.12);
   border: 1px solid rgba(150,144,196,0.22);
@@ -5336,7 +5336,7 @@ body,
   width: 264px;
   padding: 6px;
   border: 1px solid rgba(150,144,196,0.18);
-  border-radius: 10px;
+  border-radius: 16px;
   background: color-mix(in srgb, var(--kbt-card) 94%, transparent);
   box-shadow:
     0 24px 60px rgba(3,11,22,0.36),
@@ -5359,7 +5359,7 @@ body,
   gap: 8px;
   padding: 9px 10px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 14px;
   background: transparent;
   color: var(--kbt-text-2);
   cursor: pointer;
@@ -5438,7 +5438,7 @@ body,
   grid-template-columns: 40px minmax(0, 1fr);
   gap: 12px;
   border: 1px solid rgba(148,163,184,0.24);
-  border-radius: 10px;
+  border-radius: 16px;
   background: rgba(255,255,255,0.72);
 }
 
@@ -5454,7 +5454,7 @@ body,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 16px;
   color: var(--sap-blue);
   background: rgba(92,86,144,0.10);
   border: 1px solid rgba(92,86,144,0.18);
@@ -5504,7 +5504,7 @@ body,
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border-radius: 10px;
+  border-radius: 16px;
   border: 1px solid rgba(92,86,144,0.16);
   background: rgba(92,86,144,0.06);
 }
@@ -5702,14 +5702,14 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-radius: 10px;
+  border-radius: 16px;
   border: 1px solid rgba(150,144,196,0.18);
   background: linear-gradient(90deg, rgba(92,86,144,0.1), rgba(92,86,144,0.02));
 }
 .amw-ose-grade > div { display: flex; flex-direction: column; gap: 2px; }
 .amw-ose-grade span { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--kbt-text-3); }
 .amw-ose-grade strong { font-size: 1.05rem; color: var(--kbt-text); }
-.amw-ose-cat { border: 1px solid var(--kbt-border); border-radius: 10px; overflow: hidden; }
+.amw-ose-cat { border: 1px solid var(--kbt-border); border-radius: 16px; overflow: hidden; }
 .amw-ose-cat-head {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 14px;
@@ -5717,7 +5717,7 @@ body {
   border-bottom: 1px solid var(--kbt-border);
 }
 .amw-ose-cat-num {
-  width: 24px; height: 24px; flex-shrink: 0; border-radius: 6px;
+  width: 24px; height: 24px; flex-shrink: 0; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 0.78rem;
   color: #fff; background: var(--brand-gradient);
@@ -5754,7 +5754,7 @@ body {
 /* ── AMW-01-036 employee-info reason + performance summary grade ────────────── */
 .amw-reason-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .amw-reason-chip {
-  padding: 7px 14px; border-radius: 8px; cursor: pointer;
+  padding: 7px 14px; border-radius: 14px; cursor: pointer;
   border: 1px solid var(--kbt-border); background: var(--control-bg);
   color: var(--kbt-text-2); font-size: 0.8rem; font-weight: 700;
   transition: all 0.14s ease;
@@ -5766,7 +5766,7 @@ body {
 .amw-ose-scale-row { display: flex; gap: 10px; flex-wrap: wrap; }
 .amw-ose-scale-chip {
   display: flex; align-items: center; gap: 8px;
-  padding: 6px 12px; border-radius: 8px;
+  padding: 6px 12px; border-radius: 14px;
   border: 1px solid var(--kbt-border); background: rgba(255,255,255,0.02);
 }
 .amw-ose-scale-chip strong { font-size: 0.8rem; color: var(--kbt-text-2); }
@@ -5774,7 +5774,7 @@ body {
 .amw-grade-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
 .amw-grade-chip {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 12px 10px; border-radius: 10px; cursor: pointer; text-align: center;
+  padding: 12px 10px; border-radius: 16px; cursor: pointer; text-align: center;
   border: 1px solid var(--kbt-border); background: var(--control-bg);
   transition: all 0.14s ease;
 }
