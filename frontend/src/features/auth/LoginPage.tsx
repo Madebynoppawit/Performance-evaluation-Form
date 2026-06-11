@@ -177,13 +177,11 @@ export default function LoginPage() {
 
           <div style={{ marginTop: 22, paddingTop: 16, borderTop: '1px solid var(--kbt-border)' }}>
             <p style={{ fontSize: '0.6875rem', color: 'var(--kbt-text-3)', marginBottom: 9, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800 }}>
-              Demo Access · admins sign in with email
+              System accounts · sign in with email
             </p>
             {[
+              { role: 'Developer', email: 'developer@amw-ems.com' },
               { role: 'Admin', email: 'admin@amw-ems.com' },
-              { role: 'Director', email: 'k.keng@amw-ems.com' },
-              { role: 'Manager', email: 'manager.eng@amw-ems.com' },
-              { role: 'Officer', email: 'officer1@amw-ems.com' },
             ].map(({ role, email }) => (
               <div key={email} style={{
                 display: 'flex',
@@ -203,6 +201,9 @@ export default function LoginPage() {
             ))}
             <p style={{ fontSize: '0.6875rem', color: 'var(--kbt-text-3)', marginTop: 8, textAlign: 'center' }}>
               Password: <span style={{ color: 'var(--kbt-text-2)', fontFamily: 'JetBrains Mono, monospace', fontWeight: 800 }}>P@ssw0rd!</span>
+            </p>
+            <p style={{ fontSize: '0.6875rem', color: 'var(--kbt-text-3)', marginTop: 6, textAlign: 'center', lineHeight: 1.5 }}>
+              Employees sign in with their <strong style={{ color: 'var(--kbt-text-2)' }}>employee number</strong> · default <span style={{ color: 'var(--kbt-text-2)', fontFamily: 'JetBrains Mono, monospace', fontWeight: 800 }}>Amw@1234</span>
             </p>
           </div>
         </div>
