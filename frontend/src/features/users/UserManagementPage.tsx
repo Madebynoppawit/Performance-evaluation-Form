@@ -30,6 +30,8 @@ interface ImportSummary {
   updated: number
   failed: number
   errors: { row: number; reason: string; employeeNo?: string; email?: string }[]
+  added: { employeeNo: string; name: string }[]
+  missing: { employeeNo: string; name: string }[]
 }
 
 const ROLE_OPTIONS: Role[] = ['DEVELOPER', 'ADMIN', 'MANAGER', 'EMPLOYEE']
@@ -571,6 +573,39 @@ export default function UserManagementPage() {
                           <span style={{ color: 'var(--kbt-text-2)' }}>{e.reason}{e.email ? ` (${e.email})` : ''}</span>
                         </div>
                       ))}
+                    </div>
+                  )}
+
+                  {importResult.added.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <div style={{ fontSize: '0.6875rem', fontWeight: 800, color: 'var(--m-light-blue)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {t('users.importAdded')} · {importResult.added.length}
+                      </div>
+                      <div style={{ maxHeight: 140, overflowY: 'auto', border: '1px solid var(--kbt-border)', borderRadius: 8 }}>
+                        {importResult.added.map((p, i) => (
+                          <div key={p.employeeNo} style={{ display: 'flex', gap: 8, padding: '5px 10px', borderTop: i ? '1px solid var(--kbt-border)' : 'none', fontSize: '0.75rem' }}>
+                            <span style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--m-light-blue)', flexShrink: 0, minWidth: 44 }}>{p.employeeNo}</span>
+                            <span style={{ color: 'var(--kbt-text-2)' }}>{p.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {importResult.missing.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <div style={{ fontSize: '0.6875rem', fontWeight: 800, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {t('users.importMissing')} · {importResult.missing.length}
+                      </div>
+                      <p style={{ fontSize: '0.6875rem', color: 'var(--kbt-text-3)', margin: 0, lineHeight: 1.5 }}>{t('users.importMissingHint')}</p>
+                      <div style={{ maxHeight: 140, overflowY: 'auto', border: '1px solid var(--kbt-border)', borderRadius: 8 }}>
+                        {importResult.missing.map((p, i) => (
+                          <div key={p.employeeNo} style={{ display: 'flex', gap: 8, padding: '5px 10px', borderTop: i ? '1px solid var(--kbt-border)' : 'none', fontSize: '0.75rem' }}>
+                            <span style={{ fontFamily: 'JetBrains Mono, monospace', color: '#fbbf24', flexShrink: 0, minWidth: 44 }}>{p.employeeNo}</span>
+                            <span style={{ color: 'var(--kbt-text-2)' }}>{p.name}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

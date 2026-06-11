@@ -1,7 +1,14 @@
-import { Position, Prisma } from '@prisma/client'
+import { Position, Role, Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { hashPassword } from '../utils/hash'
 import { env } from '../config/env'
+
+/** Supervisory positions get the MANAGER access role on import; everyone else
+    is a plain EMPLOYEE. (Admin/Developer are never assigned by import.) */
+const SUPERVISORY_POSITIONS: Position[] = ['CEO', 'MANAGING_DIRECTOR', 'DIRECTOR_UP', 'MANAGER', 'SUPERVISOR']
+function roleForPosition(position: Position | null): Role {
+  return position && SUPERVISORY_POSITIONS.includes(position) ? 'MANAGER' : 'EMPLOYEE'
+}
 
 /* Employee master-file importer.
    Parses a delimited export (CSV or TSV) of the company's employee list and
@@ -17,6 +24,11 @@ export interface ImportRowError {
   reason: string
 }
 
+export interface ImportPerson {
+  employeeNo: string
+  name: string
+}
+
 export interface ImportSummary {
   importId: string
   totalRows: number
@@ -24,6 +36,10 @@ export interface ImportSummary {
   updated: number
   failed: number
   errors: ImportRowError[]
+  /** Newly created this run (employees added). */
+  added: ImportPerson[]
+  /** In the database but absent from this file — likely resigned/left. */
+  missing: ImportPerson[]
 }
 
 /** Parse CSV/TSV text into row objects keyed by the (trimmed) header names. */
@@ -100,6 +116,8 @@ export async function importEmployees(
 ): Promise<ImportSummary> {
   const rows = parseDelimited(text)
   const errors: ImportRowError[] = []
+  const added: ImportPerson[] = []
+  const fileEmployeeNos: string[] = []
   let created = 0
   let updated = 0
   // Everyone imported gets the same initial password and must change it on
@@ -121,6 +139,7 @@ export async function importEmployees(
       errors.push({ row: rowNo, reason: 'Row has neither an employee No nor an email — cannot key it.' })
       continue
     }
+    if (employeeNo) fileEmployeeNos.push(employeeNo)
 
     // `email` is required + unique, so only set it when present (never null it).
     const data = {
@@ -131,13 +150,16 @@ export async function importEmployees(
       hireDate: parseDate(pick(raw, 'Start date', 'Start Date')),
       sourceData: raw as Prisma.InputJsonValue,
     }
+    const role = roleForPosition(data.position)
     const updateData = email ? { ...data, email } : data
 
     try {
       if (employeeNo) {
-        const existing = await prisma.user.findUnique({ where: { employeeNo }, select: { id: true } })
+        const existing = await prisma.user.findUnique({ where: { employeeNo }, select: { id: true, role: true } })
         if (existing) {
-          await prisma.user.update({ where: { employeeNo }, data: updateData })
+          // Keep manually-granted admin/developer roles; otherwise sync to position.
+          const preserve = existing.role === 'ADMIN' || existing.role === 'DEVELOPER'
+          await prisma.user.update({ where: { employeeNo }, data: preserve ? updateData : { ...updateData, role } })
           updated += 1
         } else {
           await prisma.user.create({
@@ -145,21 +167,23 @@ export async function importEmployees(
               ...data,
               email: email || `emp.${employeeNo}@import.local`,
               employeeNo,
-              role: 'EMPLOYEE',
+              role,
               password: defaultPasswordHash,
               mustChangePassword: true,
             },
           })
           created += 1
+          added.push({ employeeNo, name })
         }
       } else {
-        const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } })
+        const existing = await prisma.user.findUnique({ where: { email }, select: { id: true, role: true } })
         if (existing) {
-          await prisma.user.update({ where: { email }, data: updateData })
+          const preserve = existing.role === 'ADMIN' || existing.role === 'DEVELOPER'
+          await prisma.user.update({ where: { email }, data: preserve ? updateData : { ...updateData, role } })
           updated += 1
         } else {
           await prisma.user.create({
-            data: { ...data, email, role: 'EMPLOYEE', password: defaultPasswordHash, mustChangePassword: true },
+            data: { ...data, email, role, password: defaultPasswordHash, mustChangePassword: true },
           })
           created += 1
         }
@@ -187,7 +211,17 @@ export async function importEmployees(
     select: { id: true },
   })
 
-  return { importId: log.id, totalRows: rows.length, created, updated, failed: errors.length, errors }
+  // Anyone in the DB (with an employee number) but not in this file likely left.
+  const missingRows = fileEmployeeNos.length
+    ? await prisma.user.findMany({
+        where: { employeeNo: { not: null, notIn: fileEmployeeNos } },
+        select: { employeeNo: true, name: true },
+        orderBy: { employeeNo: 'asc' },
+      })
+    : []
+  const missing: ImportPerson[] = missingRows.map(m => ({ employeeNo: m.employeeNo ?? '', name: m.name }))
+
+  return { importId: log.id, totalRows: rows.length, created, updated, failed: errors.length, errors, added, missing }
 }
 
 export function getImportHistory() {
