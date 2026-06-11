@@ -107,8 +107,11 @@ export async function createEvaluation(data: {
   evaluateeId?: string
   newEvaluatee?: { name: string; position: Position; department?: string; jobTitle?: string }
 }) {
-  const evaluator = await prisma.user.findUniqueOrThrow({ where: { id: data.evaluatorId }, select: { position: true } })
-  if (!evaluator.position || !EVALUATOR_POSITIONS.includes(evaluator.position)) {
+  const evaluator = await prisma.user.findUniqueOrThrow({ where: { id: data.evaluatorId }, select: { position: true, role: true } })
+  // Admin/developer (system accounts without a job position) may always create
+  // evaluations; everyone else must hold a supervisory position.
+  const privileged = evaluator.role === 'ADMIN' || evaluator.role === 'DEVELOPER'
+  if (!privileged && (!evaluator.position || !EVALUATOR_POSITIONS.includes(evaluator.position))) {
     throw badRequest('Evaluator must be a supervisor, manager or director.')
   }
 
