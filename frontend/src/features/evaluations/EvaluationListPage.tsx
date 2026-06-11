@@ -348,8 +348,8 @@ export default function EvaluationListPage() {
           <div className="kbt-modal" ref={createModalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Add evaluation" onMouseDown={e => e.stopPropagation()}>
             <div className="kbt-modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(10,110,209,0.1)', border: '1px solid rgba(10,110,209,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Plus size={14} color="#0a6ed1" />
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(92,86,144,0.1)', border: '1px solid rgba(92,86,144,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Plus size={14} color="#5c5690" />
                 </div>
                 <span>{t('eval.addEvaluation')}</span>
               </div>
@@ -474,8 +474,8 @@ export default function EvaluationListPage() {
           <div className="kbt-modal" ref={deleteModalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Delete evaluation" onMouseDown={e => e.stopPropagation()}>
             <div className="kbt-modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(237,28,36,0.12)', border: '1px solid rgba(237,28,36,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <AlertTriangle size={14} color="#ed1c24" />
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(229,35,33,0.12)', border: '1px solid rgba(229,35,33,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <AlertTriangle size={14} color="#e52321" />
                 </div>
                 <span>{t('eval.deleteTitle')}</span>
               </div>

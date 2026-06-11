@@ -78,11 +78,11 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)',
-            background: 'rgba(10,110,209,0.04)',
+            background: 'rgba(92,86,144,0.04)',
           }}>
             <span style={{
               width: 22, height: 22, borderRadius: 5, flexShrink: 0,
-              background: 'rgba(10,110,209,0.14)', border: '1px solid rgba(129,196,255,0.25)',
+              background: 'rgba(92,86,144,0.14)', border: '1px solid rgba(150,144,196,0.25)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '0.625rem', fontWeight: 700, color: 'var(--m-light-blue)', fontFamily: 'monospace',
             }}>
@@ -94,7 +94,7 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
             {!readOnly && (
               <button onClick={() => onChange(goals.filter((_, i) => i !== idx).map((g, i) => ({ ...g, order: i + 1 })))}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#6b7a90', borderRadius: 4 }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#ed1c24')}
+                onMouseEnter={e => (e.currentTarget.style.color = '#e52321')}
                 onMouseLeave={e => (e.currentTarget.style.color = '#6b7a90')}>
                 <Trash2 size={13} />
               </button>
@@ -137,7 +137,7 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                         width: 22, height: 22, borderRadius: 5, fontSize: '0.6875rem', fontWeight: 700,
                         fontFamily: 'monospace',
-                        background: r >= 4 ? 'rgba(129,196,255,0.14)' : r === 3 ? 'rgba(10,110,209,0.12)' : 'rgba(237,28,36,0.1)',
+                        background: r >= 4 ? 'rgba(150,144,196,0.14)' : r === 3 ? 'rgba(92,86,144,0.12)' : 'rgba(229,35,33,0.1)',
                         color: r >= 4 ? 'var(--m-light-blue)' : r === 3 ? 'var(--sap-blue)' : 'var(--amw-red)',
                       }}>
                         {r}

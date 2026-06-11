@@ -114,14 +114,14 @@ export default function TemplateListPage() {
                         width: 30,
                         height: 30,
                         borderRadius: 8,
-                        background: 'rgba(10,110,209,0.1)',
-                        border: '1px solid rgba(10,110,209,0.2)',
+                        background: 'rgba(92,86,144,0.1)',
+                        border: '1px solid rgba(92,86,144,0.2)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexShrink: 0,
                       }}>
-                        <LayoutTemplate size={14} color="#0a6ed1" />
+                        <LayoutTemplate size={14} color="#5c5690" />
                       </div>
                       {editingId === template.id ? (
                         <input
@@ -141,7 +141,7 @@ export default function TemplateListPage() {
                           <Link
                             to={`/templates/${template.id}`}
                             style={{ fontWeight: 700, color: 'var(--kbt-text)', textDecoration: 'none' }}
-                            onMouseEnter={e => (e.currentTarget.style.color = '#0a6ed1')}
+                            onMouseEnter={e => (e.currentTarget.style.color = '#5c5690')}
                             onMouseLeave={e => (e.currentTarget.style.color = 'var(--kbt-text)')}
                           >
                             {template.name}
@@ -196,8 +196,8 @@ export default function TemplateListPage() {
           <div className="kbt-modal" ref={modalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Delete template" onMouseDown={e => e.stopPropagation()}>
             <div className="kbt-modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(237,28,36,0.12)', border: '1px solid rgba(237,28,36,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <AlertTriangle size={14} color="#ed1c24" />
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(229,35,33,0.12)', border: '1px solid rgba(229,35,33,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <AlertTriangle size={14} color="#e52321" />
                 </div>
                 <span>{t('tmpl.deleteTitle')}</span>
               </div>

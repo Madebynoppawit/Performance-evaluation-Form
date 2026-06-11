@@ -45,8 +45,8 @@ const ROLE_LABEL: Record<Role, string> = {
 // Distinct colour per role so they read apart at a glance.
 const ROLE_STYLE: Record<Role, { bg: string; border: string; color: string; dot: string }> = {
   DEVELOPER: { bg: 'rgba(168,85,247,0.13)', border: 'rgba(168,85,247,0.4)', color: '#c084fc', dot: '#a855f7' },
-  ADMIN:     { bg: 'rgba(237,28,36,0.13)',  border: 'rgba(237,28,36,0.4)',  color: '#f87171', dot: '#ed1c24' },
-  MANAGER:   { bg: 'rgba(10,110,209,0.16)', border: 'rgba(10,110,209,0.45)', color: '#4d9fe8', dot: '#0a6ed1' },
+  ADMIN:     { bg: 'rgba(229,35,33,0.13)',  border: 'rgba(229,35,33,0.4)',  color: '#f87171', dot: '#e52321' },
+  MANAGER:   { bg: 'rgba(92,86,144,0.16)', border: 'rgba(92,86,144,0.45)', color: '#4d9fe8', dot: '#5c5690' },
   EMPLOYEE:  { bg: 'rgba(148,163,184,0.13)', border: 'rgba(148,163,184,0.32)', color: '#94a3b8', dot: '#94a3b8' },
 }
 
@@ -64,11 +64,11 @@ function RoleBadge({ role }: { role: Role }) {
 // Corporate seniority ladder using the AMW brand palette — red (CEO) down
 // through navy and the corporate blues to slate/grey, no off-brand hues.
 const POSITION_STYLE: Record<Position, { bg: string; border: string; color: string }> = {
-  CEO:               { bg: 'rgba(237,28,36,0.14)',   border: 'rgba(237,28,36,0.42)',   color: '#f6717a' }, // amw-red
+  CEO:               { bg: 'rgba(229,35,33,0.14)',   border: 'rgba(229,35,33,0.42)',   color: '#f6717a' }, // amw-red
   MANAGING_DIRECTOR: { bg: 'rgba(41,37,82,0.45)',    border: 'rgba(105,99,170,0.55)',  color: '#9a96d8' }, // amw-navy
-  DIRECTOR_UP:       { bg: 'rgba(22,88,142,0.22)',   border: 'rgba(22,88,142,0.5)',    color: '#5a9bd4' }, // m-blue
-  MANAGER:           { bg: 'rgba(10,110,209,0.16)',  border: 'rgba(10,110,209,0.45)',  color: '#4d9fe8' }, // sap-blue
-  SUPERVISOR:        { bg: 'rgba(129,196,255,0.14)', border: 'rgba(129,196,255,0.4)',  color: '#81c4ff' }, // m-light-blue
+  DIRECTOR_UP:       { bg: 'rgba(46,42,94,0.22)',   border: 'rgba(46,42,94,0.5)',    color: '#5a9bd4' }, // m-blue
+  MANAGER:           { bg: 'rgba(92,86,144,0.16)',  border: 'rgba(92,86,144,0.45)',  color: '#4d9fe8' }, // sap-blue
+  SUPERVISOR:        { bg: 'rgba(150,144,196,0.14)', border: 'rgba(150,144,196,0.4)',  color: '#9690c4' }, // m-light-blue
   OFFICER:           { bg: 'rgba(53,74,95,0.4)',     border: 'rgba(110,135,160,0.5)',  color: '#8aa1b8' }, // sap-shell slate
   PRODUCTION_STAFF:  { bg: 'rgba(106,109,112,0.2)',  border: 'rgba(106,109,112,0.42)', color: '#9aa0a6' }, // grey
 }
@@ -279,7 +279,7 @@ export default function UserManagementPage() {
             <button onClick={() => setRoleFilter('ALL')}
               style={{ height: 28, padding: '0 12px', borderRadius: 999, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
                 border: `1px solid ${roleFilter === 'ALL' ? 'var(--sap-blue)' : 'var(--kbt-border)'}`,
-                background: roleFilter === 'ALL' ? 'rgba(10,110,209,0.15)' : 'transparent',
+                background: roleFilter === 'ALL' ? 'rgba(92,86,144,0.15)' : 'transparent',
                 color: roleFilter === 'ALL' ? '#4d9fe8' : 'var(--kbt-text-2)' }}>
               {t('common.all')} · {users.length}
             </button>
@@ -383,8 +383,8 @@ export default function UserManagementPage() {
           <div className="kbt-modal" ref={editRef} tabIndex={-1} role="dialog" aria-modal="true" onMouseDown={e => e.stopPropagation()}>
             <div className="kbt-modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(10,110,209,0.1)', border: '1px solid rgba(10,110,209,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <UserCog size={14} color="#0a6ed1" />
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(92,86,144,0.1)', border: '1px solid rgba(92,86,144,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <UserCog size={14} color="#5c5690" />
                 </div>
                 <span>{isEditing ? t('users.edit') : t('users.new')}</span>
               </div>
@@ -446,8 +446,8 @@ export default function UserManagementPage() {
           <div className="kbt-modal" ref={deleteRef} tabIndex={-1} role="dialog" aria-modal="true" onMouseDown={e => e.stopPropagation()}>
             <div className="kbt-modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(237,28,36,0.12)', border: '1px solid rgba(237,28,36,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Trash2 size={14} color="#ed1c24" />
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(229,35,33,0.12)', border: '1px solid rgba(229,35,33,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Trash2 size={14} color="#e52321" />
                 </div>
                 <span>{t('users.delete')}</span>
               </div>
@@ -524,8 +524,8 @@ export default function UserManagementPage() {
           <div className="kbt-modal" ref={importRef} tabIndex={-1} role="dialog" aria-modal="true" onMouseDown={e => e.stopPropagation()}>
             <div className="kbt-modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(10,110,209,0.1)', border: '1px solid rgba(10,110,209,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Upload size={14} color="#0a6ed1" />
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(92,86,144,0.1)', border: '1px solid rgba(92,86,144,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Upload size={14} color="#5c5690" />
                 </div>
                 <span>{t('users.importTitle')}</span>
               </div>

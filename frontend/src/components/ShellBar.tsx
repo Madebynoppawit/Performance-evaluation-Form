@@ -177,11 +177,11 @@ export default function ShellBar() {
           >
             <div style={{
               width: 28, height: 28, borderRadius: 8,
-              background: 'linear-gradient(135deg, #0a6ed1 0%, #292552 100%)',
+              background: 'linear-gradient(135deg, #5c5690 0%, #25214e 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#ffffff', fontSize: '0.6875rem', fontWeight: 700,
               flexShrink: 0,
-              boxShadow: menuOpen ? 'var(--glow-blue)' : '0 0 12px rgba(10,110,209,0.3)',
+              boxShadow: menuOpen ? 'var(--glow-blue)' : '0 0 12px rgba(92,86,144,0.3)',
               transition: 'box-shadow 0.18s',
             }}>
               {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
@@ -206,7 +206,7 @@ export default function ShellBar() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{
                     width: 36, height: 36, borderRadius: 8,
-                    background: 'linear-gradient(135deg, #0a6ed1 0%, #0854a0 100%)',
+                    background: 'linear-gradient(135deg, #5c5690 0%, #3a3470 100%)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     color: '#ffffff', fontSize: '0.875rem', fontWeight: 700,
                   }}>
@@ -221,8 +221,8 @@ export default function ShellBar() {
                   <span style={{
                     display: 'inline-block', padding: '2px 8px',
                     borderRadius: 4, fontSize: '0.625rem', fontWeight: 600,
-                    background: 'rgba(10,110,209,0.1)', color: 'var(--sap-blue)',
-                    border: '1px solid rgba(10,110,209,0.2)', textTransform: 'uppercase', letterSpacing: '0.06em',
+                    background: 'rgba(92,86,144,0.1)', color: 'var(--sap-blue)',
+                    border: '1px solid rgba(92,86,144,0.2)', textTransform: 'uppercase', letterSpacing: '0.06em',
                   }}>
                     {getDisplayRole(user)}
                   </span>
@@ -237,7 +237,7 @@ export default function ShellBar() {
                   color: 'var(--kbt-text-2)', background: 'none', border: 'none',
                   cursor: 'pointer', textAlign: 'left', transition: 'all 0.12s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(10,110,209,0.08)'; e.currentTarget.style.color = 'var(--sap-blue)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(92,86,144,0.08)'; e.currentTarget.style.color = 'var(--sap-blue)' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--kbt-text-2)' }}
               >
                 <User size={14} />
@@ -252,7 +252,7 @@ export default function ShellBar() {
                   color: 'var(--kbt-text-2)', background: 'none', border: 'none',
                   cursor: 'pointer', textAlign: 'left', transition: 'all 0.12s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(237,28,36,0.08)'; e.currentTarget.style.color = '#ed1c24' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(229,35,33,0.08)'; e.currentTarget.style.color = '#e52321' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--kbt-text-2)' }}
               >
                 <LogOut size={14} />

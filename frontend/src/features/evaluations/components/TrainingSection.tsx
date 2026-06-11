@@ -39,7 +39,7 @@ export default function TrainingSection({ data, position, readOnly, onChange }: 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ padding: 14, border: '1px solid var(--kbt-border)', borderRadius: 8, background: 'rgba(10,110,209,0.05)' }}>
+      <div style={{ padding: 14, border: '1px solid var(--kbt-border)', borderRadius: 8, background: 'rgba(92,86,144,0.05)' }}>
         <strong style={{ color: 'var(--kbt-text)' }}>Training score bands</strong>
         <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.78rem', marginTop: 5 }}>
           5: &gt;=130% · 4: 110-129% · 3: 100-109% · 2: 70-99% · 1: &lt;70% of minimum hours

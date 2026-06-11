@@ -31,7 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <div style={{
             width: 'min(100%, 480px)',
             background: 'var(--kbt-card)',
-            border: '1px solid rgba(237,28,36,0.22)',
+            border: '1px solid rgba(229,35,33,0.22)',
             borderRadius: 18,
             padding: 36,
             textAlign: 'center',
@@ -39,12 +39,12 @@ export class ErrorBoundary extends Component<Props, State> {
           }}>
             <div style={{
               width: 56, height: 56, borderRadius: 16,
-              background: 'rgba(237,28,36,0.12)',
-              border: '1px solid rgba(237,28,36,0.24)',
+              background: 'rgba(229,35,33,0.12)',
+              border: '1px solid rgba(229,35,33,0.24)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 20px',
             }}>
-              <AlertTriangle size={24} color="#ed1c24" />
+              <AlertTriangle size={24} color="#e52321" />
             </div>
             <h2 style={{ color: 'var(--kbt-text)', fontSize: '1.2rem', fontWeight: 900, marginBottom: 10 }}>
               Something went wrong

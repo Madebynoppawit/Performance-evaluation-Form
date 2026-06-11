@@ -39,8 +39,8 @@ export default function ChangePasswordPage() {
 
   return (
     <div className="amw-login" style={{ position: 'relative', justifyContent: 'center' }}>
-      <div className="kbt-orb" style={{ width: 420, height: 420, background: 'radial-gradient(circle, rgba(10,110,209,0.16), transparent 70%)', top: -100, left: '20%', animationDuration: '12s' }} />
-      <div className="kbt-orb" style={{ width: 240, height: 240, background: 'radial-gradient(circle, rgba(231,34,46,0.1), transparent 70%)', bottom: '12%', right: '18%', animationDuration: '14s', animationDelay: '-5s' }} />
+      <div className="kbt-orb" style={{ width: 420, height: 420, background: 'radial-gradient(circle, rgba(92,86,144,0.16), transparent 70%)', top: -100, left: '20%', animationDuration: '12s' }} />
+      <div className="kbt-orb" style={{ width: 240, height: 240, background: 'radial-gradient(circle, rgba(229,35,33,0.1), transparent 70%)', bottom: '12%', right: '18%', animationDuration: '14s', animationDelay: '-5s' }} />
 
       <div style={{ position: 'fixed', top: 18, right: 18, zIndex: 5 }}>
         <ThemeToggle />
@@ -50,7 +50,7 @@ export default function ChangePasswordPage() {
         <div style={{ marginBottom: 24 }}>
           <div style={{
             width: 48, height: 48, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'var(--brand-gradient)', color: '#ffffff', boxShadow: '0 16px 32px rgba(10,110,209,0.28), var(--glow-blue)',
+            background: 'var(--brand-gradient)', color: '#ffffff', boxShadow: '0 16px 32px rgba(92,86,144,0.28), var(--glow-blue)',
           }}>
             <KeyRound size={22} />
           </div>
@@ -78,7 +78,7 @@ export default function ChangePasswordPage() {
                 <input {...register('password')} type="password" className="kbt-input" style={{ paddingLeft: 36 }}
                   placeholder="At least 8 chars, 1 uppercase, 1 number" autoComplete="new-password" autoFocus />
               </div>
-              {errors.password && <p style={{ color: '#ed1c24', fontSize: '0.75rem', marginTop: 4 }}>{errors.password.message}</p>}
+              {errors.password && <p style={{ color: '#e52321', fontSize: '0.75rem', marginTop: 4 }}>{errors.password.message}</p>}
             </div>
 
             <div>
@@ -88,7 +88,7 @@ export default function ChangePasswordPage() {
                 <input {...register('confirm')} type="password" className="kbt-input" style={{ paddingLeft: 36 }}
                   placeholder="Re-enter new password" autoComplete="new-password" />
               </div>
-              {errors.confirm && <p style={{ color: '#ed1c24', fontSize: '0.75rem', marginTop: 4 }}>{errors.confirm.message}</p>}
+              {errors.confirm && <p style={{ color: '#e52321', fontSize: '0.75rem', marginTop: 4 }}>{errors.confirm.message}</p>}
             </div>
 
             <button type="submit" disabled={isSubmitting} className="kbt-btn-primary"

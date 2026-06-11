@@ -13,36 +13,36 @@ export interface Toast {
 function AnimatedCheck() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" stroke="#81c4ff" strokeWidth="2" className="amw-check-circle" />
-      <path d="M7 12.5l3.2 3.2L17 8.8" stroke="#81c4ff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="amw-check-path" />
+      <circle cx="12" cy="12" r="10" stroke="#9690c4" strokeWidth="2" className="amw-check-circle" />
+      <path d="M7 12.5l3.2 3.2L17 8.8" stroke="#9690c4" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="amw-check-path" />
     </svg>
   )
 }
 
 const STYLES: Record<ToastType, { border: string; glow: string; accent: string; icon: ReactNode }> = {
   success: {
-    border: 'rgba(129,196,255,0.28)',
-    glow:   '0 0 32px rgba(10,110,209,0.16)',
-    accent: '#81c4ff',
+    border: 'rgba(150,144,196,0.28)',
+    glow:   '0 0 32px rgba(92,86,144,0.16)',
+    accent: '#9690c4',
     icon: <AnimatedCheck />,
   },
   error: {
-    border: 'rgba(237,28,36,0.28)',
-    glow:   '0 0 32px rgba(237,28,36,0.16)',
-    accent: '#ed1c24',
-    icon: <XCircle size={15} color="#ed1c24" />,
+    border: 'rgba(229,35,33,0.28)',
+    glow:   '0 0 32px rgba(229,35,33,0.16)',
+    accent: '#e52321',
+    icon: <XCircle size={15} color="#e52321" />,
   },
   warning: {
-    border: 'rgba(237,28,36,0.24)',
-    glow:   '0 0 32px rgba(237,28,36,0.12)',
-    accent: '#ed1c24',
-    icon: <AlertTriangle size={15} color="#ed1c24" />,
+    border: 'rgba(229,35,33,0.24)',
+    glow:   '0 0 32px rgba(229,35,33,0.12)',
+    accent: '#e52321',
+    icon: <AlertTriangle size={15} color="#e52321" />,
   },
   info: {
-    border: 'rgba(10,110,209,0.28)',
-    glow:   '0 0 32px rgba(10,110,209,0.18)',
-    accent: '#0a6ed1',
-    icon: <Info size={15} color="#0a6ed1" />,
+    border: 'rgba(92,86,144,0.28)',
+    glow:   '0 0 32px rgba(92,86,144,0.18)',
+    accent: '#5c5690',
+    icon: <Info size={15} color="#5c5690" />,
   },
 }
 

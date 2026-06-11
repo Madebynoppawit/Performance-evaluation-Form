@@ -10,11 +10,11 @@ interface Props {
 }
 
 const SCORE_STYLES: Record<number, { bg: string; color: string; border: string; label: string }> = {
-  1: { bg: 'rgba(237,28,36,0.15)',  color: 'var(--kbt-error)',   border: 'rgba(237,28,36,0.3)',  label: 'Unsatisfactory' },
-  2: { bg: 'rgba(237,28,36,0.1)',   color: 'var(--amw-red)',     border: 'rgba(237,28,36,0.24)', label: 'Needs Improvement' },
-  3: { bg: 'rgba(10,110,209,0.15)', color: 'var(--sap-blue)',    border: 'rgba(10,110,209,0.3)', label: 'Meets Expectation' },
-  4: { bg: 'rgba(129,196,255,0.15)', color: 'var(--m-light-blue)', border: 'rgba(129,196,255,0.3)', label: 'Exceeds Expectation' },
-  5: { bg: 'rgba(22,88,142,0.18)',  color: 'var(--m-light-blue)', border: 'rgba(129,196,255,0.34)', label: 'Role Model' },
+  1: { bg: 'rgba(229,35,33,0.15)',  color: 'var(--kbt-error)',   border: 'rgba(229,35,33,0.3)',  label: 'Unsatisfactory' },
+  2: { bg: 'rgba(229,35,33,0.1)',   color: 'var(--amw-red)',     border: 'rgba(229,35,33,0.24)', label: 'Needs Improvement' },
+  3: { bg: 'rgba(92,86,144,0.15)', color: 'var(--sap-blue)',    border: 'rgba(92,86,144,0.3)', label: 'Meets Expectation' },
+  4: { bg: 'rgba(150,144,196,0.15)', color: 'var(--m-light-blue)', border: 'rgba(150,144,196,0.3)', label: 'Exceeds Expectation' },
+  5: { bg: 'rgba(46,42,94,0.18)',  color: 'var(--m-light-blue)', border: 'rgba(150,144,196,0.34)', label: 'Role Model' },
 }
 
 export default function CompetencySection({ position, scores, readOnly, onChange }: Props) {
@@ -54,8 +54,8 @@ export default function CompetencySection({ position, scores, readOnly, onChange
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '8px 14px',
-          background: 'rgba(10,110,209,0.06)',
-          border: '1px solid rgba(129,196,255,0.16)',
+          background: 'rgba(92,86,144,0.06)',
+          border: '1px solid rgba(150,144,196,0.16)',
           borderRadius: 8,
         }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)' }}>{t('cs.avgScore')}</span>
@@ -80,7 +80,7 @@ export default function CompetencySection({ position, scores, readOnly, onChange
 
         {groups.map((group) => (
           <div key={group.title} style={{ border: '1px solid var(--kbt-border)', borderTop: 'none' }}>
-            <div style={{ padding: '9px 14px', background: 'rgba(10,110,209,0.06)', color: 'var(--kbt-text)', fontSize: '0.78rem', fontWeight: 800, letterSpacing: '0.02em' }}>
+            <div style={{ padding: '9px 14px', background: 'rgba(92,86,144,0.06)', color: 'var(--kbt-text)', fontSize: '0.78rem', fontWeight: 800, letterSpacing: '0.02em' }}>
               {group.title}
             </div>
             {group.items.map((c, idx) => {

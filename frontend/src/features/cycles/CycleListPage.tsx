@@ -209,8 +209,8 @@ export default function CycleListPage() {
           <div className="kbt-modal" ref={deleteModalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Delete cycle" onMouseDown={e => e.stopPropagation()}>
             <div className="kbt-modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(237,28,36,0.12)', border: '1px solid rgba(237,28,36,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <AlertTriangle size={14} color="#ed1c24" />
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(229,35,33,0.12)', border: '1px solid rgba(229,35,33,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <AlertTriangle size={14} color="#e52321" />
                 </div>
                 <span>{t('cyc.deleteTitle')}</span>
               </div>

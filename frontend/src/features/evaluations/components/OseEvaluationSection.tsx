@@ -10,11 +10,11 @@ interface Props {
 }
 
 const SCORE_STYLE: Record<number, { bg: string; color: string; border: string }> = {
-  1: { bg: 'rgba(237,28,36,0.15)',   color: 'var(--kbt-error)',    border: 'rgba(237,28,36,0.3)' },
-  2: { bg: 'rgba(237,28,36,0.1)',    color: 'var(--amw-red)',      border: 'rgba(237,28,36,0.24)' },
-  3: { bg: 'rgba(10,110,209,0.15)',  color: 'var(--sap-blue)',     border: 'rgba(10,110,209,0.3)' },
-  4: { bg: 'rgba(129,196,255,0.15)', color: 'var(--m-light-blue)', border: 'rgba(129,196,255,0.3)' },
-  5: { bg: 'rgba(22,88,142,0.18)',   color: 'var(--m-light-blue)', border: 'rgba(129,196,255,0.34)' },
+  1: { bg: 'rgba(229,35,33,0.15)',   color: 'var(--kbt-error)',    border: 'rgba(229,35,33,0.3)' },
+  2: { bg: 'rgba(229,35,33,0.1)',    color: 'var(--amw-red)',      border: 'rgba(229,35,33,0.24)' },
+  3: { bg: 'rgba(92,86,144,0.15)',  color: 'var(--sap-blue)',     border: 'rgba(92,86,144,0.3)' },
+  4: { bg: 'rgba(150,144,196,0.15)', color: 'var(--m-light-blue)', border: 'rgba(150,144,196,0.3)' },
+  5: { bg: 'rgba(46,42,94,0.18)',   color: 'var(--m-light-blue)', border: 'rgba(150,144,196,0.34)' },
 }
 
 export default function OseEvaluationSection({ def, scores, readOnly, onChange }: Props) {

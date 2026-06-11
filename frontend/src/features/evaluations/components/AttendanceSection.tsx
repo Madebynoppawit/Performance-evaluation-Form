@@ -13,7 +13,7 @@ const SCORE_COLOR = (score: number) =>
   score >= 4 ? 'var(--m-light-blue)' : score === 3 ? 'var(--sap-blue)' : 'var(--amw-red)'
 
 const SCORE_BG = (score: number) =>
-  score >= 4 ? 'rgba(129,196,255,0.15)' : score === 3 ? 'rgba(10,110,209,0.15)' : 'rgba(237,28,36,0.12)'
+  score >= 4 ? 'rgba(150,144,196,0.15)' : score === 3 ? 'rgba(92,86,144,0.15)' : 'rgba(229,35,33,0.12)'
 
 const CRITERIA: { labelKey: TranslationKey; scores: Record<number, string> }[] = [
   { labelKey: 'att.leave', scores: { 5: '0 days', 4: '1-2 days', 3: '3-4 days', 2: '5-6 days', 1: '>=7 days' } },
@@ -33,7 +33,7 @@ export default function AttendanceSection({ data, readOnly, onChange }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {avg && (
-        <div style={{ padding: '8px 14px', background: 'rgba(10,110,209,0.06)', border: '1px solid rgba(129,196,255,0.15)', borderRadius: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ padding: '8px 14px', background: 'rgba(92,86,144,0.06)', border: '1px solid rgba(150,144,196,0.15)', borderRadius: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
           <span style={{ fontSize: '0.75rem', color: '#6b7a90' }}>{t('att.average')}</span>
           <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--amw-red)' }}>{avg}</span>
           <span style={{ fontSize: '0.75rem', color: '#6b7a90' }}>/ 5.00</span>

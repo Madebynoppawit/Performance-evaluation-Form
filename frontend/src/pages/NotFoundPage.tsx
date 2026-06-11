@@ -14,8 +14,8 @@ export default function NotFoundPage() {
       <div style={{ textAlign: 'center', maxWidth: 420 }}>
         <div style={{
           width: 72, height: 72, borderRadius: 20,
-          background: 'rgba(10,110,209,0.1)',
-          border: '1px solid rgba(10,110,209,0.2)',
+          background: 'rgba(92,86,144,0.1)',
+          border: '1px solid rgba(92,86,144,0.2)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           margin: '0 auto 24px',
           boxShadow: 'var(--glow-blue)',

@@ -340,7 +340,7 @@ export default function EvaluationFormPage() {
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              background: isRequirementReady ? 'rgba(22,88,142,0.14)' : 'rgba(237,28,36,0.1)',
+              background: isRequirementReady ? 'rgba(46,42,94,0.14)' : 'rgba(229,35,33,0.1)',
               color: isRequirementReady ? 'var(--m-light-blue)' : 'var(--amw-red)',
             }}>
               <FileCheck2 size={17} />

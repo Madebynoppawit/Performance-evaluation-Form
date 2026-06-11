@@ -43,10 +43,10 @@ export default function LoginPage() {
   return (
     <div className="amw-login" style={{ position: 'relative' }} onMouseMove={onMove} onMouseLeave={onLeave}>
       {/* Ambient orbs */}
-      <div className="kbt-orb" style={{ width: 520, height: 520, background: 'radial-gradient(circle, rgba(10,110,209,0.16), transparent 70%)', top: -120, left: '8%', animationDuration: '12s' }} />
-      <div className="kbt-orb" style={{ width: 360, height: 360, background: 'radial-gradient(circle, rgba(22,88,142,0.18), transparent 70%)', bottom: '6%', left: '28%', animationDuration: '16s', animationDelay: '-6s' }} />
-      <div className="kbt-orb" style={{ width: 240, height: 240, background: 'radial-gradient(circle, rgba(231,34,46,0.1), transparent 70%)', top: '30%', left: '48%', animationDuration: '10s', animationDelay: '-3s' }} />
-      <div className="kbt-orb" style={{ width: 180, height: 180, background: 'radial-gradient(circle, rgba(129,196,255,0.14), transparent 70%)', top: '60%', right: '4%', animationDuration: '14s', animationDelay: '-8s' }} />
+      <div className="kbt-orb" style={{ width: 520, height: 520, background: 'radial-gradient(circle, rgba(92,86,144,0.16), transparent 70%)', top: -120, left: '8%', animationDuration: '12s' }} />
+      <div className="kbt-orb" style={{ width: 360, height: 360, background: 'radial-gradient(circle, rgba(46,42,94,0.18), transparent 70%)', bottom: '6%', left: '28%', animationDuration: '16s', animationDelay: '-6s' }} />
+      <div className="kbt-orb" style={{ width: 240, height: 240, background: 'radial-gradient(circle, rgba(229,35,33,0.1), transparent 70%)', top: '30%', left: '48%', animationDuration: '10s', animationDelay: '-3s' }} />
+      <div className="kbt-orb" style={{ width: 180, height: 180, background: 'radial-gradient(circle, rgba(150,144,196,0.14), transparent 70%)', top: '60%', right: '4%', animationDuration: '14s', animationDelay: '-8s' }} />
 
       <div style={{ position: 'fixed', top: 18, right: 18, zIndex: 5 }}>
         <ThemeToggle />
@@ -74,7 +74,7 @@ export default function LoginPage() {
               { value: '5.00', label: 'Score scale', color: 'var(--amw-red)' },
               { value: 'RBAC', label: 'Access guard', color: 'var(--m-light-blue)' },
             ].map((item, i) => (
-              <div key={item.label} className={`amw-status-tile kbt-animate-up kbt-stagger-${i + 1}`} style={{ borderColor: 'rgba(10,110,209,0.18)', background: 'rgba(10,110,209,0.05)' }}>
+              <div key={item.label} className={`amw-status-tile kbt-animate-up kbt-stagger-${i + 1}`} style={{ borderColor: 'rgba(92,86,144,0.18)', background: 'rgba(92,86,144,0.05)' }}>
                 <strong style={{ color: item.color }}>{item.value}</strong>
                 <span>{item.label}</span>
               </div>
@@ -99,7 +99,7 @@ export default function LoginPage() {
             justifyContent: 'center',
             background: 'var(--brand-gradient)',
             color: '#ffffff',
-            boxShadow: '0 16px 32px rgba(10,110,209,0.28), var(--glow-blue)',
+            boxShadow: '0 16px 32px rgba(92,86,144,0.28), var(--glow-blue)',
             position: 'relative',
             overflow: 'hidden',
           }}>
@@ -136,7 +136,7 @@ export default function LoginPage() {
                   autoFocus
                 />
               </div>
-              {errors.identifier && <p style={{ color: '#ed1c24', fontSize: '0.75rem', marginTop: 4 }}>{errors.identifier.message}</p>}
+              {errors.identifier && <p style={{ color: '#e52321', fontSize: '0.75rem', marginTop: 4 }}>{errors.identifier.message}</p>}
             </div>
 
             <div>
@@ -152,7 +152,7 @@ export default function LoginPage() {
                   autoComplete="current-password"
                 />
               </div>
-              {errors.password && <p style={{ color: '#ed1c24', fontSize: '0.75rem', marginTop: 4 }}>{errors.password.message}</p>}
+              {errors.password && <p style={{ color: '#e52321', fontSize: '0.75rem', marginTop: 4 }}>{errors.password.message}</p>}
             </div>
 
             <button

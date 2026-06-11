@@ -44,7 +44,7 @@ function NavItem({ to, labelKey, subKey, icon: Icon, end }: NavItemProps) {
       className="kbt-nav-item"
       style={({ isActive }) => ({
         color: isActive ? 'var(--sap-blue)' : 'var(--kbt-text-2)',
-        background: isActive ? 'rgba(10,110,209,0.08)' : 'transparent',
+        background: isActive ? 'rgba(92,86,144,0.08)' : 'transparent',
         fontWeight: isActive ? 700 : 500,
       })}
     >
@@ -150,9 +150,9 @@ export default function SideNav() {
         <div style={{
           padding: '11px 14px',
           borderRadius: 12,
-          border: '1px solid rgba(10,110,209,0.18)',
-          background: 'linear-gradient(135deg, rgba(10,110,209,0.08), rgba(10,110,209,0.02))',
-          boxShadow: '0 0 24px rgba(10,110,209,0.06)',
+          border: '1px solid rgba(92,86,144,0.18)',
+          background: 'linear-gradient(135deg, rgba(92,86,144,0.08), rgba(92,86,144,0.02))',
+          boxShadow: '0 0 24px rgba(92,86,144,0.06)',
         }}>
           <p style={{ fontSize: '0.6rem', color: 'var(--kbt-text-3)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 800 }}>
             v{APP_VERSION} / AMW Command
