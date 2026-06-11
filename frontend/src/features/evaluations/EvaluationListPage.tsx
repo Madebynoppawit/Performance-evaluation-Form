@@ -55,6 +55,7 @@ export default function EvaluationListPage() {
     cycleId: '', evaluateeId: '', evaluatorName: '',
     evaluateeMode: 'new', newName: '', newPositionOption: 'OFFICER', newDepartment: '', matchedEvaluateeId: '',
   })
+  const [nameListOpen, setNameListOpen] = useState(false)
   const createModalRef = useFocusTrap<HTMLDivElement>(showCreateDialog, () => setShowCreateDialog(false))
   const deleteModalRef = useFocusTrap<HTMLDivElement>(!!deleteTarget, () => setDeleteTarget(null))
   // Creating a new employee account is admin/developer-only; everyone else
@@ -411,33 +412,68 @@ export default function EvaluationListPage() {
                   </select>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <input
-                      className="kbt-input"
-                      list="amw-evaluatee-names"
-                      placeholder={t('eval.employeeName')}
-                      value={draft.newName}
-                      onChange={(e) => {
-                        const name = e.target.value
-                        const match = users.find((u) => u.name.trim().toLowerCase() === name.trim().toLowerCase())
-                        setDraft((d) => match
-                          ? {
-                              ...d,
-                              newName: name,
-                              matchedEvaluateeId: match.id,
-                              newPositionOption: CREATE_POSITION_OPTIONS.find((o) => o.position === match.position)?.value ?? d.newPositionOption,
-                              newDepartment: match.department ?? '',
-                            }
-                          : { ...d, newName: name, matchedEvaluateeId: '' })
-                      }}
-                      disabled={createMutation.isPending}
-                      autoFocus
-                      required
-                    />
-                    <datalist id="amw-evaluatee-names">
-                      {users.map((person) => (
-                        <option key={person.id} value={person.name}>{person.department ?? person.role}</option>
-                      ))}
-                    </datalist>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        className="kbt-input"
+                        placeholder={t('eval.employeeName')}
+                        value={draft.newName}
+                        autoComplete="off"
+                        onFocus={() => setNameListOpen(true)}
+                        onBlur={() => window.setTimeout(() => setNameListOpen(false), 150)}
+                        onChange={(e) => {
+                          const name = e.target.value
+                          setNameListOpen(true)
+                          const match = users.find((u) => u.name.trim().toLowerCase() === name.trim().toLowerCase())
+                          setDraft((d) => match
+                            ? {
+                                ...d,
+                                newName: name,
+                                matchedEvaluateeId: match.id,
+                                newPositionOption: CREATE_POSITION_OPTIONS.find((o) => o.position === match.position)?.value ?? d.newPositionOption,
+                                newDepartment: match.department ?? '',
+                              }
+                            : { ...d, newName: name, matchedEvaluateeId: '' })
+                        }}
+                        disabled={createMutation.isPending}
+                        autoFocus
+                        required
+                      />
+                      {nameListOpen && (() => {
+                        const q = draft.newName.trim().toLowerCase()
+                        const matches = users.filter((u) => !q || u.name.toLowerCase().includes(q)).slice(0, 8)
+                        if (matches.length === 0) return null
+                        return (
+                          <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 30,
+                            background: 'var(--kbt-card)', border: '1px solid var(--kbt-border-2)', borderRadius: 12,
+                            overflow: 'hidden', maxHeight: 248, overflowY: 'auto', boxShadow: 'var(--elevated-shadow)' }}>
+                            {matches.map((person, i) => (
+                              <button type="button" key={person.id}
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => {
+                                  setDraft((d) => ({
+                                    ...d,
+                                    newName: person.name,
+                                    matchedEvaluateeId: person.id,
+                                    newPositionOption: CREATE_POSITION_OPTIONS.find((o) => o.position === person.position)?.value ?? d.newPositionOption,
+                                    newDepartment: person.department ?? '',
+                                  }))
+                                  setNameListOpen(false)
+                                }}
+                                style={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%', textAlign: 'left',
+                                  padding: '9px 12px', background: 'transparent', border: 'none',
+                                  borderTop: i ? '1px solid var(--kbt-border)' : 'none', cursor: 'pointer', color: 'var(--kbt-text)' }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(229,35,33,0.1)' }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}>
+                                <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{person.name}</span>
+                                <span style={{ fontSize: '0.7rem', color: 'var(--kbt-text-3)' }}>
+                                  {person.position ? POSITION_LABELS[person.position] : person.role}{person.department ? ` · ${person.department}` : ''}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )
+                      })()}
+                    </div>
                     {draft.matchedEvaluateeId && (
                       <span style={{ fontSize: '0.7rem', color: 'var(--m-light-blue)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                         <CheckCircle2 size={12} /> {t('eval.mappedFromDirectory')}
