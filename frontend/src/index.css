@@ -29,10 +29,10 @@
   --lambo-gold:      #5c5690;
   --lambo-gold-hi:   #9690c4;
   --lambo-bronze:    #3a3470;
-  --kbt-bg:          #000000;
-  --kbt-surface:     #070707;
-  --kbt-card:        #101010;
-  --kbt-card-hover:  #171717;
+  --kbt-bg:          #0b0a16;
+  --kbt-surface:     #110f20;
+  --kbt-card:        #16142a;
+  --kbt-card-hover:  #1d1a38;
   --kbt-border:      rgba(255,255,255,0.1);
   --kbt-border-2:    rgba(255,255,255,0.16);
   --kbt-green:       var(--sap-blue);
@@ -50,13 +50,15 @@
   --kbt-success:     var(--sap-blue);
   --kbt-warning:     var(--amw-signal);
   --kbt-error:       var(--amw-red);
-  --kbt-sidebar:     #070707;
-  --kbt-header:      #000000;
+  --kbt-sidebar:     #100e1e;
+  --kbt-header:      #0b0a16;
   --brand-gradient:  linear-gradient(120deg, #6b6499 0%, #7d76a8 44%, #e52321 100%);
   --brand-line:      linear-gradient(90deg, transparent, #9690c4, #5c5690, #e52321, transparent);
-  --app-bg-gradient: linear-gradient(180deg, #000000 0%, #050505 100%);
-  --app-bg-overlay:  linear-gradient(180deg, rgba(0,0,0,1), rgba(5,7,10,0.98)),
-                     #000000;
+  --app-bg-gradient: radial-gradient(1200px 600px at 78% -8%, rgba(37,33,78,0.5), transparent 60%),
+                     radial-gradient(900px 520px at 12% 108%, rgba(229,35,33,0.07), transparent 60%),
+                     linear-gradient(180deg, #0b0a16 0%, #08070f 100%);
+  --app-bg-overlay:  linear-gradient(180deg, rgba(11,10,22,1), rgba(8,7,15,0.98)),
+                     #0b0a16;
   --app-bg-grid:     rgba(255,255,255,0.024);
   --app-bg-grid-2:   rgba(150,144,196,0.12);
   --app-bg-scan:     rgba(58,52,112,0.18);
@@ -717,7 +719,7 @@ body,
   }
 
   :root:not([data-theme='light']) .kbt-card {
-    background: linear-gradient(180deg, rgba(20,20,24,0.80), rgba(12,12,14,0.76));
+    background: linear-gradient(180deg, rgba(28,24,52,0.78), rgba(18,15,36,0.74));
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     border-color: rgba(150,144,196,0.16);
