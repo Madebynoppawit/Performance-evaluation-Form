@@ -43,8 +43,8 @@ function NavItem({ to, labelKey, subKey, icon: Icon, end }: NavItemProps) {
       end={end}
       className="kbt-nav-item"
       style={({ isActive }) => ({
-        color: isActive ? 'var(--sap-blue)' : 'var(--kbt-text-2)',
-        background: isActive ? 'rgba(92,86,144,0.08)' : 'transparent',
+        color: isActive ? 'var(--amw-red)' : 'var(--kbt-text-2)',
+        background: isActive ? 'rgba(229,35,33,0.07)' : 'transparent',
         fontWeight: isActive ? 700 : 500,
       })}
     >
@@ -54,7 +54,8 @@ function NavItem({ to, labelKey, subKey, icon: Icon, end }: NavItemProps) {
             width: 34,
             height: 34,
             borderRadius: 9,
-            background: isActive ? 'var(--brand-gradient)' : 'var(--control-bg)',
+            background: isActive ? 'linear-gradient(135deg, #e52321 0%, #c4181a 100%)' : 'var(--control-bg)',
+            boxShadow: isActive ? '0 4px 12px rgba(229,35,33,0.32)' : 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

@@ -14,6 +14,7 @@ import {
   Trash2,
   User,
 } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/i18n/languageContext'
 import api from '@/lib/api'
@@ -63,6 +64,7 @@ const POSITION_OPTIONS: Position[] = ['CEO', 'MANAGING_DIRECTOR', 'DIRECTOR_UP',
 
 export default function AccountPage() {
   const { user, updateUser } = useAuth()
+  const qc = useQueryClient()
   const t = useT()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const storageKey = useMemo(() => `amw-account-photo:${user?.id ?? 'guest'}`, [user?.id])
@@ -120,6 +122,8 @@ export default function AccountPage() {
       if (form.password) payload.password = form.password
       const { data } = await api.patch<UserType>('/auth/me', payload)
       updateUser(data)
+      // Keep the admin User Management list in sync with this self-edit.
+      qc.invalidateQueries({ queryKey: ['users'] })
       localStorage.setItem(profileKey, JSON.stringify({ phone: form.phone, bio: form.bio }))
       setForm(f => ({ ...f, password: '' }))
       setSavedFlash(true)
