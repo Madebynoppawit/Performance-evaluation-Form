@@ -49,10 +49,11 @@ export default function EvaluationListPage() {
     newName: '',
     newPositionOption: 'OFFICER',
     newDepartment: '',
+    matchedEvaluateeId: '',
   })
   const resetDraft = () => setDraft({
     cycleId: '', evaluateeId: '', evaluatorName: '',
-    evaluateeMode: 'new', newName: '', newPositionOption: 'OFFICER', newDepartment: '',
+    evaluateeMode: 'new', newName: '', newPositionOption: 'OFFICER', newDepartment: '', matchedEvaluateeId: '',
   })
   const createModalRef = useFocusTrap<HTMLDivElement>(showCreateDialog, () => setShowCreateDialog(false))
   const deleteModalRef = useFocusTrap<HTMLDivElement>(!!deleteTarget, () => setDeleteTarget(null))
@@ -85,14 +86,17 @@ export default function EvaluationListPage() {
         evaluatorId: user?.id,
         evaluatorName: draft.evaluatorName.trim() || undefined,
         ...(evaluateeMode === 'new'
-          ? {
-              newEvaluatee: {
-                name: draft.newName.trim(),
-                position: selectedPosition.position,
-                jobTitle: selectedPosition.jobTitle,
-                department: selectedPosition.skipDepartment ? undefined : draft.newDepartment.trim() || undefined,
-              },
-            }
+          ? (draft.matchedEvaluateeId
+              // Name resolved to a real directory user → link them directly.
+              ? { evaluateeId: draft.matchedEvaluateeId }
+              : {
+                  newEvaluatee: {
+                    name: draft.newName.trim(),
+                    position: selectedPosition.position,
+                    jobTitle: selectedPosition.jobTitle,
+                    department: selectedPosition.skipDepartment ? undefined : draft.newDepartment.trim() || undefined,
+                  },
+                })
           : { evaluateeId: draft.evaluateeId || users[0]?.id }),
       })
     },
@@ -407,15 +411,38 @@ export default function EvaluationListPage() {
                   </select>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <textarea
-                      className="kbt-textarea amw-create-longfield"
+                    <input
+                      className="kbt-input"
+                      list="amw-evaluatee-names"
                       placeholder={t('eval.employeeName')}
                       value={draft.newName}
-                      onChange={(e) => setDraft((d) => ({ ...d, newName: e.target.value }))}
+                      onChange={(e) => {
+                        const name = e.target.value
+                        const match = users.find((u) => u.name.trim().toLowerCase() === name.trim().toLowerCase())
+                        setDraft((d) => match
+                          ? {
+                              ...d,
+                              newName: name,
+                              matchedEvaluateeId: match.id,
+                              newPositionOption: CREATE_POSITION_OPTIONS.find((o) => o.position === match.position)?.value ?? d.newPositionOption,
+                              newDepartment: match.department ?? '',
+                            }
+                          : { ...d, newName: name, matchedEvaluateeId: '' })
+                      }}
                       disabled={createMutation.isPending}
                       autoFocus
                       required
                     />
+                    <datalist id="amw-evaluatee-names">
+                      {users.map((person) => (
+                        <option key={person.id} value={person.name}>{person.department ?? person.role}</option>
+                      ))}
+                    </datalist>
+                    {draft.matchedEvaluateeId && (
+                      <span style={{ fontSize: '0.7rem', color: 'var(--m-light-blue)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <CheckCircle2 size={12} /> {t('eval.mappedFromDirectory')}
+                      </span>
+                    )}
                     <select
                       className="kbt-input"
                       value={draft.newPositionOption}
@@ -427,7 +454,7 @@ export default function EvaluationListPage() {
                           newDepartment: option?.skipDepartment ? '' : d.newDepartment,
                         }))
                       }}
-                      disabled={createMutation.isPending}
+                      disabled={createMutation.isPending || !!draft.matchedEvaluateeId}
                       aria-label={t('acc.position')}
                     >
                       {CREATE_POSITION_OPTIONS.map((option) => (
@@ -440,7 +467,7 @@ export default function EvaluationListPage() {
                         placeholder={t('eval.employeeDept')}
                         value={draft.newDepartment}
                         onChange={(e) => setDraft((d) => ({ ...d, newDepartment: e.target.value }))}
-                        disabled={createMutation.isPending}
+                        disabled={createMutation.isPending || !!draft.matchedEvaluateeId}
                       />
                     )}
                   </div>
