@@ -8,7 +8,6 @@ import { useLabels } from '@/i18n/useLabels'
 import api from '@/lib/api'
 import type { Evaluation } from '@/types'
 import DashboardAnalytics from './DashboardAnalytics'
-import GettingStarted from './GettingStarted'
 import EmptyState from '@/components/EmptyState'
 
 interface DashboardStats {
@@ -280,8 +279,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </section>
-
-      <GettingStarted canManage={isAdmin || isManager} />
 
       <div className="kbt-metric-grid kbt-metric-grid-4">
         {metricCards.map((card, i) => (
