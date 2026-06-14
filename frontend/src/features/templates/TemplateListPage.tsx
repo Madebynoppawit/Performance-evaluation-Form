@@ -107,7 +107,9 @@ export default function TemplateListPage() {
             </thead>
             <tbody>
               {data?.map((template) => (
-                <tr key={template.id}>
+                <tr key={template.id}
+                  onClick={() => editingId !== template.id && navigate(`/templates/${template.id}`)}
+                  style={{ cursor: editingId === template.id ? 'default' : 'pointer' }}>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{
@@ -150,7 +152,7 @@ export default function TemplateListPage() {
                             <button
                               type="button"
                               className="amw-inline-edit-btn"
-                              onClick={() => startEdit(template)}
+                              onClick={e => { e.stopPropagation(); startEdit(template) }}
                               aria-label={`Rename ${template.name}`}
                               title="Rename"
                             >
@@ -169,12 +171,12 @@ export default function TemplateListPage() {
                   <td style={{ color: 'var(--kbt-text-3)', fontSize: '0.8125rem' }}>{formatDate(template.updatedAt)}</td>
                   <td>
                     <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                      <Link to={`/templates/${template.id}`} className="kbt-btn-ghost" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem' }}>
+                      <Link to={`/templates/${template.id}`} onClick={e => e.stopPropagation()} className="kbt-btn-ghost" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem' }}>
                         {t('common.edit')}
                       </Link>
                       {isAdmin && (
                         <button
-                          onClick={() => setDeleteTarget(template)}
+                          onClick={e => { e.stopPropagation(); setDeleteTarget(template) }}
                           className="kbt-btn-danger"
                           style={{ height: 28, padding: '0 10px', fontSize: '0.75rem' }}
                           aria-label={`Delete template ${template.name}`}

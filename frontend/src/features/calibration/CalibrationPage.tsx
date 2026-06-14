@@ -250,7 +250,14 @@ export default function CalibrationPage() {
                           )}
                         </td>
                         <td>
-                          <span className="kbt-badge-neutral">{statusLabel(ev.status)}</span>
+                          <span className={{
+                            DRAFT: 'kbt-badge-neutral',
+                            IN_PROGRESS: 'kbt-badge-warning',
+                            SUBMITTED: 'kbt-badge-info',
+                            PENDING_REVIEW: 'kbt-badge-orange',
+                            REVIEWED: 'kbt-badge-success',
+                            CLOSED: 'kbt-badge-neutral',
+                          }[ev.status] ?? 'kbt-badge-neutral'}>{statusLabel(ev.status)}</span>
                         </td>
                         <td style={{ textAlign: 'right' }}>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, alignItems: 'center' }}>

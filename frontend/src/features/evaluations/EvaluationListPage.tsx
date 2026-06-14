@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { AlertTriangle, ArrowUpRight, CalendarClock, CheckCircle2, ChevronLeft, ChevronRight, FileCheck2, Gauge, Plus, RefreshCw, Search, Send, Trash2, TrendingUp, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import api from '@/lib/api'
@@ -36,6 +36,7 @@ const CREATE_POSITION_OPTIONS: Array<{ value: string; label: string; position: P
 export default function EvaluationListPage() {
   const qc = useQueryClient()
   const { isAdmin, user, canManage } = useAuth()
+  const navigate = useNavigate()
   const t = useT()
   const { statusLabel, typeLabel } = useLabels()
   const PAGE_SIZE = 25
@@ -249,7 +250,9 @@ export default function EvaluationListPage() {
             </thead>
             <tbody>
               {paginated.map((ev) => (
-                <tr key={ev.id}>
+                <tr key={ev.id}
+                  onClick={() => navigate(`/evaluations/${ev.id}`)}
+                  style={{ cursor: 'pointer' }}>
                   <td><strong>{ev.cycle?.name ?? ev.cycleId}</strong></td>
                   <td style={{ color: 'var(--kbt-text-2)' }}>{typeLabel(ev.type)}</td>
                   <td style={{ fontWeight: 700 }}>{ev.evaluatee?.name ?? ev.evaluateeId}</td>
@@ -274,7 +277,7 @@ export default function EvaluationListPage() {
                       {isAdmin && (
                         <button
                           type="button"
-                          onClick={() => setDeleteTarget(ev)}
+                          onClick={e => { e.stopPropagation(); setDeleteTarget(ev) }}
                           className="kbt-btn-danger"
                           style={{ height: 28, padding: '0 10px', fontSize: '0.75rem' }}
                           aria-label={`Delete evaluation for ${ev.evaluatee?.name ?? ev.evaluateeId}`}

@@ -59,6 +59,36 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   )
 }
 
+function exportReportsCsv(summaries: ReportSummary[]) {
+  const rows: string[][] = [['Cycle', 'Total Evaluations', 'Completed', 'Completion %', 'Average Score', 'Department', 'Dept Average Score']]
+  for (const s of summaries) {
+    const pct = s.totalEvaluations > 0 ? Math.round((s.completedEvaluations / s.totalEvaluations) * 100) : 0
+    if (s.byDepartment.length === 0) {
+      rows.push([s.cycleName, String(s.totalEvaluations), String(s.completedEvaluations), `${pct}%`, s.averageScore.toFixed(2), '', ''])
+    } else {
+      s.byDepartment.forEach((d, i) => {
+        rows.push([
+          i === 0 ? s.cycleName : '',
+          i === 0 ? String(s.totalEvaluations) : '',
+          i === 0 ? String(s.completedEvaluations) : '',
+          i === 0 ? `${pct}%` : '',
+          i === 0 ? s.averageScore.toFixed(2) : '',
+          d.department,
+          d.averageScore.toFixed(2),
+        ])
+      })
+    }
+  }
+  const csv = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n')
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `amw-reports-${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export default function ReportsPage() {
   const { isAdmin } = useAuth()
   const t = useT()
@@ -83,6 +113,12 @@ export default function ReportsPage() {
           <h1>{t('page.reports.title')}</h1>
           <p>{t('page.reports.desc')}</p>
         </div>
+        {data && data.length > 0 && (
+          <button onClick={() => exportReportsCsv(data)} className="kbt-btn-ghost" style={{ gap: 6 }}>
+            <Download size={14} />
+            {t('rp.exportCsv')}
+          </button>
+        )}
       </div>
 
       {isLoading ? (

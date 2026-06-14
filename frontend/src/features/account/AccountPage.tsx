@@ -75,7 +75,7 @@ export default function AccountPage() {
   const profileKey = useMemo(() => `amw-account-profile:${user?.id ?? 'guest'}`, [user?.id])
   const [form, setForm] = useState({
     name: '', email: '', department: '', position: '' as '' | Position, jobTitle: '',
-    phone: '', bio: '', password: '', dateOfBirth: '',
+    phone: '', bio: '', password: '', confirmPassword: '', dateOfBirth: '',
   })
   const [savedFlash, setSavedFlash] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -105,11 +105,16 @@ export default function AccountPage() {
       phone: local.phone ?? '',
       bio: local.bio ?? '',
       password: '',
+      confirmPassword: '',
       dateOfBirth: user?.dateOfBirth ? user.dateOfBirth.slice(0, 10) : '',
     })
   }, [profileKey, user])
 
   async function saveDetails() {
+    if (form.password && form.password !== form.confirmPassword) {
+      setSaveError(t('acc.passwordMismatch'))
+      return
+    }
     setSaving(true)
     setSaveError(null)
     try {
@@ -127,7 +132,7 @@ export default function AccountPage() {
       // Keep the admin User Management list in sync with this self-edit.
       qc.invalidateQueries({ queryKey: ['users'] })
       localStorage.setItem(profileKey, JSON.stringify({ phone: form.phone, bio: form.bio }))
-      setForm(f => ({ ...f, password: '' }))
+      setForm(f => ({ ...f, password: '', confirmPassword: '' }))
       setSavedFlash(true)
       setTimeout(() => setSavedFlash(false), 2000)
     } catch (err) {
@@ -368,6 +373,13 @@ export default function AccountPage() {
             <input className="kbt-input" type="password" value={form.password} autoComplete="new-password"
               onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
               placeholder={t('acc.newPasswordHint')} />
+          </label>
+          <label className="amw-account-edit-field">
+            <span className="kbt-label">{t('acc.confirmPassword')}</span>
+            <input className="kbt-input" type="password" value={form.confirmPassword} autoComplete="new-password"
+              onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))}
+              placeholder={t('acc.confirmPasswordHint')}
+              style={form.confirmPassword && form.password !== form.confirmPassword ? { borderColor: 'var(--kbt-danger)' } : {}} />
           </label>
           <label className="amw-account-edit-field amw-account-edit-full">
             <span className="kbt-label">{t('acc.bioTitle')}</span>

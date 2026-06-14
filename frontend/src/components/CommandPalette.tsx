@@ -15,8 +15,10 @@ import {
   RefreshCw,
   Search,
   Settings,
+  Database,
   SlidersHorizontal,
   Sun,
+  UserCog,
   UserRound,
   type LucideIcon,
 } from 'lucide-react'
@@ -70,6 +72,12 @@ export default function CommandPalette() {
       { id: 'nav-cycles', label: t('nav.cycles'), hint: t('nav.cycles.sub'), group: 'Navigate', icon: RefreshCw, keywords: 'periods schedule cycles', run: goto('/cycles') },
       { id: 'nav-reports', label: t('nav.reports'), hint: t('nav.reports.sub'), group: 'Navigate', icon: BarChart2, keywords: 'analytics charts reports', run: goto('/reports') },
       { id: 'nav-calibrate', label: t('nav.calibrate'), hint: t('nav.calibrate.sub'), group: 'Navigate', icon: SlidersHorizontal, keywords: 'calibration calibrate normalize ratings distribution', run: goto('/calibrate') },
+      ...(isAdmin
+        ? [
+            { id: 'nav-users', label: t('nav.users'), hint: t('nav.users.sub'), group: 'Navigate' as Group, icon: UserCog, keywords: 'users management accounts access people', run: goto('/users') },
+            { id: 'nav-data', label: t('nav.data'), hint: t('nav.data.sub'), group: 'Navigate' as Group, icon: Database, keywords: 'data import export audit management', run: goto('/data') },
+          ]
+        : []),
       ...(isManager
         ? [{ id: 'act-new-eval', label: t('eval.new'), hint: t('cmd.startReview'), group: 'Actions' as Group, icon: Plus, keywords: 'create add new evaluation', run: goto('/evaluations') }]
         : []),

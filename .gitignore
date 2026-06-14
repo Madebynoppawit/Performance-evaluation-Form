@@ -36,7 +36,12 @@ test-results/
 playwright-report/
 
 # Local test runs & scratch artifacts
-reports/
+/reports/
 .tmp_pdf_review/
 .env.prod
 .env.demo
+
+# QA Robot generated output (logs, screenshots, HTML reports are runtime artifacts)
+scripts/qa-robot/logs/
+scripts/qa-robot/screenshots/
+scripts/qa-robot/reports/

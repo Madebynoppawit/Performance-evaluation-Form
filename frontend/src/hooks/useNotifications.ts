@@ -100,7 +100,7 @@ export function useNotifications() {
           description: `${cycle.name} — complete remaining evaluations before the window closes.`,
           time: new Date(cycle.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
           type: 'deadline',
-          href: '/evaluations',
+          href: '/cycles',
         })
       }
     }
