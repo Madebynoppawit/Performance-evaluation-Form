@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { AlertTriangle, ArrowUpRight, CalendarClock, CheckCircle2, FileCheck2, Gauge, Plus, RefreshCw, Search, Send, Trash2, TrendingUp, X } from 'lucide-react'
+import { AlertTriangle, ArrowUpRight, CalendarClock, CheckCircle2, ChevronLeft, ChevronRight, FileCheck2, Gauge, Plus, RefreshCw, Search, Send, Trash2, TrendingUp, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import api from '@/lib/api'
 import type { Cycle, Evaluation, Position, User } from '@/types'
@@ -38,7 +38,9 @@ export default function EvaluationListPage() {
   const { isAdmin, user, canManage } = useAuth()
   const t = useT()
   const { statusLabel, typeLabel } = useLabels()
+  const PAGE_SIZE = 25
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Evaluation | null>(null)
   const [draft, setDraft] = useState({
@@ -121,6 +123,9 @@ export default function EvaluationListPage() {
     const q = search.toLowerCase()
     return !q || ev.cycle?.name?.toLowerCase().includes(q) || ev.evaluatee?.name?.toLowerCase().includes(q)
   })
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   const scored = (data ?? []).filter((e) => e.totalScore != null)
   const stats = {
@@ -209,7 +214,7 @@ export default function EvaluationListPage() {
             <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--kbt-text-3)', pointerEvents: 'none' }} />
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(1) }}
               placeholder={t('common.search')}
               className="kbt-input"
               style={{ paddingLeft: 32, width: 220, height: 32, fontSize: '0.8125rem' }}
@@ -243,7 +248,7 @@ export default function EvaluationListPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((ev) => (
+              {paginated.map((ev) => (
                 <tr key={ev.id}>
                   <td><strong>{ev.cycle?.name ?? ev.cycleId}</strong></td>
                   <td style={{ color: 'var(--kbt-text-2)' }}>{typeLabel(ev.type)}</td>
@@ -287,7 +292,36 @@ export default function EvaluationListPage() {
         )}
 
         {!isLoading && filtered.length > 0 && (
-          <div className="kbt-table-footer">{t('common.showing')} {filtered.length} {t('common.of')} {data?.length ?? 0}</div>
+          <div className="kbt-table-footer" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span>{t('common.showing')} {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} {t('common.of')} {filtered.length}</span>
+            {totalPages > 1 && (
+              <>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
+                  <button
+                    className="kbt-btn-ghost"
+                    style={{ height: 26, width: 26, padding: 0 }}
+                    disabled={safePage === 1}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  <span style={{ display: 'flex', alignItems: 'center', fontSize: '0.75rem', color: 'var(--kbt-text-2)', padding: '0 6px' }}>
+                    {safePage} / {totalPages}
+                  </span>
+                  <button
+                    className="kbt-btn-ghost"
+                    style={{ height: 26, width: 26, padding: 0 }}
+                    disabled={safePage === totalPages}
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    aria-label="Next page"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         )}
       </div>
 

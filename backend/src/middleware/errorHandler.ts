@@ -1,11 +1,20 @@
 import { Request, Response, NextFunction } from 'express'
+import { Prisma } from '@prisma/client'
 import { ZodError } from 'zod'
 import { reportError } from '../config/monitoring'
 
 export function errorHandler(err: unknown, req: Request, res: Response, _next: NextFunction) {
   const ts = new Date().toISOString()
   const isZod = err instanceof ZodError
-  const status = isZod ? 400 : ((err as { status?: number }).status ?? 500)
+  const isPrismaKnown = err instanceof Prisma.PrismaClientKnownRequestError
+  const prismaStatus = isPrismaKnown
+    ? err.code === 'P2002'
+      ? 409
+      : err.code === 'P2025'
+        ? 404
+        : undefined
+    : undefined
+  const status = isZod ? 400 : (prismaStatus ?? (err as { status?: number }).status ?? 500)
 
   console.error(JSON.stringify({
     ts,
@@ -30,7 +39,13 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
 
   if (status >= 500) reportError(err)
 
-  const message = err instanceof Error ? err.message : 'Unexpected server error'
+  const message = isPrismaKnown && err.code === 'P2002'
+    ? 'Resource already exists'
+    : isPrismaKnown && err.code === 'P2025'
+      ? 'Resource not found'
+      : err instanceof Error
+        ? err.message
+        : 'Unexpected server error'
   const details = (err as { details?: unknown }).details
   res.status(status).json({ message, requestId: req.requestId, ...(details ? { details } : {}) })
 }

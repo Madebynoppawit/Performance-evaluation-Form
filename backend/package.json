@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "0.2.0-rc.1",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -14,14 +14,15 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:test:deploy": "cross-env DATABASE_URL=postgresql://postgres:postgres@localhost:5432/amw_test prisma migrate deploy",
-    "db:test:seed": "cross-env NODE_ENV=test DATABASE_URL=postgresql://postgres:postgres@localhost:5432/amw_test tsx prisma/seed.ts",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:test:seed": "cross-env NODE_ENV=test DATABASE_URL=postgresql://postgres:postgres@localhost:5432/amw_test node prisma/seed.cjs",
+    "db:seed": "node prisma/seed.cjs",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",
     "@sentry/node": "^10.56.0",
+    "@types/nodemailer": "^8.0.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",
@@ -29,6 +30,9 @@
     "express-rate-limit": "^8.5.2",
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^8.0.11",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
     "prisma": "^5.7.1",
     "prom-client": "^15.1.3",
     "swagger-ui-express": "^5.0.1",

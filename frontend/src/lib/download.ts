@@ -1,154 +1,13 @@
 import api from './api'
 import type { Evaluation } from '@/types'
-import { EVALUATION_REASONS, getFormDefinition, scoreToGrade } from '@/features/evaluations/constants/formDefinitions'
+import { getFormDefinition } from '@/features/evaluations/constants/formDefinitions'
+import { COMPETENCY_DEFINITIONS, RATING_SCALE as CC_RATING_SCALE } from '@/features/evaluations/constants/competency'
+import type { Position } from '@/types'
 
 export type ExportLanguage = 'en' | 'fr'
 
 const PDF_FONT_NAME = 'AMWReport'
 const PDF_FONT_URL = '/fonts/AMW-Report-Regular.ttf'
-
-const PDF_COPY: Record<ExportLanguage, Record<string, string>> = {
-  en: {
-    brand: 'AMW PERFORMANCE EVALUATION',
-    confidential: 'CONFIDENTIAL CORPORATE RECORD',
-    title: 'Performance Evaluation Report',
-    cycleFallback: 'Evaluation Cycle',
-    employeeFallback: 'Employee',
-    totalScore: 'TOTAL SCORE',
-    summary: 'Evaluation Summary',
-    employee: 'Employee',
-    department: 'Department',
-    position: 'Position',
-    hireDate: 'Hire Date',
-    evaluator: 'Evaluator',
-    evaluatorTitle: 'Evaluator Title',
-    status: 'Status',
-    evaluationType: 'Evaluation Type',
-    form: 'Form',
-    reason: 'Reason',
-    grade: 'Performance Grade',
-    effectiveDate: 'Effective Date',
-    period: 'Period',
-    exportedAt: 'Exported At',
-    scores: 'Score Summary',
-    goal: 'Goal',
-    competency: 'Competency',
-    attendance: 'Attendance',
-    total: 'Total',
-    combinedScore: 'combined score',
-    weight: 'weight',
-    goals: 'Goals',
-    description: 'Description',
-    target: 'Target',
-    result: 'Result',
-    wig: 'WIG',
-    kpiCategory: 'KPI Category',
-    score: 'Score',
-    competencyId: 'Competency ID',
-    criteria: 'Criteria',
-    category: 'Category',
-    training: 'Training',
-    minimumHours: 'Minimum Hours',
-    actualHours: 'Actual Hours',
-    percentMinimum: '% vs Minimum',
-    behaviorNote: 'Behavior Note',
-    comments: 'Comments',
-    strengths: 'Strengths',
-    improvements: 'Improvements',
-    requiredSkills: 'Required Skills',
-    metric: 'Metric',
-    value: 'Value',
-    leaveDays: 'Leave Actual Days',
-    lateTimes: 'Late Actual Times',
-    disciplinary: 'Disciplinary Level',
-    attendanceAvg: 'Attendance Average',
-    acknowledgement: 'Acknowledgement',
-    salary: 'Salary / Compensation',
-    oldSalary: 'Old Salary',
-    newSalary: 'New Salary',
-    bonus: 'Bonus',
-    bonusDeduction: 'Bonus Deduction',
-    bonusPolicy: 'Bonus Policy',
-    answers: 'Saved Template Answers',
-    question: 'Question',
-    answer: 'Answer',
-    signer: 'Signer',
-    signedAt: 'Signed At',
-    director: 'Director',
-    page: 'PAGE',
-    of: 'OF',
-  },
-  fr: {
-    brand: 'AMW EVALUATION DE PERFORMANCE',
-    confidential: 'DOSSIER CORPORATE CONFIDENTIEL',
-    title: "Rapport d'evaluation de performance",
-    cycleFallback: "Cycle d'evaluation",
-    employeeFallback: 'Collaborateur',
-    totalScore: 'SCORE TOTAL',
-    summary: "Synthese de l'evaluation",
-    employee: 'Collaborateur',
-    department: 'Departement',
-    position: 'Poste',
-    hireDate: "Date d'embauche",
-    evaluator: 'Evaluateur',
-    evaluatorTitle: "Titre de l'evaluateur",
-    status: 'Statut',
-    evaluationType: "Type d'evaluation",
-    form: 'Formulaire',
-    reason: 'Motif',
-    grade: 'Note de performance',
-    effectiveDate: "Date d'effet",
-    period: 'Periode',
-    exportedAt: 'Exporte le',
-    scores: 'Synthese des scores',
-    goal: 'Objectif',
-    competency: 'Competence',
-    attendance: 'Assiduite',
-    total: 'Total',
-    combinedScore: 'score combine',
-    weight: 'ponderation',
-    goals: 'Objectifs',
-    description: 'Description',
-    target: 'Objectif',
-    result: 'Resultat',
-    wig: 'WIG',
-    kpiCategory: 'Categorie KPI',
-    score: 'Score',
-    competencyId: 'ID competence',
-    criteria: 'Critere',
-    category: 'Categorie',
-    training: 'Formation',
-    minimumHours: 'Heures minimales',
-    actualHours: 'Heures realisees',
-    percentMinimum: '% du minimum',
-    behaviorNote: 'Note comportementale',
-    comments: 'Commentaires',
-    strengths: 'Points forts',
-    improvements: 'Axes damelioration',
-    requiredSkills: 'Competences requises',
-    metric: 'Indicateur',
-    value: 'Valeur',
-    leaveDays: 'Jours de conge',
-    lateTimes: 'Retards',
-    disciplinary: 'Niveau disciplinaire',
-    attendanceAvg: "Moyenne d'assiduite",
-    acknowledgement: 'Validation',
-    salary: 'Salaire / Compensation',
-    oldSalary: 'Ancien salaire',
-    newSalary: 'Nouveau salaire',
-    bonus: 'Prime',
-    bonusDeduction: 'Deduction de prime',
-    bonusPolicy: 'Politique de prime',
-    answers: 'Reponses du modele',
-    question: 'Question',
-    answer: 'Reponse',
-    signer: 'Signataire',
-    signedAt: 'Signe le',
-    director: 'Directeur',
-    page: 'PAGE',
-    of: 'SUR',
-  },
-}
 
 async function loadBinaryString(url: string) {
   const res = await fetch(url)
@@ -162,7 +21,6 @@ async function loadBinaryString(url: string) {
     signature === 'ttcf'
   )
   if (!isTrueType) return null
-
   let binary = ''
   const chunkSize = 0x8000
   for (let i = 0; i < bytes.length; i += chunkSize) {
@@ -195,407 +53,1027 @@ function cleanFilePart(value?: string | null) {
   return (value ?? 'evaluation').replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-|-$/g, '') || 'evaluation'
 }
 
-function score(value?: number | null) {
-  return value == null ? '-' : value.toFixed(2)
+function fmtDate(value?: string | null) {
+  return value ? new Date(value).toLocaleDateString('en-GB') : '—'
 }
 
-function date(value?: string | null) {
-  return value ? new Date(value).toLocaleDateString('en-US') : '-'
+function fmtScore(value?: number | null) {
+  return value == null ? '—' : value.toFixed(2)
 }
 
-function money(value?: number | null) {
-  return value == null ? '-' : value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+type RGB = [number, number, number]
 
-function reasonLabel(value?: string | null) {
-  const item = EVALUATION_REASONS.find((reason) => reason.value === value)
-  return item?.en ?? value ?? '-'
-}
-
-export async function downloadEvaluationPdf(evaluationId: string, fallbackName?: string, language: ExportLanguage = 'en') {
+export async function downloadEvaluationPdf(evaluationId: string, fallbackName?: string, _language: ExportLanguage = 'en') {
+  void _language
   const [{ jsPDF }, evaluationResponse] = await Promise.all([
     import('jspdf'),
     api.get<Evaluation>(`/evaluations/${evaluationId}`),
   ])
   const ev = evaluationResponse.data
-  const copy = PDF_COPY[language]
   const formDef = getFormDefinition(ev.formType)
-  const scoreById = new Map((ev.competencyScores ?? []).map((item) => [item.competencyId, item.score]))
-  const displayEmployee = ev.evaluateeName?.trim() || ev.evaluatee?.name || copy.employeeFallback
-  const displayEvaluator = ev.evaluatorName?.trim() || ev.evaluator?.name || '-'
-  const displayPosition = ev.evaluatee?.jobTitle?.trim() || ev.evaluatee?.position || '-'
-  const selectedGrade = ev.performanceGrade
-    ? formDef.gradeScale.find((grade) => grade.key === ev.performanceGrade)
+  const isWeighted = formDef.sections.goalSetting
+  const scoreById = new Map((ev.competencyScores ?? []).map(s => [s.competencyId, s.score]))
+
+  const displayEmployee = ev.evaluateeName?.trim() || ev.evaluatee?.name || 'Employee'
+  const displayEvaluator = ev.evaluatorName?.trim() || ev.evaluator?.name || '—'
+  const displayPosition = ev.evaluatee?.jobTitle?.trim() || (ev.evaluatee?.position ?? '—')
+  const displayDept = ev.evaluatee?.department || '—'
+  const documentId = `AMW-${ev.id.slice(0, 8).toUpperCase()}`
+
+  const goals = ev.goalEntries ?? []
+  const trainingScore = ev.trainingRecord?.score ?? null
+  const attRecord = ev.attendanceRecord ?? null
+  const attScore = attRecord?.attendanceAvgScore ?? ev.attendanceScore ?? null
+  const goalScore = ev.goalScore ?? null
+  const competencyScore = ev.competencyScore ?? null
+
+  const TRAINING_WEIGHT = 10
+  const effectiveTrainingWeight = trainingScore != null ? TRAINING_WEIGHT : 0
+  const cWeight = ev.competencyWeight || 20
+  const aWeight = ev.attendanceWeight || 10
+  const effectiveGoalWeight = isWeighted ? (100 - cWeight - aWeight - effectiveTrainingWeight) : 0
+
+  let weightedTotal: number | null = null
+  if (isWeighted && goalScore != null && competencyScore != null && attScore != null) {
+    weightedTotal = (
+      goalScore * effectiveGoalWeight +
+      competencyScore * cWeight +
+      attScore * aWeight +
+      (trainingScore ?? 0) * effectiveTrainingWeight
+    ) / 100
+  }
+
+  const allOseCriteria = formDef.categories.flatMap(c => c.criteria)
+  const oseScoredValues = allOseCriteria.map(c => scoreById.get(c.id)).filter((s): s is number => s != null)
+  const oseAvg = oseScoredValues.length ? oseScoredValues.reduce((a, b) => a + b, 0) / oseScoredValues.length : null
+  const oseGrade = oseAvg != null ? formDef.gradeScale.find(g => g.value === Math.round(oseAvg)) ?? null : null
+
+  const calibGrade = weightedTotal != null
+    ? CC_RATING_SCALE.find(r => r.score === Math.round(weightedTotal!)) ?? CC_RATING_SCALE[CC_RATING_SCALE.length - 1]
     : null
-  const ratedCriteria = formDef.categories.flatMap((category) => category.criteria)
-    .map((criterion) => scoreById.get(criterion.id))
-    .filter((item): item is number => item != null)
-  const calculatedGrade = ratedCriteria.length
-    ? scoreToGrade(ratedCriteria.reduce((sum, item) => sum + item, 0) / ratedCriteria.length, formDef)
-    : null
-  const performanceGrade = selectedGrade ?? calculatedGrade
+
+  const positionCompetencies = ev.evaluatee?.position
+    ? COMPETENCY_DEFINITIONS.filter(c => c.positions.includes(ev.evaluatee!.position as Position))
+    : []
+
   const doc = new jsPDF({ unit: 'pt', format: 'a4' })
-  let fontFamily = 'helvetica'
-  let hasCustomFont = false
+  // AMWReport only covers Thai codepoints (U+0E01–U+0E4E); use it for Thai
+  // section headings and fall back to helvetica for all Latin / numeric content.
+  let thaiFont = 'helvetica'
   try {
     const font = await loadBinaryString(PDF_FONT_URL)
     if (font) {
       doc.addFileToVFS('AMW-Report-Regular.ttf', font)
       doc.addFont('AMW-Report-Regular.ttf', PDF_FONT_NAME, 'normal')
-      fontFamily = PDF_FONT_NAME
-      hasCustomFont = true
-      doc.setFont(fontFamily, 'normal')
+      thaiFont = PDF_FONT_NAME
     }
-  } catch {
-    fontFamily = 'helvetica'
-  }
-  doc.setLineHeightFactor(1.25)
-  const pageWidth = doc.internal.pageSize.getWidth()
-  const pageHeight = doc.internal.pageSize.getHeight()
-  const margin = 42
-  const contentWidth = pageWidth - margin * 2
-  const navy: [number, number, number] = [41, 37, 82]
-  const blue: [number, number, number] = [22, 88, 142]
-  const red: [number, number, number] = [237, 28, 36]
-  const sky: [number, number, number] = [129, 196, 255]
-  const ink: [number, number, number] = [31, 38, 50]
-  const muted: [number, number, number] = [99, 111, 128]
-  const line: [number, number, number] = [221, 228, 237]
-  const paper: [number, number, number] = [248, 251, 255]
-  const gold: [number, number, number] = [184, 151, 87]
-  let y = 46
-  const documentId = `AMW-EVAL-${ev.id.slice(0, 8).toUpperCase()}`
+  } catch { /* stay with helvetica */ }
 
-  function setPdfFont(style: 'normal' | 'bold' = 'normal') {
-    doc.setFont(fontFamily, hasCustomFont ? 'normal' : style)
-  }
+  const PW = doc.internal.pageSize.getWidth()
+  const PH = doc.internal.pageSize.getHeight()
+  const M = 36
+  const CW = PW - M * 2
 
-  function addPageIfNeeded(height = 24) {
-    if (y + height <= pageHeight - margin) return
-    doc.addPage()
-    drawPageChrome()
-    y = 72
+  const C = {
+    navy:    [31, 57, 97]     as RGB,
+    blue:    [46, 99, 166]    as RGB,
+    blueLt:  [215, 228, 250]  as RGB,
+    red:     [229, 35, 33]    as RGB,
+    orange:  [234, 122, 0]    as RGB,
+    ink:     [22, 26, 36]     as RGB,
+    muted:   [100, 115, 135]  as RGB,
+    border:  [175, 188, 205]  as RGB,
+    borderX: [210, 220, 232]  as RGB,
+    paper:   [249, 251, 255]  as RGB,
+    rowAlt:  [242, 246, 254]  as RGB,
+    white:   [255, 255, 255]  as RGB,
+    green:   [22, 163, 74]    as RGB,
+    amber:   [210, 115, 6]    as RGB,
   }
 
-  function drawPageChrome() {
-    doc.setFillColor(255, 255, 255)
-    doc.rect(0, 0, pageWidth, pageHeight, 'F')
-    doc.setFillColor(...navy)
-    doc.rect(0, 0, pageWidth, 8, 'F')
-    doc.setFillColor(...blue)
-    doc.rect(0, 8, pageWidth * 0.74, 3, 'F')
-    doc.setFillColor(...red)
-    doc.rect(pageWidth * 0.74, 8, pageWidth * 0.26, 3, 'F')
-    doc.setFillColor(...paper)
-    doc.rect(0, pageHeight - 44, pageWidth, 44, 'F')
-    doc.setDrawColor(...line)
-    doc.line(margin, pageHeight - 34, pageWidth - margin, pageHeight - 34)
-    setPdfFont('bold')
-    doc.setFontSize(7.5)
-    doc.setTextColor(...muted)
-    doc.text(copy.brand, margin, pageHeight - 18)
-    doc.text(documentId, pageWidth / 2, pageHeight - 18, { align: 'center' })
-    doc.text(`${copy.page} ${doc.getNumberOfPages()}`, pageWidth - margin, pageHeight - 18, { align: 'right' })
-    doc.setTextColor(244, 247, 252)
-    doc.setFontSize(28)
-    doc.text('CONFIDENTIAL', pageWidth / 2, pageHeight / 2 + 18, { align: 'center', angle: 35 })
+  const SCORE_BG: Record<number, RGB> = {
+    5: C.navy, 4: C.blue, 3: C.green, 2: C.amber, 1: C.red,
   }
 
-  function sectionTitle(text: string) {
-    addPageIfNeeded(50)
-    y += 8
-    doc.setDrawColor(...line)
-    doc.line(margin, y + 23, pageWidth - margin, y + 23)
-    doc.setFillColor(...navy)
-    doc.roundedRect(margin, y, 24, 24, 6, 6, 'F')
-    doc.setFillColor(...gold)
-    doc.circle(margin + 12, y + 12, 3.5, 'F')
-    setPdfFont('bold')
-    doc.setFontSize(11.5)
-    doc.setTextColor(...navy)
-    doc.text(text.toUpperCase(), margin + 34, y + 16)
-    y += 38
+  let y = M
+
+  // pf  → helvetica (supports all Latin/numeric content)
+  function pf(bold = false) {
+    doc.setFont('helvetica', bold ? 'bold' : 'normal')
+  }
+  // pfTh → Thai font for section headings that contain Thai text
+  function pfTh() {
+    doc.setFont(thaiFont, 'normal')
   }
 
-  function valueRow(label: string, value?: string | number | null, options?: { wide?: boolean }) {
-    const width = options?.wide ? contentWidth : (contentWidth - 12) / 2
-    const x = options?.wide ? margin : undefined
-    return { label, value: String(value ?? '-'), width, x }
-  }
-
-  function detailGrid(items: ReturnType<typeof valueRow>[]) {
-    const gap = 12
-    for (let i = 0; i < items.length; i += 2) {
-      const rowItems = items[i].x ? [items[i]] : items.slice(i, i + 2)
-      const heights = rowItems.map((item) => {
-        const textWidth = item.width - 24
-        return Math.max(58, doc.splitTextToSize(item.value, textWidth).length * 11 + 34)
-      })
-      const cardHeight = Math.max(...heights)
-      addPageIfNeeded(cardHeight + 8)
-      rowItems.forEach((item, index) => {
-        const x = item.x ?? margin + index * (item.width + gap)
-        doc.setFillColor(...paper)
-        doc.setDrawColor(...line)
-        doc.roundedRect(x, y, item.width, cardHeight, 7, 7, 'FD')
-        doc.setFillColor(...blue)
-        doc.roundedRect(x, y, 4, cardHeight, 2, 2, 'F')
-        setPdfFont('bold')
-        doc.setFontSize(7.5)
-        doc.setTextColor(...blue)
-        doc.text(item.label.toUpperCase(), x + 16, y + 18)
-        setPdfFont('normal')
-        doc.setFontSize(9.6)
-        doc.setTextColor(...ink)
-        doc.text(doc.splitTextToSize(item.value, item.width - 30), x + 16, y + 37)
-      })
-      y += cardHeight + 10
+  function needPage(h = 24) {
+    if (y + h > PH - M - 24) {
+      doc.addPage()
+      renderPageFrame()
+      y = M + 44
     }
   }
 
-  function scoreCard(label: string, value: string, weight: string, x: number, w: number, accent: [number, number, number]) {
-    doc.setFillColor(...paper)
-    doc.setDrawColor(...line)
-    doc.roundedRect(x, y, w, 86, 10, 10, 'FD')
-    doc.setFillColor(...accent)
-    doc.roundedRect(x, y, w, 5, 2, 2, 'F')
+  function renderPageFrame() {
     doc.setFillColor(255, 255, 255)
-    doc.circle(x + w - 20, y + 23, 8, 'F')
-    setPdfFont('bold')
-    doc.setFontSize(7.5)
-    doc.setTextColor(...muted)
-    doc.text(label.toUpperCase(), x + 12, y + 22)
+    doc.rect(0, 0, PW, PH, 'F')
+    doc.setFillColor(...C.navy)
+    doc.rect(0, 0, PW, 6, 'F')
+    doc.setFillColor(...C.blue)
+    doc.rect(0, 6, PW * 0.72, 2, 'F')
+    doc.setFillColor(...C.red)
+    doc.rect(PW * 0.72, 6, PW * 0.28, 2, 'F')
+    doc.setFillColor(...C.paper)
+    doc.rect(0, 8, PW, 32, 'F')
+    doc.setDrawColor(...C.borderX)
+    doc.line(M, 38, PW - M, 38)
+    pf(true)
+    doc.setFontSize(7)
+    doc.setTextColor(...C.navy)
+    doc.text('AMW', M, 27)
+    doc.setTextColor(...C.muted)
+    doc.setFontSize(6.5)
+    doc.text('Performance Evaluation System', M + 20, 27)
+    doc.setTextColor(...C.ink)
+    doc.setFontSize(7)
+    doc.text(displayEmployee, PW / 2, 27, { align: 'center' })
+    doc.setTextColor(...C.muted)
+    doc.setFontSize(6.5)
+    doc.text(documentId, PW - M, 27, { align: 'right' })
     doc.setFontSize(24)
-    doc.setTextColor(...accent)
-    doc.text(value, x + 12, y + 54)
-    doc.setFontSize(8)
-    doc.setTextColor(...muted)
-    doc.text(weight, x + 12, y + 72)
+    doc.setTextColor(238, 242, 250)
+    doc.text('CONFIDENTIAL', PW / 2, PH / 2 + 20, { align: 'center', angle: 35 })
+    doc.setFillColor(...C.paper)
+    doc.rect(0, PH - 26, PW, 26, 'F')
+    doc.setDrawColor(...C.borderX)
+    doc.line(M, PH - 20, PW - M, PH - 20)
+    pf(false)
+    doc.setFontSize(6.5)
+    doc.setTextColor(...C.muted)
+    doc.text(`${formDef.code} · ${formDef.titleEn}`, M, PH - 8)
   }
 
-  function table(headers: string[], rows: (string | number | null | undefined)[][], widths: number[]) {
-    const headerHeight = 28
-    addPageIfNeeded(headerHeight + 24)
-    doc.setFillColor(...navy)
-    doc.roundedRect(margin, y, contentWidth, headerHeight, 7, 7, 'F')
-    doc.setFillColor(...blue)
-    doc.rect(margin, y + headerHeight - 3, contentWidth * 0.78, 3, 'F')
-    doc.setFillColor(...red)
-    doc.rect(margin + contentWidth * 0.78, y + headerHeight - 3, contentWidth * 0.22, 3, 'F')
-    setPdfFont('bold')
+  function partBanner(num: string, titleTh: string, titleEn: string) {
+    needPage(26)
+    doc.setFillColor(...C.navy)
+    doc.rect(M, y, CW, 22, 'F')
+    doc.setFillColor(...C.blue)
+    doc.rect(M, y + 19, CW * 0.68, 3, 'F')
+    doc.setFillColor(...C.red)
+    doc.rect(M + CW * 0.68, y + 19, CW * 0.32, 3, 'F')
+    pfTh()
     doc.setFontSize(7.5)
-    doc.setTextColor(255, 255, 255)
-    let x = margin
-    headers.forEach((header, index) => {
-      doc.text(header.toUpperCase(), x + 10, y + 17)
-      x += widths[index]
-    })
-    y += headerHeight
+    doc.setTextColor(...C.white)
+    doc.text(`${num}   ${titleTh}  /  ${titleEn}`, M + 10, y + 14)
+    y += 22
+  }
 
-    rows.forEach((cells, rowIndex) => {
-      const splitCells = cells.map((cell, index) => doc.splitTextToSize(String(cell ?? '-'), widths[index] - 20))
-      const rowHeight = Math.max(32, ...splitCells.map((lines) => lines.length * 10 + 18))
-      addPageIfNeeded(rowHeight)
-      doc.setFillColor(rowIndex % 2 === 0 ? paper[0] : 255, rowIndex % 2 === 0 ? paper[1] : 255, rowIndex % 2 === 0 ? paper[2] : 255)
-      doc.setDrawColor(226, 233, 242)
-      doc.rect(margin, y, contentWidth, rowHeight, 'FD')
-      x = margin
-      splitCells.forEach((lines, index) => {
-        setPdfFont(index === 0 ? 'bold' : 'normal')
-        doc.setFontSize(8.2)
-        doc.setTextColor(...ink)
-        doc.text(lines, x + 10, y + 18)
-        x += widths[index]
+  function colDivider(x: number, top: number, h: number) {
+    doc.setDrawColor(...C.borderX)
+    doc.line(x, top, x, top + h)
+  }
+
+  function cellText(
+    text: string,
+    x: number,
+    cellY: number,
+    w: number,
+    h: number,
+    align: 'left' | 'center' | 'right' = 'left',
+    bold = false,
+    color: RGB = C.ink,
+    fontSize = 8,
+  ) {
+    pf(bold)
+    doc.setFontSize(fontSize)
+    doc.setTextColor(...color)
+    const pad = align === 'left' ? 6 : 0
+    const lineH = fontSize * 1.35
+    const lines = doc.splitTextToSize(text, w - 10)
+    // Clamp to lines that physically fit in the cell — prevents negative baseY
+    // when custom font glyph-width metrics cause splitTextToSize to split
+    // text character-by-character, producing hundreds of lines and making
+    // (h - totalTextH) / 2 go deeply negative (text renders above the page).
+    const maxLines = Math.max(1, Math.floor(h / lineH))
+    const renderLines = lines.length <= maxLines ? lines : lines.slice(0, maxLines)
+    const totalTextH = renderLines.length * lineH
+    const baseY = cellY + (h - totalTextH) / 2 + lineH * 0.78
+    if (align === 'center') {
+      doc.text(renderLines, x + w / 2, baseY, { align: 'center' })
+    } else if (align === 'right') {
+      doc.text(renderLines, x + w - 5, baseY, { align: 'right' })
+    } else {
+      doc.text(renderLines, x + pad, baseY)
+    }
+  }
+
+  function ratingDots(score: number | null | undefined, x: number, cy: number, r = 5, gap = 4) {
+    for (let i = 1; i <= 5; i++) {
+      const cx = x + (i - 1) * (r * 2 + gap)
+      if (score != null && i <= Math.round(score)) {
+        doc.setFillColor(...C.orange)
+        doc.circle(cx, cy, r, 'F')
+      } else {
+        doc.setFillColor(...C.white)
+        doc.setDrawColor(...C.border)
+        doc.circle(cx, cy, r, 'FD')
+      }
+    }
+  }
+
+  function scoreBox(score: number | null, x: number, bY: number, w: number, h: number) {
+    const bg = score != null ? (SCORE_BG[Math.round(score)] ?? C.muted) : C.muted
+    doc.setFillColor(...bg)
+    doc.roundedRect(x, bY, w, h, 3, 3, 'F')
+    pf(true)
+    doc.setFontSize(12)
+    doc.setTextColor(...C.white)
+    doc.text(score != null ? String(Math.round(score)) : '—', x + w / 2, bY + h / 2 + 4.5, { align: 'center' })
+  }
+
+  function tblHeader(cols: { text: string; w: number }[], h = 18) {
+    needPage(h)
+    doc.setFillColor(...C.blueLt)
+    doc.setDrawColor(...C.border)
+    doc.rect(M, y, CW, h, 'FD')
+    let x = M
+    cols.forEach((col, i) => {
+      cellText(col.text, x, y, col.w, h, 'center', true, C.navy, 7)
+      if (i < cols.length - 1) colDivider(x + col.w, y, h)
+      x += col.w
+    })
+    y += h
+  }
+
+  function tblRow(
+    cells: { text: string; align?: 'left' | 'center' | 'right'; bold?: boolean }[],
+    widths: number[],
+    h: number,
+    opts: { alt?: boolean; subHeader?: boolean; total?: boolean } = {},
+  ) {
+    needPage(h)
+    let bg: RGB
+    if (opts.total) bg = C.navy
+    else if (opts.subHeader) bg = C.rowAlt
+    else if (opts.alt) bg = C.paper
+    else bg = C.white
+    doc.setFillColor(...bg)
+    doc.setDrawColor(...C.border)
+    doc.rect(M, y, CW, h, 'FD')
+    let x = M
+    cells.forEach((cell, i) => {
+      const color: RGB = opts.total ? C.white : C.ink
+      cellText(cell.text, x, y, widths[i], h, cell.align ?? 'left', cell.bold ?? opts.total ?? false, color)
+      if (i < cells.length - 1) colDivider(x + widths[i], y, h)
+      x += widths[i]
+    })
+    y += h
+  }
+
+  // ─── PAGE 1 COVER ─────────────────────────────────────────────────────────
+  renderPageFrame()
+  y = M + 44
+
+  // Title banner
+  doc.setFillColor(...C.navy)
+  doc.rect(M, y, CW, 54, 'F')
+  doc.setFillColor(...C.blue)
+  doc.rect(M, y + 51, CW * 0.68, 3, 'F')
+  doc.setFillColor(...C.red)
+  doc.rect(M + CW * 0.68, y + 51, CW * 0.32, 3, 'F')
+  doc.setFillColor(...C.white)
+  doc.roundedRect(M + 10, y + 9, 50, 36, 6, 6, 'F')
+  pf(true)
+  doc.setFontSize(13)
+  doc.setTextColor(...C.navy)
+  doc.text('AMW', M + 35, y + 30, { align: 'center' })
+  pf(true)
+  doc.setFontSize(12)
+  doc.setTextColor(...C.white)
+  doc.text('Performance Evaluation Form', M + 72, y + 22)
+  doc.setFontSize(7.5)
+  doc.setTextColor(170, 200, 242)
+  doc.text(`${formDef.code} · ${formDef.titleEn}`, M + 72, y + 38)
+  doc.setFontSize(7)
+  doc.setTextColor(140, 170, 210)
+  doc.text(documentId, PW - M - 8, y + 22, { align: 'right' })
+  doc.text(fmtDate(new Date().toISOString()), PW - M - 8, y + 36, { align: 'right' })
+  y += 54
+
+  // Employee info grid
+  const iW: [number, number, number, number] = [CW * 0.18, CW * 0.32, CW * 0.18, CW * 0.32]
+  const infoRows: [string, string, string, string][] = [
+    ['Employee Name', displayEmployee, 'Department', displayDept],
+    ['Position', displayPosition, 'Hire Date', fmtDate(ev.evaluatee?.hireDate)],
+    ['Evaluator', displayEvaluator, 'Evaluator Title', ev.evaluatorTitle ?? '—'],
+    ['Period', `${fmtDate(ev.cycle?.startDate)} – ${fmtDate(ev.cycle?.endDate)}`, 'Evaluation Type', ev.type ?? '—'],
+    ['Reason', ev.evaluationReason ?? '—', 'Status', ev.status ?? '—'],
+  ]
+
+  needPage(16 + infoRows.length * 20)
+  doc.setFillColor(...C.blueLt)
+  doc.setDrawColor(...C.border)
+  doc.rect(M, y, CW, 16, 'FD')
+  pfTh()
+  doc.setFontSize(7)
+  doc.setTextColor(...C.navy)
+  doc.text('ข้อมูลพนักงาน  /  Employee Information', M + 8, y + 11)
+  y += 16
+
+  infoRows.forEach((row, ri) => {
+    const rh = 20
+    doc.setDrawColor(...C.border)
+    let rx = M
+    row.forEach((cell, ci) => {
+      const w = iW[ci]
+      const isLabel = ci % 2 === 0
+      doc.setFillColor(...(isLabel ? C.blueLt : (ri % 2 === 0 ? C.white : C.paper)))
+      doc.rect(rx, y, w, rh, 'F')
+      cellText(cell, rx, y, w, rh, 'left', isLabel, isLabel ? C.navy : C.ink, 7.5)
+      if (ci < 3) colDivider(rx + w, y, rh)
+      rx += w
+    })
+    doc.setDrawColor(...C.border)
+    doc.rect(M, y, CW, rh, 'D')
+    y += rh
+  })
+
+  y += 12
+
+  const attMW = CW * 0.55
+
+  // ─── SECTIONS ─────────────────────────────────────────────────────────────
+  let partN = 1
+
+  if (isWeighted) {
+    // ── PART 1: GOAL SETTING KPI ──────────────────────────────────────────
+    partBanner(`ส่วนที่ ${partN++}`, 'การตั้งเป้าหมาย (KPI)', 'Goal Setting (KPI)')
+
+    const GW = [20, 196, 38, 32, 32, 32, 32, 32, 48, 39] as const
+    tblHeader([
+      { text: '#', w: GW[0] },
+      { text: 'KPI Goal Description', w: GW[1] },
+      { text: 'Wt%', w: GW[2] },
+      { text: '★5', w: GW[3] },
+      { text: '★4', w: GW[4] },
+      { text: '★3', w: GW[5] },
+      { text: '★2', w: GW[6] },
+      { text: '★1', w: GW[7] },
+      { text: 'Actual', w: GW[8] },
+      { text: 'Score', w: GW[9] },
+    ], 20)
+
+    if (goals.length === 0) {
+      tblRow([{ text: 'No goal entries recorded.', align: 'center' }], [CW], 22)
+    }
+
+    goals.forEach((goal, gi) => {
+      const goalLines = doc.splitTextToSize(goal.goal || '—', GW[1] - 10)
+      const rh = Math.max(22, goalLines.length * 9.5 + 10)
+      needPage(rh)
+
+      const rowBg: RGB = gi % 2 === 0 ? C.white : C.paper
+      doc.setFillColor(...rowBg)
+      doc.setDrawColor(...C.border)
+      doc.rect(M, y, CW, rh, 'FD')
+
+      let gx = M
+      const cols = [
+        String(gi + 1),
+        goal.goal || '—',
+        `${goal.weight}%`,
+        goal.targetRating5 ?? '—',
+        goal.targetRating4 ?? '—',
+        goal.targetRating3 ?? '—',
+        goal.targetRating2 ?? '—',
+        goal.targetRating1 ?? '—',
+        goal.result ?? '—',
+      ]
+      cols.forEach((t, i) => {
+        const w = GW[i]
+        const isMatched = i >= 3 && i <= 7 && goal.evaluationScore != null && (8 - i) === goal.evaluationScore
+        if (isMatched) {
+          doc.setFillColor(...C.blueLt)
+          doc.rect(gx, y, w, rh, 'F')
+        }
+        const align = i === 1 ? 'left' : 'center'
+        const sz = i === 1 ? 7.5 : 8
+        cellText(t, gx, y, w, rh, align, false, C.ink, sz)
+        if (i < 8) colDivider(gx + w, y, rh)
+        gx += w
       })
-      y += rowHeight
+      const lastW = GW[9]
+      if (goal.evaluationScore != null) {
+        scoreBox(goal.evaluationScore, gx + 4, y + rh / 2 - 11, lastW - 8, 22)
+      } else {
+        cellText('—', gx, y, lastW, rh, 'center')
+      }
+      y += rh
+    })
+
+    const totalGoalWeight = goals.reduce((s, g) => s + (Number(g.weight) || 0), 0)
+    needPage(18)
+    doc.setFillColor(...C.blueLt)
+    doc.setDrawColor(...C.border)
+    doc.rect(M, y, CW, 16, 'FD')
+    pf(true)
+    doc.setFontSize(7.5)
+    doc.setTextColor(...C.navy)
+    doc.text(`Total Goal Weight: ${totalGoalWeight}%  (max 70%)`, M + 8, y + 11)
+    doc.text(`Goal Score: ${fmtScore(goalScore)}`, PW - M - 8, y + 11, { align: 'right' })
+    y += 16
+    y += 10
+
+    // ── PART 2: CORE COMPETENCY ───────────────────────────────────────────
+    partBanner(`ส่วนที่ ${partN++}`, 'สมรรถนะหลัก (Core Competency)', 'Core Competency')
+
+    const dotsColW = 84
+    const CCW = [30, 160, CW - 30 - 160 - 52 - dotsColW, 52, dotsColW] as const
+    tblHeader([
+      { text: '#', w: CCW[0] },
+      { text: 'Competency', w: CCW[1] },
+      { text: 'Description (for this position)', w: CCW[2] },
+      { text: 'Score', w: CCW[3] },
+      { text: '● Rating', w: CCW[4] },
+    ], 20)
+
+    if (positionCompetencies.length === 0) {
+      tblRow([{ text: 'No competency definitions for this position.', align: 'center' }], [CW], 22)
+    }
+
+    positionCompetencies.forEach((cc, ci) => {
+      const pos = ev.evaluatee?.position as Position | undefined
+      const desc = pos ? (cc.descriptions[pos] ?? cc.descriptions['OFFICER'] ?? '') : ''
+      const descLines = doc.splitTextToSize(desc, CCW[2] - 10)
+      const rh = Math.max(22, descLines.length * 9 + 10)
+      needPage(rh)
+
+      const sc = scoreById.get(cc.id) ?? null
+      doc.setFillColor(...(ci % 2 === 0 ? C.white : C.paper))
+      doc.setDrawColor(...C.border)
+      doc.rect(M, y, CW, rh, 'FD')
+
+      let ccx = M
+      cellText(String(ci + 1), ccx, y, CCW[0], rh, 'center')
+      colDivider(ccx + CCW[0], y, rh)
+      ccx += CCW[0]
+      cellText(cc.name, ccx, y, CCW[1], rh, 'left', true, C.navy, 7.5)
+      colDivider(ccx + CCW[1], y, rh)
+      ccx += CCW[1]
+      cellText(desc, ccx, y, CCW[2], rh, 'left', false, C.ink, 7.5)
+      colDivider(ccx + CCW[2], y, rh)
+      ccx += CCW[2]
+      if (sc != null) {
+        scoreBox(sc, ccx + 6, y + rh / 2 - 11, CCW[3] - 12, 22)
+      } else {
+        cellText('—', ccx, y, CCW[3], rh, 'center', false, C.muted)
+      }
+      colDivider(ccx + CCW[3], y, rh)
+      ccx += CCW[3]
+      ratingDots(sc, ccx + 8, y + rh / 2, 5, 5)
+      y += rh
+    })
+
+    needPage(18)
+    doc.setFillColor(...C.blueLt)
+    doc.setDrawColor(...C.border)
+    doc.rect(M, y, CW, 16, 'FD')
+    pf(true)
+    doc.setFontSize(7.5)
+    doc.setTextColor(...C.navy)
+    doc.text(`Core Competency Average Score:  ${fmtScore(competencyScore)}`, M + 8, y + 11)
+    y += 16
+    y += 10
+
+    // ── PART 3: ATTENDANCE ───────────────────────────────────────────────
+    partBanner(`ส่วนที่ ${partN++}`, 'การมาปฏิบัติงาน', 'Attendance')
+
+    tblHeader([{ text: 'Metric', w: attMW }, { text: 'Value', w: CW - attMW }], 18)
+    const attRows: [string, string][] = [
+      ['Leave Actual Days  (วันลาจริง)', attRecord?.leaveActualDays != null ? `${attRecord.leaveActualDays} day(s)` : '—'],
+      ['Late Actual Times  (ครั้งที่มาสาย)', attRecord?.lateActualTimes != null ? `${attRecord.lateActualTimes} time(s)` : '—'],
+      ['Disciplinary Level  (ระดับโทษทางวินัย)', attRecord?.disciplinaryLevel ?? '—'],
+      ['Attendance Average Score  (คะแนนเฉลี่ย)', fmtScore(attScore)],
+    ]
+    attRows.forEach(([label, val], ri) => {
+      tblRow([
+        { text: label, bold: ri === 3 },
+        { text: val, align: 'center', bold: ri === 3 },
+      ], [attMW, CW - attMW], 20, { alt: ri % 2 !== 0 })
     })
     y += 10
-  }
 
-  function banner() {
-    doc.setFillColor(...navy)
-    doc.roundedRect(margin, y, contentWidth, 138, 16, 16, 'F')
-    doc.setFillColor(...blue)
-    doc.rect(margin, y, contentWidth * 0.72, 6, 'F')
-    doc.setFillColor(...red)
-    doc.rect(margin + contentWidth * 0.72, y, contentWidth * 0.28, 6, 'F')
-    doc.setFillColor(255, 255, 255)
-    doc.roundedRect(margin + 22, y + 24, 58, 34, 8, 8, 'F')
-    setPdfFont('bold')
-    doc.setFontSize(14)
-    doc.setTextColor(...navy)
-    doc.text('AMW', margin + 51, y + 46, { align: 'center' })
-    setPdfFont('normal')
-    doc.setFontSize(8)
-    doc.setTextColor(...sky)
-    doc.text(copy.confidential, margin + 94, y + 34)
-    setPdfFont('bold')
-    doc.setFontSize(21)
-    doc.setTextColor(255, 255, 255)
-    doc.text(copy.title, margin + 94, y + 58)
-    doc.setFillColor(255, 255, 255)
-    doc.setDrawColor(79, 119, 168)
-    doc.roundedRect(pageWidth - margin - 116, y + 26, 94, 82, 12, 12, 'FD')
-    doc.setFontSize(27)
-    doc.setTextColor(...red)
-    doc.text(score(ev.totalScore), pageWidth - margin - 69, y + 64, { align: 'center' })
+    // ── PART 4: TRAINING ─────────────────────────────────────────────────
+    partBanner(`ส่วนที่ ${partN++}`, 'การฝึกอบรม', 'Training')
+
+    tblHeader([{ text: 'Metric', w: attMW }, { text: 'Value', w: CW - attMW }], 18)
+    const trn = ev.trainingRecord
+    const trnRows: [string, string][] = [
+      ['Minimum Training Hours Required  (ชั่วโมงขั้นต่ำ)', trn?.minimumHours != null ? `${trn.minimumHours} hrs` : '—'],
+      ['Actual Training Hours  (ชั่วโมงจริง)', trn?.actualHours != null ? `${trn.actualHours} hrs` : '—'],
+      ['% vs Minimum  (% เทียบกับขั้นต่ำ)', trn?.percentOfMinimum != null ? `${trn.percentOfMinimum.toFixed(1)}%` : '—'],
+      ['Training Score  (คะแนน)', trainingScore != null ? String(trainingScore) : '—'],
+    ]
+    trnRows.forEach(([label, val], ri) => {
+      tblRow([
+        { text: label, bold: ri === 3 },
+        { text: val, align: 'center', bold: ri === 3 },
+      ], [attMW, CW - attMW], 20, { alt: ri % 2 !== 0 })
+    })
+    y += 10
+
+    // ── PART 5: PERFORMANCE SUMMARY ──────────────────────────────────────
+    partBanner(`ส่วนที่ ${partN++}`, 'สรุปผลการประเมิน', 'Performance Summary')
+
+    const SW = [CW * 0.43, CW * 0.15, CW * 0.21, CW * 0.21]
+    tblHeader([
+      { text: 'หัวข้อการประเมิน  /  Section', w: SW[0] },
+      { text: 'น้ำหนัก / Weight', w: SW[1] },
+      { text: 'คะแนนที่ได้ / Score', w: SW[2] },
+      { text: 'คะแนนถ่วงน้ำหนัก / Weighted', w: SW[3] },
+    ], 20)
+
+    const sumRow = (
+      label: string, weight: string, rawScore: string, weighted: string,
+      opts: { subHeader?: boolean; total?: boolean; indent?: boolean } = {}
+    ) => {
+      const rh = 18
+      needPage(rh)
+      const isTotal = opts.total ?? false
+      const isSH = opts.subHeader ?? false
+      const bg: RGB = isTotal ? C.navy : isSH ? C.rowAlt : C.white
+      doc.setFillColor(...bg)
+      doc.setDrawColor(...C.border)
+      doc.rect(M, y, CW, rh, 'FD')
+      const textColor: RGB = isTotal ? C.white : C.ink
+      const indent = opts.indent ? 14 : 6
+      pf(isTotal || isSH)
+      doc.setFontSize(7.5)
+      doc.setTextColor(...textColor)
+      const labelLines = doc.splitTextToSize(label, SW[0] - indent - 4)
+      doc.text(labelLines, M + indent, y + rh / 2 + 3)
+      ;[weight, rawScore, weighted].forEach((t, i) => {
+        const x = M + SW[0] + SW.slice(1, i + 1).reduce((a, b) => a + b, 0)
+        const w = SW[i + 1]
+        const lines = doc.splitTextToSize(t, w - 8)
+        doc.text(lines, x + w / 2, y + rh / 2 + 3, { align: 'center' })
+        colDivider(x, y, rh)
+      })
+      y += rh
+    }
+
+    const gWScore = goalScore != null ? fmtScore((goalScore * effectiveGoalWeight) / 100) : '—'
+    sumRow(
+      `1. Goal Setting (KPI)  — Total Weight: ${goals.reduce((s, g) => s + (Number(g.weight) || 0), 0)}%`,
+      `${effectiveGoalWeight}%`,
+      fmtScore(goalScore),
+      gWScore,
+      { subHeader: true },
+    )
+    goals.forEach((g, gi) => {
+      const sc = g.evaluationScore != null ? String(g.evaluationScore) : '—'
+      sumRow(`  ${gi + 1}. ${g.goal || '—'}`, `${g.weight}%`, sc, '—', { indent: true })
+    })
+
+    const compWScore = competencyScore != null ? fmtScore((competencyScore * cWeight) / 100) : '—'
+    sumRow('2. Core Competency', `${cWeight}%`, fmtScore(competencyScore), compWScore, { subHeader: true })
+    positionCompetencies.forEach((cc) => {
+      const sc = scoreById.get(cc.id)
+      sumRow(`  ${cc.name}`, '—', sc != null ? String(sc) : '—', '—', { indent: true })
+    })
+
+    const attWScore = attScore != null ? fmtScore((attScore * aWeight) / 100) : '—'
+    sumRow('3. Attendance  (การมาปฏิบัติงาน)', `${aWeight}%`, fmtScore(attScore), attWScore, { subHeader: true })
+
+    const trnWScore = trainingScore != null ? fmtScore((trainingScore * effectiveTrainingWeight) / 100) : '—'
+    sumRow(
+      `4. Training  (การฝึกอบรม)${trainingScore == null ? ' — N/A (0%)' : ''}`,
+      `${effectiveTrainingWeight}%`,
+      trainingScore != null ? String(trainingScore) : '—',
+      trnWScore,
+      { subHeader: true },
+    )
+
+    sumRow(
+      'รวม  /  TOTAL SCORE',
+      '100%',
+      '—',
+      weightedTotal != null ? weightedTotal.toFixed(3) : '—',
+      { total: true },
+    )
+
+    y += 8
+
+    // Calibration panel
+    if (weightedTotal != null && calibGrade != null) {
+      needPage(60)
+      const roundedTotal = Math.round(weightedTotal)
+      doc.setFillColor(...C.blueLt)
+      doc.setDrawColor(...C.border)
+      doc.rect(M, y, CW, 58, 'FD')
+      pf(true)
+      doc.setFontSize(7.5)
+      doc.setTextColor(...C.navy)
+      doc.text('CALIBRATION RESULT', M + 10, y + 14)
+      ratingDots(roundedTotal, M + 10, y + 32, 6.5, 5)
+      scoreBox(roundedTotal, PW - M - 52, y + 9, 44, 40)
+      doc.setFontSize(12)
+      doc.setTextColor(...C.navy)
+      doc.text(calibGrade.labelEn, M + 110, y + 22)
+      pf(false)
+      doc.setFontSize(7.5)
+      doc.setTextColor(...C.muted)
+      doc.text(`${calibGrade.definitionEn}`, M + 110, y + 36, { maxWidth: CW - 180 })
+      doc.setFontSize(7)
+      doc.text(`Total Score: ${weightedTotal.toFixed(3)}`, M + 110, y + 50)
+      y += 58
+    }
+
+    y += 12
+
+  } else {
+    // ── OSE FORM: EVALUATION CRITERIA ──────────────────────────────────
+    partBanner(`ส่วนที่ ${partN++}`, 'การประเมินผลการปฏิบัติงาน', 'Evaluation Criteria')
+
+    const dotsW = 82
+    const EC = [CW * 0.08, CW * 0.07, CW - CW * 0.08 - CW * 0.07 - 48 - dotsW, 48, dotsW] as const
+    tblHeader([
+      { text: 'Cat.', w: EC[0] },
+      { text: 'ID', w: EC[1] },
+      { text: 'Criterion', w: EC[2] },
+      { text: 'Score', w: EC[3] },
+      { text: '● Rating', w: EC[4] },
+    ], 20)
+
+    let critRow = 0
+    formDef.categories.forEach((cat) => {
+      needPage(14)
+      doc.setFillColor(...C.rowAlt)
+      doc.setDrawColor(...C.border)
+      doc.rect(M, y, CW, 14, 'FD')
+      pfTh()
+      doc.setFontSize(7)
+      doc.setTextColor(...C.blue)
+      doc.text(`${cat.num}. ${cat.titleEn}  /  ${cat.titleTh}`, M + 8, y + 10)
+      y += 14
+
+      cat.criteria.forEach((crit) => {
+        const critLines = doc.splitTextToSize(crit.en, EC[2] - 8)
+        const rh = Math.max(22, critLines.length * 8.5 + 10)
+        needPage(rh)
+
+        const sc = scoreById.get(crit.id) ?? null
+        doc.setFillColor(...(critRow % 2 === 0 ? C.white : C.paper))
+        doc.setDrawColor(...C.border)
+        doc.rect(M, y, CW, rh, 'FD')
+
+        let ecx = M
+        cellText(cat.num, ecx, y, EC[0], rh, 'center')
+        colDivider(ecx + EC[0], y, rh)
+        ecx += EC[0]
+        cellText(crit.id, ecx, y, EC[1], rh, 'center')
+        colDivider(ecx + EC[1], y, rh)
+        ecx += EC[1]
+        cellText(crit.en, ecx, y, EC[2], rh, 'left', false, C.ink, 7.5)
+        colDivider(ecx + EC[2], y, rh)
+        ecx += EC[2]
+        if (sc != null) {
+          scoreBox(sc, ecx + 6, y + rh / 2 - 11, EC[3] - 12, 22)
+        } else {
+          cellText('—', ecx, y, EC[3], rh, 'center', false, C.muted)
+        }
+        colDivider(ecx + EC[3], y, rh)
+        ecx += EC[3]
+        ratingDots(sc, ecx + 8, y + rh / 2, 5, 5)
+        y += rh
+        critRow++
+      })
+    })
+
+    needPage(20)
+    doc.setFillColor(...C.blueLt)
+    doc.setDrawColor(...C.border)
+    doc.rect(M, y, CW, 18, 'FD')
+    pfTh()
     doc.setFontSize(7.5)
-    doc.setTextColor(...muted)
-    doc.text(copy.totalScore, pageWidth - margin - 69, y + 84, { align: 'center' })
-    doc.setFontSize(10)
-    doc.setTextColor(221, 231, 244)
-    doc.text(doc.splitTextToSize(`${displayEmployee} / ${ev.cycle?.name ?? copy.cycleFallback}`, contentWidth - 150), margin + 94, y + 79)
-    setPdfFont('normal')
-    doc.setFontSize(8.5)
-    doc.setTextColor(221, 231, 244)
-    doc.text(`${documentId}  |  ${new Date().toLocaleDateString('en-US')}`, margin + 94, y + 115)
-    y += 160
+    doc.setTextColor(...C.navy)
+    doc.text('Average Score  /  คะแนนเฉลี่ย:', M + 8, y + 12)
+    if (oseAvg != null) {
+      doc.text(oseAvg.toFixed(2), M + CW / 2 - 50, y + 12, { align: 'right' })
+      ratingDots(oseAvg, M + CW / 2 - 40, y + 11, 5, 5)
+    } else {
+      doc.setTextColor(...C.muted)
+      pf(false)
+      doc.text('—', M + CW / 2, y + 12, { align: 'center' })
+    }
+    y += 18
+    y += 10
+
+    // OSE Summary
+    partBanner(`ส่วนที่ ${partN++}`, 'สรุปผลการประเมิน', 'Performance Summary')
+
+    // ── Calibration banner ────────────────────────────────────────────────────
+    needPage(74)
+    if (oseGrade != null && oseAvg != null) {
+      doc.setFillColor(...C.navy)
+      doc.setDrawColor(...C.border)
+      doc.rect(M, y, CW, 72, 'FD')
+      // Left: score label + big number
+      pfTh()
+      doc.setFontSize(7)
+      doc.setTextColor(170, 200, 242)
+      doc.text('Calibrated Score  /  คะแนนรวม', M + 16, y + 16)
+      pf(true)
+      doc.setFontSize(30)
+      doc.setTextColor(...C.white)
+      doc.text(oseAvg.toFixed(2), M + 16, y + 50)
+      // Rating dots under the big number
+      ratingDots(Math.round(oseAvg), M + 16, y + 60, 5, 5)
+      // Center divider
+      doc.setDrawColor(255, 255, 255, 0.12)
+      doc.line(M + 110, y + 12, M + 110, y + 60)
+      // Right: grade badge + label + definition
+      pf(true)
+      doc.setFontSize(9)
+      doc.setTextColor(170, 200, 242)
+      doc.text('Grade', M + 122, y + 16)
+      // Grade badge
+      const gradeBg = SCORE_BG[Math.round(oseAvg)] ?? C.blue
+      doc.setFillColor(...gradeBg)
+      doc.roundedRect(M + 120, y + 22, 38, 26, 4, 4, 'F')
+      pf(true)
+      doc.setFontSize(16)
+      doc.setTextColor(...C.white)
+      doc.text(String(Math.round(oseAvg)), M + 139, y + 40, { align: 'center' })
+      // Grade label & definition
+      pf(true)
+      doc.setFontSize(10)
+      doc.setTextColor(...C.white)
+      doc.text(oseGrade.en, M + 168, y + 34)
+      pf(false)
+      doc.setFontSize(7)
+      doc.setTextColor(170, 200, 242)
+      doc.text(oseGrade.definitionEn, M + 168, y + 48, { maxWidth: CW - 182 })
+      // Score box (right edge)
+      scoreBox(Math.round(oseAvg), PW - M - 54, y + 14, 44, 44)
+      y += 72
+    } else {
+      doc.setFillColor(...C.paper)
+      doc.setDrawColor(...C.border)
+      doc.rect(M, y, CW, 30, 'FD')
+      pf(false)
+      doc.setFontSize(8)
+      doc.setTextColor(...C.muted)
+      doc.text('No scores recorded — evaluation not complete.', M + CW / 2, y + 17, { align: 'center' })
+      y += 30
+    }
+
+    // ── Section breakdown table ───────────────────────────────────────────────
+    y += 10
+    const oseBW = [CW * 0.52, CW * 0.24, CW * 0.24] as const
+
+    tblHeader([
+      { text: 'Section', w: oseBW[0] },
+      { text: 'Score', w: oseBW[1] },
+      { text: 'Rating', w: oseBW[2] },
+    ], 18)
+
+    const oseRow = (label: string, score: number | null) => {
+      const rh = 22
+      needPage(rh)
+      doc.setFillColor(...C.rowAlt)
+      doc.setDrawColor(...C.border)
+      doc.rect(M, y, CW, rh, 'FD')
+      cellText(label, M, y, oseBW[0], rh, 'left', true, C.navy, 7.5)
+      colDivider(M + oseBW[0], y, rh)
+      if (score != null) {
+        cellText(score.toFixed(2), M + oseBW[0], y, oseBW[1], rh, 'center', true, C.navy, 9)
+      } else {
+        cellText('—', M + oseBW[0], y, oseBW[1], rh, 'center', false, C.muted, 8)
+      }
+      colDivider(M + oseBW[0] + oseBW[1], y, rh)
+      ratingDots(score, M + oseBW[0] + oseBW[1] + 14, y + rh / 2 - 1, 4.5, 5)
+      y += rh
+    }
+
+    const oseSubRow = (label: string, score: number | null) => {
+      const rh = 16
+      needPage(rh)
+      doc.setFillColor(...C.white)
+      doc.setDrawColor(...C.border)
+      doc.rect(M, y, CW, rh, 'FD')
+      cellText(label, M + 14, y, oseBW[0] - 14, rh, 'left', false, C.muted, 6.5)
+      colDivider(M + oseBW[0], y, rh)
+      if (score != null) {
+        cellText(score.toFixed(2), M + oseBW[0], y, oseBW[1], rh, 'center', false, C.ink, 7)
+      } else {
+        cellText('—', M + oseBW[0], y, oseBW[1], rh, 'center', false, C.muted, 7)
+      }
+      colDivider(M + oseBW[0] + oseBW[1], y, rh)
+      ratingDots(score, M + oseBW[0] + oseBW[1] + 14, y + rh / 2, 3.5, 4)
+      y += rh
+    }
+
+    // ── 1. Goal Setting ──────────────────────────────────────────────────────
+    oseRow('1. Goal Setting (KPI)', goalScore)
+    if (goals.length) {
+      goals.forEach((g, i) => {
+        oseSubRow(`${i + 1}. ${g.goal || '—'}  (${g.weight ?? 0}%)`, g.evaluationScore ?? null)
+      })
+    } else {
+      oseSubRow('No goals recorded', null)
+    }
+
+    // ── 2. Evaluation Criteria ───────────────────────────────────────────────
+    oseRow('2. Evaluation Criteria', oseAvg)
+    formDef.categories.forEach(cat => {
+      const catScores = cat.criteria
+        .map(c => scoreById.get(c.id))
+        .filter((s): s is number => s != null)
+      const catAvg = catScores.length
+        ? catScores.reduce((a, b) => a + b, 0) / catScores.length
+        : null
+      oseSubRow(`${cat.num}. ${cat.titleEn}`, catAvg)
+    })
+
+    // ── 3. Core Competency ───────────────────────────────────────────────────
+    oseRow('3. Core Competency', competencyScore)
+    if (positionCompetencies.length) {
+      positionCompetencies.forEach(cc => {
+        oseSubRow(cc.name, scoreById.get(cc.id) ?? null)
+      })
+    } else {
+      oseSubRow('No competency definitions for this position', null)
+    }
+
+    // ── 4. Attendance ────────────────────────────────────────────────────────
+    oseRow('4. Attendance', attScore)
+    if (attRecord) {
+      if (attRecord.leaveActualDays != null)
+        oseSubRow(`Leave: ${attRecord.leaveActualDays} day(s)`, attRecord.leaveScore ?? null)
+      if (attRecord.lateActualTimes != null)
+        oseSubRow(`Late: ${attRecord.lateActualTimes} time(s)`, attRecord.lateScore ?? null)
+      if (attRecord.disciplinaryLevel != null)
+        oseSubRow(`Disciplinary: Level ${attRecord.disciplinaryLevel}`, attRecord.disciplinaryScore ?? null)
+    } else {
+      oseSubRow('No attendance record', null)
+    }
+
+    // ── 5. Training ──────────────────────────────────────────────────────────
+    oseRow('5. Training', trainingScore)
+    if (ev.trainingRecord) {
+      const tr = ev.trainingRecord
+      if (tr.actualHours != null && tr.minimumHours != null)
+        oseSubRow(`Hours: ${tr.actualHours} / ${tr.minimumHours} required`, null)
+      if (tr.percentOfMinimum != null)
+        oseSubRow(`Completion: ${tr.percentOfMinimum.toFixed(0)}%`, null)
+    } else {
+      oseSubRow('No training record', null)
+    }
+
+    y += 12
   }
 
-  drawPageChrome()
-  banner()
-
-  sectionTitle(copy.summary)
-  detailGrid([
-    valueRow('Document ID', documentId),
-    valueRow('Classification', 'Confidential HR record'),
-    valueRow(copy.employee, displayEmployee),
-    valueRow(copy.department, ev.evaluatee?.department),
-    valueRow(copy.position, displayPosition),
-    valueRow(copy.hireDate, date(ev.evaluatee?.hireDate)),
-    valueRow(copy.evaluator, displayEvaluator),
-    valueRow(copy.evaluatorTitle, ev.evaluatorTitle),
-    valueRow(copy.status, ev.status),
-    valueRow(copy.evaluationType, ev.type),
-    valueRow(copy.form, `${formDef.code} - ${formDef.titleEn}`, { wide: true }),
-    valueRow(copy.reason, ev.evaluationReason === 'OTHER' ? ev.evaluationReasonOther : reasonLabel(ev.evaluationReason)),
-    valueRow(copy.grade, performanceGrade?.en ?? '-'),
-    valueRow(copy.effectiveDate, date(ev.effectiveDate)),
-    valueRow(copy.period, `${date(ev.cycle?.startDate)} - ${date(ev.cycle?.endDate)}`),
-    valueRow(copy.exportedAt, new Date().toLocaleString('en-US'), { wide: true }),
-  ])
-
-  sectionTitle(copy.scores)
-  addPageIfNeeded(96)
-  const cardW = (contentWidth - 36) / 4
-  scoreCard(copy.goal, score(ev.goalScore), `${ev.goalWeight}% ${copy.weight}`, margin, cardW, blue)
-  scoreCard(copy.competency, score(ev.competencyScore), `${ev.competencyWeight}% ${copy.weight}`, margin + cardW + 12, cardW, navy)
-  scoreCard(copy.attendance, score(ev.attendanceScore), `${ev.attendanceWeight}% ${copy.weight}`, margin + (cardW + 12) * 2, cardW, sky)
-  scoreCard(copy.total, score(ev.totalScore), copy.combinedScore, margin + (cardW + 12) * 3, cardW, red)
-  y += 98
-
-  if (ev.goalEntries?.length) {
-    sectionTitle(copy.goals)
-    table(
-      [copy.goal, copy.description, copy.wig, copy.kpiCategory, copy.weight, copy.score],
-      ev.goalEntries.map((goal) => [goal.goal, goal.goalDescription ?? '-', goal.wig ?? '-', goal.kpiCategory ?? '-', `${goal.weight}%`, goal.evaluationScore ?? '-']),
-      [110, 150, 78, 92, 52, contentWidth - 482]
-    )
-    table(
-      [copy.goal, `${copy.target} 5`, `${copy.target} 4`, `${copy.target} 3`, `${copy.target} 2`, `${copy.target} 1`, copy.result],
-      ev.goalEntries.map((goal) => [goal.goal, goal.targetRating5, goal.targetRating4, goal.targetRating3, goal.targetRating2, goal.targetRating1, goal.result]),
-      [110, 58, 58, 58, 58, 58, contentWidth - 400]
-    )
-    table(
-      [copy.goal, 'Employee Comment', 'Superior Comment'],
-      ev.goalEntries.map((goal) => [goal.goal, goal.employeeComment, goal.superiorComment]),
-      [120, (contentWidth - 120) / 2, (contentWidth - 120) / 2]
-    )
-  }
-
-  if (ev.competencyScores?.length) {
-    sectionTitle(copy.competency)
-    table(
-      [copy.category, copy.competencyId, copy.criteria, copy.score],
-      formDef.categories.flatMap((category) =>
-        category.criteria.map((criterion) => [
-          `${category.num}. ${category.titleEn}`,
-          criterion.id,
-          criterion.en,
-          scoreById.get(criterion.id) ?? '-',
-        ])
-      ),
-      [108, 48, contentWidth - 216, 60]
-    )
-  }
-
+  // ─── COMMENTS ─────────────────────────────────────────────────────────────
   if (ev.comment) {
-    sectionTitle(copy.comments)
-    detailGrid([
-      valueRow(copy.strengths, ev.comment.strengths, { wide: true }),
-      valueRow(copy.improvements, ev.comment.improvements, { wide: true }),
-      valueRow(copy.requiredSkills, ev.comment.requiredSkills, { wide: true }),
-    ])
+    partBanner(`ส่วนที่ ${partN++}`, 'ความคิดเห็น', 'Comments')
+    const fields: [string, string | null | undefined][] = [
+      ['จุดเด่น  /  Strengths', ev.comment.strengths],
+      ['จุดที่ต้องพัฒนา  /  Areas for Improvement', ev.comment.improvements],
+      ['ความรู้ / ทักษะที่ต้องพัฒนา  /  Required Skills', ev.comment.requiredSkills],
+    ]
+    fields.forEach(([label, val], fi) => {
+      const text = val?.trim() || '—'
+      const textLines = doc.splitTextToSize(text, CW - 20)
+      const bh = Math.max(40, textLines.length * 10 + 22)
+      needPage(bh)
+      doc.setFillColor(...(fi % 2 === 0 ? C.white : C.paper))
+      doc.setDrawColor(...C.border)
+      doc.rect(M, y, CW, bh, 'FD')
+      pfTh()
+      doc.setFontSize(7.5)
+      doc.setTextColor(...C.navy)
+      doc.text(label, M + 8, y + 13)
+      pf(false)
+      doc.setFontSize(8)
+      doc.setTextColor(...C.ink)
+      doc.text(textLines, M + 12, y + 25)
+      y += bh
+    })
+    y += 12
   }
 
-  if (ev.attendanceRecord) {
-    sectionTitle(copy.attendance)
-    table(
-      [copy.metric, copy.value],
-      [
-        [copy.leaveDays, ev.attendanceRecord.leaveActualDays],
-        [copy.lateTimes, ev.attendanceRecord.lateActualTimes],
-        [copy.disciplinary, ev.attendanceRecord.disciplinaryLevel],
-        [copy.attendanceAvg, score(ev.attendanceRecord.attendanceAvgScore)],
-      ],
-      [220, contentWidth - 220]
-    )
-  }
-
-  if (ev.trainingRecord) {
-    sectionTitle(copy.training)
-    table(
-      [copy.metric, copy.value],
-      [
-        [copy.minimumHours, ev.trainingRecord.minimumHours],
-        [copy.actualHours, ev.trainingRecord.actualHours],
-        [copy.percentMinimum, ev.trainingRecord.percentOfMinimum == null ? '-' : `${ev.trainingRecord.percentOfMinimum.toFixed(1)}%`],
-        [copy.score, ev.trainingRecord.score],
-        [copy.behaviorNote, ev.trainingRecord.behaviorNote],
-      ],
-      [220, contentWidth - 220]
-    )
-  }
-
+  // ─── SALARY SUMMARY (if present) ─────────────────────────────────────────
   if (ev.salarySummary) {
-    sectionTitle(copy.salary)
-    detailGrid([
-      valueRow(copy.oldSalary, money(ev.salarySummary.oldSalary)),
-      valueRow(copy.newSalary, money(ev.salarySummary.newSalary)),
-      valueRow(copy.bonus, money(ev.salarySummary.bonus)),
-      valueRow(copy.bonusDeduction, money(ev.salarySummary.bonusDeduction)),
-      valueRow(copy.effectiveDate, date(ev.salarySummary.effectiveDate)),
-      valueRow(copy.bonusPolicy, ev.salarySummary.bonusPolicy, { wide: true }),
-    ])
+    const ss = ev.salarySummary
+    partBanner(`ส่วนที่ ${partN++}`, 'สรุปเงินเดือน / โบนัส', 'Salary / Compensation')
+    const salW = attMW
+    tblHeader([{ text: 'Item', w: salW }, { text: 'Amount', w: CW - salW }], 18)
+    const salRows: [string, string][] = [
+      ['Old Salary', ss.oldSalary != null ? ss.oldSalary.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '—'],
+      ['New Salary', ss.newSalary != null ? ss.newSalary.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '—'],
+      ['Bonus', ss.bonus != null ? ss.bonus.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '—'],
+      ['Bonus Deduction', ss.bonusDeduction != null ? ss.bonusDeduction.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '—'],
+      ['Effective Date', fmtDate(ss.effectiveDate)],
+    ]
+    salRows.forEach(([label, val], ri) => {
+      tblRow([{ text: label }, { text: val, align: 'center' }], [salW, CW - salW], 20, { alt: ri % 2 !== 0 })
+    })
+    if (ss.bonusPolicy) {
+      needPage(36)
+      const policyLines = doc.splitTextToSize(ss.bonusPolicy, CW - 20)
+      const ph = Math.max(30, policyLines.length * 10 + 20)
+      doc.setFillColor(...C.paper)
+      doc.setDrawColor(...C.border)
+      doc.rect(M, y, CW, ph, 'FD')
+      pf(true)
+      doc.setFontSize(7.5)
+      doc.setTextColor(...C.navy)
+      doc.text('Bonus Policy', M + 8, y + 13)
+      pf(false)
+      doc.setFontSize(8)
+      doc.setTextColor(...C.ink)
+      doc.text(policyLines, M + 12, y + 24)
+      y += ph
+    }
+    y += 12
   }
 
-  if (ev.answers?.length) {
-    sectionTitle(copy.answers)
-    table(
-      [copy.question, copy.answer, copy.score],
-      ev.answers.map((answer) => [answer.questionId, answer.value, answer.score ?? '-']),
-      [contentWidth * 0.42, contentWidth * 0.42, contentWidth * 0.16]
-    )
-  }
+  // ─── ACKNOWLEDGEMENT / SIGNATURES ─────────────────────────────────────────
+  needPage(110)
+  partBanner(`ส่วนที่ ${partN++}`, 'การรับทราบ / ลายเซ็น', 'Acknowledgement & Signatures')
 
-  sectionTitle(copy.acknowledgement)
-  table(
-    [copy.signer, copy.signedAt],
-    [
-      [copy.employee, date(ev.acknowledgement?.employeeSignedAt)],
-      [copy.evaluator, date(ev.acknowledgement?.evaluatorSignedAt)],
-      [copy.director, date(ev.acknowledgement?.directorSignedAt)],
-    ],
-    [180, contentWidth - 180]
-  )
+  const signers = [
+    { label: 'Employee  /  พนักงาน', name: displayEmployee, signedAt: ev.acknowledgement?.employeeSignedAt },
+    { label: 'Evaluator  /  ผู้ประเมิน', name: displayEvaluator, signedAt: ev.acknowledgement?.evaluatorSignedAt },
+    { label: 'Director  /  ผู้บริหาร', name: '—', signedAt: ev.acknowledgement?.directorSignedAt },
+  ]
 
+  const sigW = CW / 3
+  const sigLabelH = 16
+  needPage(sigLabelH + 80)
+  doc.setFillColor(...C.blueLt)
+  doc.setDrawColor(...C.border)
+  doc.rect(M, y, CW, sigLabelH, 'FD')
+  signers.forEach((s, i) => {
+    pfTh()
+    doc.setFontSize(7)
+    doc.setTextColor(...C.navy)
+    doc.text(s.label, M + i * sigW + sigW / 2, y + 11, { align: 'center' })
+    if (i < 2) colDivider(M + (i + 1) * sigW, y, sigLabelH)
+  })
+  y += sigLabelH
+
+  const sigBoxH = 80
+  doc.setFillColor(...C.white)
+  doc.setDrawColor(...C.border)
+  doc.rect(M, y, CW, sigBoxH, 'FD')
+  signers.forEach((s, i) => {
+    const sx = M + i * sigW
+    if (i < 2) colDivider(sx + sigW, y, sigBoxH)
+
+    if (s.signedAt) {
+      doc.setFillColor(...C.green)
+      doc.circle(sx + sigW / 2, y + 22, 7, 'F')
+      pf(true)
+      doc.setFontSize(8)
+      doc.setTextColor(...C.white)
+      doc.text('✓', sx + sigW / 2, y + 25, { align: 'center' })
+      pf(false)
+      doc.setFontSize(7)
+      doc.setTextColor(...C.green)
+      doc.text('Signed', sx + sigW / 2, y + 37, { align: 'center' })
+      doc.setTextColor(...C.muted)
+      doc.setFontSize(6.5)
+      doc.text(fmtDate(s.signedAt as string), sx + sigW / 2, y + 47, { align: 'center' })
+    } else {
+      doc.setDrawColor(...C.border)
+      doc.setLineDashPattern([3, 3], 0)
+      doc.line(sx + 14, y + 44, sx + sigW - 14, y + 44)
+      doc.setLineDashPattern([], 0)
+      pf(false)
+      doc.setFontSize(6.5)
+      doc.setTextColor(...C.muted)
+      doc.text('Signature', sx + sigW / 2, y + 53, { align: 'center' })
+    }
+
+    pf(false)
+    doc.setFontSize(7)
+    doc.setTextColor(...C.muted)
+    doc.text(s.name, sx + sigW / 2, y + 67, { align: 'center', maxWidth: sigW - 16 })
+  })
+  y += sigBoxH
+
+  // ─── FIX PAGE NUMBERS ─────────────────────────────────────────────────────
   const totalPages = doc.getNumberOfPages()
-  for (let page = 1; page <= totalPages; page += 1) {
-    doc.setPage(page)
-    setPdfFont('bold')
-    doc.setFontSize(7.5)
-    doc.setTextColor(...muted)
-    doc.text(`${copy.page} ${page} ${copy.of} ${totalPages}`, pageWidth - margin, pageHeight - 18, { align: 'right' })
+  for (let pg = 1; pg <= totalPages; pg++) {
+    doc.setPage(pg)
+    doc.setFillColor(...C.paper)
+    doc.rect(M, PH - 20, CW, 14, 'F')
+    pf(false)
+    doc.setFontSize(6.5)
+    doc.setTextColor(...C.muted)
+    doc.text(`PAGE ${pg} OF ${totalPages}`, PW - M, PH - 8, { align: 'right' })
   }
 
   const name = fallbackName ?? `evaluation-${cleanFilePart(displayEmployee)}-${ev.id}.pdf`

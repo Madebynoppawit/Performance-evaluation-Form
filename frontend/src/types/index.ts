@@ -1,7 +1,7 @@
 export type Role = 'DEVELOPER' | 'ADMIN' | 'MANAGER' | 'EMPLOYEE'
 export type Position = 'CEO' | 'MANAGING_DIRECTOR' | 'DIRECTOR_UP' | 'MANAGER' | 'OFFICER' | 'SUPERVISOR' | 'PRODUCTION_STAFF'
 export type EvaluationType = 'SELF' | 'MANAGER' | 'PEER' | 'THREE_SIXTY'
-export type EvaluationStatus = 'DRAFT' | 'IN_PROGRESS' | 'SUBMITTED' | 'REVIEWED' | 'CLOSED'
+export type EvaluationStatus = 'DRAFT' | 'IN_PROGRESS' | 'PENDING_REVIEW' | 'SUBMITTED' | 'REVIEWED' | 'CLOSED'
 export type CycleStatus = 'UPCOMING' | 'ACTIVE' | 'CLOSED'
 export type QuestionType = 'rating' | 'text' | 'multiple_choice'
 export type DisciplinaryLevel =
@@ -22,6 +22,8 @@ export interface User {
   hireDate?: string | null
   employeeNo?: string | null
   mustChangePassword?: boolean
+  dateOfBirth?: string | null
+  sourceData?: Record<string, string> | null
 }
 
 export interface Question {
@@ -149,6 +151,11 @@ export interface Evaluation {
   evaluatorId: string
   evaluator?: User
   evaluatorName?: string | null
+  reviewerId?: string | null
+  reviewer?: User | null
+  reviewerName?: string | null
+  reviewerComment?: string | null
+  reviewedAt?: string | null
   type: EvaluationType
   status: EvaluationStatus
   formType?: string | null

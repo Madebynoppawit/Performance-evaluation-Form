@@ -1,0 +1,104 @@
+# Demo stack: production-shaped containers with demo release flags and seed data.
+#
+#   docker compose -f docker-compose.demo.yml up -d --build
+#
+# Opens at http://localhost:8080 by default. This file is for internal demo/UAT
+# only; use docker-compose.prod.yml plus real secrets for production.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DEMO_POSTGRES_USER:-amw_demo}
+      POSTGRES_PASSWORD: ${DEMO_POSTGRES_PASSWORD:-amw-demo-postgres-password-safe-for-local-demo}
+      POSTGRES_DB: ${DEMO_POSTGRES_DB:-performance_eval_demo}
+    volumes:
+      - demo_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DEMO_POSTGRES_USER:-amw_demo} -d ${DEMO_POSTGRES_DB:-performance_eval_demo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    user: root
+    command: ["npx", "prisma", "migrate", "deploy"]
+    environment:
+      DATABASE_URL: postgresql://${DEMO_POSTGRES_USER:-amw_demo}:${DEMO_POSTGRES_PASSWORD:-amw-demo-postgres-password-safe-for-local-demo}@postgres:5432/${DEMO_POSTGRES_DB:-performance_eval_demo}?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  seed:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    user: root
+    command: ["npm", "run", "db:seed"]
+    environment:
+      NODE_ENV: production
+      ALLOW_PROD_SEED: "true"
+      DATABASE_URL: postgresql://${DEMO_POSTGRES_USER:-amw_demo}:${DEMO_POSTGRES_PASSWORD:-amw-demo-postgres-password-safe-for-local-demo}@postgres:5432/${DEMO_POSTGRES_DB:-performance_eval_demo}?schema=public
+      JWT_SECRET: ${DEMO_JWT_SECRET:-demo-only-jwt-secret-for-local-deploy-preview-123456}
+      CLIENT_URL: ${DEMO_CLIENT_URL:-http://localhost:8080}
+      CORS_ORIGINS: ${DEMO_CORS_ORIGINS:-http://localhost:8080}
+      APP_RELEASE_CHANNEL: demo
+      ENABLE_AI_FEATURES: "false"
+      AI_PROVIDER: none
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://${DEMO_POSTGRES_USER:-amw_demo}:${DEMO_POSTGRES_PASSWORD:-amw-demo-postgres-password-safe-for-local-demo}@postgres:5432/${DEMO_POSTGRES_DB:-performance_eval_demo}?schema=public
+      JWT_SECRET: ${DEMO_JWT_SECRET:-demo-only-jwt-secret-for-local-deploy-preview-123456}
+      JWT_EXPIRES_IN: ${DEMO_JWT_EXPIRES_IN:-12h}
+      COMPANY_EMAIL_DOMAIN: ${DEMO_COMPANY_EMAIL_DOMAIN:-amw-ems.com}
+      CLIENT_URL: ${DEMO_CLIENT_URL:-http://localhost:8080}
+      CORS_ORIGINS: ${DEMO_CORS_ORIGINS:-http://localhost:8080}
+      ALLOW_PUBLIC_REGISTRATION: "false"
+      APP_RELEASE_CHANNEL: demo
+      ENABLE_AI_FEATURES: "false"
+      AI_PROVIDER: none
+      LOG_LEVEL: ${DEMO_LOG_LEVEL:-info}
+      SENTRY_DSN: ${DEMO_SENTRY_DSN:-}
+      METRICS_TOKEN: ${DEMO_METRICS_TOKEN:-demo-metrics-token-safe-for-local-demo}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      seed:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+        VITE_APP_VERSION: ${DEMO_VITE_APP_VERSION:-0.2.0-demo.1}
+        VITE_RELEASE_CHANNEL: demo
+        VITE_ENABLE_AI_FEATURES: "false"
+        VITE_AI_PROVIDER: none
+    restart: unless-stopped
+    ports:
+      - "${DEMO_HTTP_PORT:-8080}:80"
+    depends_on:
+      - backend
+
+volumes:
+  demo_postgres_data:

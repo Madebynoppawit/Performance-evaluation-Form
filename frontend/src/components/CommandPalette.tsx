@@ -15,6 +15,7 @@ import {
   RefreshCw,
   Search,
   Settings,
+  SlidersHorizontal,
   Sun,
   UserRound,
   type LucideIcon,
@@ -68,6 +69,7 @@ export default function CommandPalette() {
       { id: 'nav-templates', label: t('nav.templates'), hint: t('nav.templates.sub'), group: 'Navigate', icon: LayoutTemplate, keywords: 'blueprint templates', run: goto('/templates') },
       { id: 'nav-cycles', label: t('nav.cycles'), hint: t('nav.cycles.sub'), group: 'Navigate', icon: RefreshCw, keywords: 'periods schedule cycles', run: goto('/cycles') },
       { id: 'nav-reports', label: t('nav.reports'), hint: t('nav.reports.sub'), group: 'Navigate', icon: BarChart2, keywords: 'analytics charts reports', run: goto('/reports') },
+      { id: 'nav-calibrate', label: t('nav.calibrate'), hint: t('nav.calibrate.sub'), group: 'Navigate', icon: SlidersHorizontal, keywords: 'calibration calibrate normalize ratings distribution', run: goto('/calibrate') },
       ...(isManager
         ? [{ id: 'act-new-eval', label: t('eval.new'), hint: t('cmd.startReview'), group: 'Actions' as Group, icon: Plus, keywords: 'create add new evaluation', run: goto('/evaluations') }]
         : []),

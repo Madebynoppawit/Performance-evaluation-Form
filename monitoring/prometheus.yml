@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers: []
+
+scrape_configs:
+  - job_name: amw-backend
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['backend:3001']
+    metrics_path: /metrics
+    # Uncomment and set to match METRICS_TOKEN in .env.prod:
+    # bearer_token: <your-metrics-token>
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']

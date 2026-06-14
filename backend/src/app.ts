@@ -3,6 +3,8 @@ import { env } from './config/env'
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
+import pinoHttp from 'pino-http'
+import { logger } from './lib/logger'
 import { errorHandler } from './middleware/errorHandler'
 import { notFoundHandler } from './middleware/notFound'
 import { apiLimiter, authLimiter } from './middleware/rateLimiter'
@@ -30,6 +32,18 @@ export function createApp() {
   app.disable('x-powered-by')
   app.set('trust proxy', env.isProd ? 1 : false)
   app.use(requestContext)
+  app.use(pinoHttp({
+    logger,
+    // Skip health/metrics noise from logs
+    autoLogging: {
+      ignore: (req) => ['/health', '/api/health', '/ready', '/api/ready', '/metrics'].includes(req.url ?? ''),
+    },
+    customLogLevel: (_req, res) => res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info',
+    serializers: {
+      req: (req) => ({ method: req.method, url: req.url, requestId: req.id }),
+      res: (res) => ({ statusCode: res.statusCode }),
+    },
+  }))
   app.use(metricsMiddleware)
   app.use(helmet({
     contentSecurityPolicy: {

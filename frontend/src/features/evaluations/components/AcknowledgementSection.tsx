@@ -1,56 +1,83 @@
-import { CheckCircle2, Clock4, Loader2 } from 'lucide-react'
+import { CheckCircle2, Clock4 } from 'lucide-react'
 import type { EvaluationAcknowledgement } from '@/types'
-import { formatDate } from '@/lib/utils'
 import { useT } from '@/i18n/languageContext'
+import { CalendarPicker } from './CalendarPicker'
 
 interface Props {
   data?: EvaluationAcknowledgement | null
-  currentUserId: string
-  evaluateeId: string
-  evaluatorId: string
   isAdmin: boolean
-  onSign: (type: 'employee' | 'evaluator' | 'director') => void
-  isSigning?: boolean
+  onUpdate: (field: 'employeeSignedAt' | 'evaluatorSignedAt' | 'directorSignedAt', value: string | null) => void
+  isUpdating?: boolean
 }
 
-export default function AcknowledgementSection({ data, currentUserId, evaluateeId, evaluatorId, isAdmin, onSign, isSigning }: Props) {
+function toDateValue(iso?: string | null): string {
+  if (!iso) return ''
+  return iso.slice(0, 10)
+}
+
+function toIso(dateValue: string): string | null {
+  if (!dateValue) return null
+  return new Date(dateValue + 'T00:00:00.000Z').toISOString()
+}
+
+export default function AcknowledgementSection({ data, isAdmin, onUpdate, isUpdating }: Props) {
   const t = useT()
-  const signers = [
-    { label: t('ak.employee'), sub: t('ak.employeeSub'), signedAt: data?.employeeSignedAt, canSign: currentUserId === evaluateeId && !data?.employeeSignedAt, type: 'employee' as const },
-    { label: t('ak.evaluator'), sub: t('ak.evaluatorSub'), signedAt: data?.evaluatorSignedAt, canSign: currentUserId === evaluatorId && !data?.evaluatorSignedAt, type: 'evaluator' as const },
-    { label: t('ak.director'), sub: t('ak.directorSub'), signedAt: data?.directorSignedAt, canSign: isAdmin && !data?.directorSignedAt, type: 'director' as const },
+
+  const parties = [
+    {
+      label: t('ak.employee'),
+      sub: t('ak.employeeSub'),
+      field: 'employeeSignedAt' as const,
+      signedAt: data?.employeeSignedAt,
+    },
+    {
+      label: t('ak.evaluator'),
+      sub: t('ak.evaluatorSub'),
+      field: 'evaluatorSignedAt' as const,
+      signedAt: data?.evaluatorSignedAt,
+    },
+    {
+      label: t('ak.director'),
+      sub: t('ak.directorSub'),
+      field: 'directorSignedAt' as const,
+      signedAt: data?.directorSignedAt,
+    },
   ]
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
-      {signers.map((signer) => (
-        <div key={signer.type} className="kbt-card" style={{ padding: 18, textAlign: 'center' }}>
+      {parties.map((party) => (
+        <div key={party.field} className="kbt-card" style={{ padding: 18, textAlign: 'center' }}>
           <div style={{ marginBottom: 12 }}>
-            {signer.signedAt
+            {party.signedAt
               ? <CheckCircle2 size={30} color="var(--m-light-blue)" style={{ margin: '0 auto' }} />
               : <Clock4 size={30} color="var(--kbt-text-3)" style={{ margin: '0 auto' }} />}
           </div>
-          <p style={{ color: 'var(--kbt-text)', fontSize: '0.94rem', fontWeight: 900 }}>{signer.label}</p>
-          <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.75rem', marginTop: 3, marginBottom: 14 }}>{signer.sub}</p>
+          <p style={{ color: 'var(--kbt-text)', fontSize: '0.94rem', fontWeight: 900 }}>{party.label}</p>
+          <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.75rem', marginTop: 3, marginBottom: 14 }}>{party.sub}</p>
 
-          {signer.signedAt ? (
-            <div>
-              <span className="kbt-badge-success">{t('ak.acknowledged')}</span>
-              <p style={{ color: 'var(--kbt-text-3)', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem', marginTop: 8 }}>
-                {formatDate(signer.signedAt)}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            {party.signedAt
+              ? <span className="kbt-badge-success">{t('ak.acknowledged')}</span>
+              : <span className="kbt-badge-neutral">{t('ak.pending')}</span>}
+
+            {isAdmin ? (
+              <CalendarPicker
+                value={toDateValue(party.signedAt)}
+                onChange={v => onUpdate(party.field, toIso(v))}
+                disabled={isUpdating}
+                placeholder="เลือกวันที่ลงนาม"
+              />
+            ) : party.signedAt ? (
+              <p style={{
+                color: 'var(--kbt-text-3)',
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: '0.75rem',
+              }}>
+                {party.signedAt.slice(0, 10)}
               </p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <span className="kbt-badge-neutral">{t('ak.pending')}</span>
-              {signer.canSign && (
-                <button onClick={() => onSign(signer.type)} disabled={isSigning} className="kbt-btn-primary" style={{ height: 30, padding: '0 14px', fontSize: '0.75rem' }}>
-                  {isSigning ? <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> : null}
-                  {t('ak.acknowledge')}
-                </button>
-              )}
-            </div>
-          )}
+            ) : null}
+          </div>
         </div>
       ))}
     </div>

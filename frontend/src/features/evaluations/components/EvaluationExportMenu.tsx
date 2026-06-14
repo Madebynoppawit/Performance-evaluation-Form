@@ -6,11 +6,12 @@ interface Props {
   evaluationId: string
   employeeName?: string | null
   compact?: boolean
+  onBeforeExport?: () => Promise<void>
 }
 
 type ExportAction = 'csv' | `pdf-${ExportLanguage}`
 
-export default function EvaluationExportMenu({ evaluationId, employeeName, compact }: Props) {
+export default function EvaluationExportMenu({ evaluationId, employeeName, compact, onBeforeExport }: Props) {
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState<ExportAction | null>(null)
   const ref = useRef<HTMLDivElement>(null)
@@ -26,6 +27,7 @@ export default function EvaluationExportMenu({ evaluationId, employeeName, compa
   async function run(action: ExportAction) {
     setActive(action)
     try {
+      await onBeforeExport?.()
       const base = `evaluation-${employeeName ?? evaluationId}`
       if (action === 'csv') await downloadEvaluationExport(evaluationId, `${base}.csv`)
       if (action === 'pdf-en') await downloadEvaluationPdf(evaluationId, `${base}-en.pdf`, 'en')

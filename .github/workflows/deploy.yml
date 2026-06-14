@@ -1,0 +1,123 @@
+name: Deploy
+
+# Triggers:
+#   - Automatically after images job succeeds on main (via workflow_run)
+#   - Manually from the Actions tab (for rollback / re-deploy)
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to deploy (default: latest)"
+        required: false
+        default: latest
+      environment:
+        description: "Target environment"
+        required: true
+        default: production
+        type: choice
+        options: [production, staging]
+
+concurrency:
+  group: deploy-${{ github.event.inputs.environment || 'production' }}
+  prevent-parallel-runs: true
+
+jobs:
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment || 'production' }}
+    runs-on: ubuntu-latest
+    # Only proceed if the triggering CI run succeeded (or if manually triggered)
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    environment:
+      name: ${{ github.event.inputs.environment || 'production' }}
+      url: ${{ vars.DEPLOY_URL }}
+
+    steps:
+      - name: Resolve image tag
+        id: tag
+        run: |
+          TAG="${{ github.event.inputs.image_tag }}"
+          if [[ -z "$TAG" || "$TAG" == "latest" ]]; then
+            # Use the short SHA of the commit that triggered the CI run
+            SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+            TAG="sha-${SHA:0:7}"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Deploying tag: $TAG"
+
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          IMAGE_TAG: ${{ steps.tag.outputs.tag }}
+          GHCR_OWNER: ${{ github.repository_owner }}
+          COMPOSE_FILE: /opt/amw/docker-compose.prod.yml
+          ENV_FILE: /opt/amw/.env.prod
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: IMAGE_TAG,GHCR_OWNER,COMPOSE_FILE,ENV_FILE
+          script: |
+            set -euo pipefail
+            echo "==> Pulling images: $IMAGE_TAG"
+
+            # Pull new images (fast — layers mostly cached on server)
+            docker pull ghcr.io/${GHCR_OWNER}/amw-backend:${IMAGE_TAG}
+            docker pull ghcr.io/${GHCR_OWNER}/amw-frontend:${IMAGE_TAG}
+
+            # Tag as 'current' so the compose file always pins to a real digest
+            docker tag ghcr.io/${GHCR_OWNER}/amw-backend:${IMAGE_TAG}  amw-backend:current
+            docker tag ghcr.io/${GHCR_OWNER}/amw-frontend:${IMAGE_TAG} amw-frontend:current
+
+            echo "==> Rolling update"
+            cd /opt/amw
+            docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" \
+              up -d --no-build --remove-orphans
+
+            echo "==> Health check (60 s)"
+            for i in $(seq 1 12); do
+              STATUS=$(docker compose -f "${COMPOSE_FILE}" ps --format json \
+                | python3 -c "import sys,json; s=[c['State'] for c in json.load(sys.stdin) if c['Service']=='backend']; print(s[0] if s else 'unknown')" 2>/dev/null || true)
+              if [[ "$STATUS" == "running" ]]; then
+                HTTP=$(curl -fsS -o /dev/null -w "%{http_code}" http://localhost:3001/api/health || true)
+                if [[ "$HTTP" == "200" ]]; then
+                  echo "Backend healthy after ${i}x5s"
+                  break
+                fi
+              fi
+              if [[ "$i" == "12" ]]; then
+                echo "ERROR: backend not healthy after 60 s — rolling back"
+                docker tag amw-backend:previous  amw-backend:current 2>/dev/null || true
+                docker tag amw-frontend:previous amw-frontend:current 2>/dev/null || true
+                docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" \
+                  up -d --no-build
+                exit 1
+              fi
+              sleep 5
+            done
+
+            # Snapshot the new images as 'previous' for next-deploy rollback
+            docker tag amw-backend:current  amw-backend:previous  2>/dev/null || true
+            docker tag amw-frontend:current amw-frontend:previous 2>/dev/null || true
+
+            echo "==> Prune dangling images"
+            docker image prune -f
+
+            echo "Deploy complete: $IMAGE_TAG"
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number || 1,
+              body: `🚨 **Deploy failed** for \`${{ steps.tag.outputs.tag }}\`.\nCheck the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.`,
+            });

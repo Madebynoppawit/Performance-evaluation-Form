@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState } from 'react'
-import { AlertTriangle, Calendar, Plus, RefreshCw, Trash2, X } from 'lucide-react'
+import { AlertTriangle, Calendar, Lock, Plus, RefreshCw, Trash2, X } from 'lucide-react'
 import api from '@/lib/api'
 import type { Cycle, Template } from '@/types'
 import { formatDate } from '@/lib/utils'
@@ -40,8 +40,10 @@ export default function CycleListPage() {
   const { cycleStatusLabel } = useLabels()
   const [showDialog, setShowDialog] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Cycle | null>(null)
+  const [closeTarget, setCloseTarget] = useState<Cycle | null>(null)
   const modalRef = useFocusTrap<HTMLDivElement>(showDialog, () => setShowDialog(false))
   const deleteModalRef = useFocusTrap<HTMLDivElement>(!!deleteTarget, () => setDeleteTarget(null))
+  const closeModalRef = useFocusTrap<HTMLDivElement>(!!closeTarget, () => setCloseTarget(null))
 
   const { data: cycles, isLoading } = useQuery<Cycle[]>({
     queryKey: ['cycles'],
@@ -70,6 +72,14 @@ export default function CycleListPage() {
       qc.invalidateQueries({ queryKey: ['cycles'] })
       qc.invalidateQueries({ queryKey: ['evaluations'] })
       setDeleteTarget(null)
+    },
+  })
+
+  const closeMutation = useMutation({
+    mutationFn: (id: string) => api.patch(`/cycles/${id}/status`, { status: 'CLOSED' }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['cycles'] })
+      setCloseTarget(null)
     },
   })
 
@@ -130,7 +140,19 @@ export default function CycleListPage() {
                 <td style={{ color: 'var(--kbt-text-3)' }}>{cycle.description ?? '-'}</td>
                 <td>
                   {isAdmin && (
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+                      {cycle.status !== 'CLOSED' && (
+                        <button
+                          type="button"
+                          onClick={() => setCloseTarget(cycle)}
+                          className="kbt-btn-ghost"
+                          style={{ height: 28, padding: '0 10px', fontSize: '0.75rem', gap: 5 }}
+                          aria-label={`Close cycle ${cycle.name}`}
+                          title="Close cycle"
+                        >
+                          <Lock size={12} /> Close
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(cycle)}
@@ -232,6 +254,40 @@ export default function CycleListPage() {
                 >
                   {deleteMutation.isPending ? <Spinner size={14} /> : <Trash2 size={13} />}
                   {t('common.delete')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {closeTarget && (
+        <div className="kbt-modal-backdrop" onMouseDown={() => setCloseTarget(null)}>
+          <div className="kbt-modal" ref={closeModalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Close cycle" onMouseDown={e => e.stopPropagation()}>
+            <div className="kbt-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(92,86,144,0.12)', border: '1px solid rgba(92,86,144,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Lock size={14} color="var(--m-light-blue)" />
+                </div>
+                <span>Close Cycle</span>
+              </div>
+              <button onClick={() => setCloseTarget(null)} className="kbt-btn-ghost" style={{ width: 28, height: 28, padding: 0 }} aria-label="Cancel close cycle">
+                <X size={15} />
+              </button>
+            </div>
+            <div className="kbt-modal-body">
+              <p style={{ color: 'var(--kbt-text-2)', fontSize: '0.875rem', lineHeight: 1.6 }}>
+                Close <strong style={{ color: 'var(--kbt-text)' }}>"{closeTarget.name}"</strong>? No new evaluations can be started once a cycle is closed. This action cannot be undone.
+              </p>
+              <div className="kbt-modal-actions">
+                <button onClick={() => setCloseTarget(null)} className="kbt-btn-ghost">{t('common.cancel')}</button>
+                <button
+                  onClick={() => closeMutation.mutate(closeTarget.id)}
+                  disabled={closeMutation.isPending}
+                  className="kbt-btn-primary"
+                >
+                  {closeMutation.isPending ? <Spinner size={14} /> : <Lock size={13} />}
+                  Close Cycle
                 </button>
               </div>
             </div>

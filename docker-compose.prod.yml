@@ -21,6 +21,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "1.0"
+        reservations:
+          memory: 128m
     # Not published to the host by default — only the app talks to it.
 
   migrate:
@@ -59,6 +66,13 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "1.0"
+        reservations:
+          memory: 128m
 
   frontend:
     build:
@@ -71,6 +85,13 @@ services:
       - "${HTTP_PORT:-8080}:80"
     depends_on:
       - backend
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+          cpus: "0.25"
+        reservations:
+          memory: 16m
 
 volumes:
   postgres_data:

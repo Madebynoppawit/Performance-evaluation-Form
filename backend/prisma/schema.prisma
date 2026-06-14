@@ -37,6 +37,7 @@ enum EvaluationType {
 enum EvaluationStatus {
   DRAFT
   IN_PROGRESS
+  PENDING_REVIEW
   SUBMITTED
   REVIEWED
   CLOSED
@@ -87,13 +88,15 @@ model User {
   sourceData Json?
 
   // Forces a password change on next login (set for default-password imports).
-  mustChangePassword Boolean @default(false)
+  mustChangePassword Boolean   @default(false)
+  dateOfBirth        DateTime?
 
   manager   User?  @relation("ManagerEmployee", fields: [managerId], references: [id])
   employees User[] @relation("ManagerEmployee")
 
   evaluationsAsEvaluatee Evaluation[] @relation("Evaluatee")
   evaluationsAsEvaluator Evaluation[] @relation("Evaluator")
+  evaluationsAsReviewer  Evaluation[] @relation("Reviewer")
   auditEvents             AuditEvent[]
 
   createdAt DateTime @default(now())
@@ -203,9 +206,17 @@ model Evaluation {
   performanceGrade      PerformanceGrade?
   effectiveDate         DateTime?
 
-  cycle     Cycle    @relation(fields: [cycleId], references: [id])
-  evaluatee User     @relation("Evaluatee", fields: [evaluateeId], references: [id])
-  evaluator User     @relation("Evaluator", fields: [evaluatorId], references: [id])
+  // 2-stage workflow for Production Staff: supervisor evaluates first,
+  // then reviewer (manager) does a second-pass review before final submission.
+  reviewerId      String?
+  reviewerName    String?
+  reviewerComment String?
+  reviewedAt      DateTime?
+
+  cycle    Cycle  @relation(fields: [cycleId], references: [id])
+  evaluatee User  @relation("Evaluatee",  fields: [evaluateeId], references: [id])
+  evaluator User  @relation("Evaluator",  fields: [evaluatorId], references: [id])
+  reviewer  User? @relation("Reviewer",   fields: [reviewerId],  references: [id])
 
   answers          Answer[]
   goalEntries      GoalEntry[]

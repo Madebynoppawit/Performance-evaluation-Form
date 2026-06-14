@@ -1,6 +1,10 @@
 import { prisma } from '../lib/prisma'
 import { calculateGoalScore } from './goalService'
 import { calculateCompetencyScore } from './competencyService'
+import * as email from './emailService'
+import { env } from '../config/env'
+
+const APP_URL = env.CLIENT_URL.replace(/\/$/, '')
 
 type SignerType = 'employee' | 'evaluator' | 'director'
 type SectionUser = { userId: string; role: string }
@@ -21,11 +25,11 @@ const POSITION_COMPETENCIES: Record<Position, string[]> = {
 
 const REQUIRED_TARGET_FIELDS = ['targetRating5', 'targetRating4', 'targetRating3', 'targetRating2', 'targetRating1'] as const
 
-/* The five position-level appraisal forms (Director/Manager/Officer/Supervisor/
-   Production) all share the AMW-01-036 skeleton: 6 categories × 3 criteria, a
-   flat 1–5 rating with no goal/attendance weighting. They are scored and
-   validated identically; only the criterion wording (frontend) differs. */
-const APPRAISAL_FORM_TYPES = ['DIRECTOR_LEVEL', 'MANAGER_LEVEL', 'OFFICER_LEVEL', 'SUPERVISOR_LEVEL', 'PRODUCTION_LEVEL']
+/* Director / Manager / Officer use the flat appraisal form (6 categories × 3
+   criteria, 1–5 rating, no goal/attendance weighting).
+   Supervisor / Production use the weighted scoring model:
+   Goal(60-70%) + Competency(20%) + Attendance(10%) + Training(0-10%) = 100%. */
+const APPRAISAL_FORM_TYPES = ['DIRECTOR_LEVEL', 'MANAGER_LEVEL', 'OFFICER_LEVEL']
 
 function isAppraisalForm(formType: string) {
   return APPRAISAL_FORM_TYPES.includes(formType)
@@ -109,37 +113,55 @@ export async function upsertSalarySummary(
   })
 }
 
-export async function signAcknowledgement(
+export async function saveAcknowledgementManual(
   evaluationId: string,
-  signerType: SignerType,
-  user: SectionUser
+  data: {
+    employeeSignedAt?: string | null
+    evaluatorSignedAt?: string | null
+    directorSignedAt?: string | null
+  }
 ) {
-  const evaluation = await prisma.evaluation.findUniqueOrThrow({
-    where: { id: evaluationId },
-    select: { evaluateeId: true, evaluatorId: true },
-  })
+  const toDate = (v: string | null | undefined) => (v ? new Date(v) : null)
+  const payload: Record<string, Date | null> = {}
+  if ('employeeSignedAt' in data) payload.employeeSignedAt = toDate(data.employeeSignedAt)
+  if ('evaluatorSignedAt' in data) payload.evaluatorSignedAt = toDate(data.evaluatorSignedAt)
+  if ('directorSignedAt' in data) payload.directorSignedAt = toDate(data.directorSignedAt)
 
-  const canSign =
-    user.role === 'ADMIN' || user.role === 'DEVELOPER' ||
-    (signerType === 'employee' && evaluation.evaluateeId === user.userId) ||
-    (signerType === 'evaluator' && evaluation.evaluatorId === user.userId)
-
-  if (!canSign) {
-    throw forbiddenError()
-  }
-
-  const now = new Date()
-  const fieldMap = {
-    employee: { employeeSignedAt: now },
-    evaluator: { evaluatorSignedAt: now },
-    director: { directorSignedAt: now },
-  }
-
-  return prisma.evaluationAcknowledgement.upsert({
+  // Check if employee was previously unsigned (to avoid duplicate emails on re-save).
+  const existing = await prisma.evaluationAcknowledgement.findUnique({
     where: { evaluationId },
-    create: { evaluationId, ...fieldMap[signerType] },
-    update: fieldMap[signerType],
+    select: { employeeSignedAt: true },
   })
+  const employeeJustSigned = 'employeeSignedAt' in data &&
+    data.employeeSignedAt != null &&
+    existing?.employeeSignedAt == null
+
+  const result = await prisma.evaluationAcknowledgement.upsert({
+    where: { evaluationId },
+    create: { evaluationId, ...payload },
+    update: payload,
+  })
+
+  if (employeeJustSigned) {
+    const evaluation = await prisma.evaluation.findUnique({
+      where: { id: evaluationId },
+      select: {
+        evaluator: { select: { email: true, name: true } },
+        evaluatee: { select: { name: true } },
+      },
+    })
+    if (evaluation?.evaluator?.email) {
+      void email.sendAcknowledged({
+        to:            evaluation.evaluator.email,
+        evaluatorName: evaluation.evaluator.name ?? 'Evaluator',
+        evaluateeName: evaluation.evaluatee?.name ?? 'Employee',
+        appUrl:        APP_URL,
+        evaluationId,
+      })
+    }
+  }
+
+  return result
 }
 
 export async function recalculateTotalScore(evaluationId: string) {
@@ -149,6 +171,7 @@ export async function recalculateTotalScore(evaluationId: string) {
       goalEntries: true,
       competencyScores: true,
       attendanceRecord: true,
+      trainingRecord: true,
     },
   })
 
@@ -165,16 +188,22 @@ export async function recalculateTotalScore(evaluationId: string) {
 
   const goalScore = calculateGoalScore(evaluation.goalEntries)
   const attendanceScore = evaluation.attendanceRecord?.attendanceAvgScore ?? null
+  const trainingScore = evaluation.trainingRecord?.score ?? null
 
-  const totalWeight = evaluation.goalWeight + evaluation.competencyWeight + evaluation.attendanceWeight
+  // Training gets 10% weight when a training score exists; goal absorbs the rest.
+  // Formula: Goal(60or70%) + Competency(20%) + Attendance(10%) + Training(0or10%) = 100%
+  const TRAINING_WEIGHT = 10
+  const effectiveTrainingWeight = trainingScore != null ? TRAINING_WEIGHT : 0
+  const effectiveGoalWeight = 100 - evaluation.competencyWeight - evaluation.attendanceWeight - effectiveTrainingWeight
+
   let totalScore: number | null = null
-
   if (goalScore != null && competencyScore != null && attendanceScore != null) {
-    totalScore =
-      (goalScore * evaluation.goalWeight +
-        competencyScore * evaluation.competencyWeight +
-        attendanceScore * evaluation.attendanceWeight) /
-      totalWeight
+    totalScore = (
+      goalScore * effectiveGoalWeight +
+      competencyScore * evaluation.competencyWeight +
+      attendanceScore * evaluation.attendanceWeight +
+      (trainingScore ?? 0) * effectiveTrainingWeight
+    ) / 100
   }
 
   return prisma.evaluation.update({
@@ -250,10 +279,9 @@ export async function assertEvaluationReadyForSubmit(evaluationId: string) {
   if (goals.length > 5) {
     missing.push('Goal Setting allows no more than 5 goals.')
   }
-
-  const goalWeight = goals.reduce((sum, goal) => sum + goal.weight, 0)
-  if (goals.length > 0 && Math.abs(goalWeight - 100) > 0.001) {
-    missing.push('Goal Setting total weight must equal 100%.')
+  const totalGoalWeight = goals.reduce((s, g) => s + g.weight, 0)
+  if (totalGoalWeight > 70) {
+    missing.push(`Total goal weight (${totalGoalWeight}%) must not exceed 70%.`)
   }
 
   goals.forEach((goal, index) => {
@@ -268,7 +296,6 @@ export async function assertEvaluationReadyForSubmit(evaluationId: string) {
       }
     }
     if (!hasText(goal.wig)) missing.push(`${label}: WIG strategic pillar is required.`)
-    if (!hasText(goal.kpiCategory)) missing.push(`${label}: KPI category is required.`)
   })
 
   const position = evaluation.evaluatee.position
@@ -286,9 +313,10 @@ export async function assertEvaluationReadyForSubmit(evaluationId: string) {
   if (evaluation.attendanceRecord?.leaveActualDays == null) missing.push('Attendance requires leave actual days.')
   if (evaluation.attendanceRecord?.lateActualTimes == null) missing.push('Attendance requires late actual times.')
   if (!evaluation.attendanceRecord?.disciplinaryLevel) missing.push('Attendance requires disciplinary level.')
-  if (evaluation.trainingRecord?.minimumHours == null) missing.push('Training requires minimum hours.')
-  if (evaluation.trainingRecord?.actualHours == null) missing.push('Training requires actual hours.')
-  if (evaluation.trainingRecord?.score == null) missing.push('Training score could not be calculated.')
+  // Training is optional — if hours are entered the score must be calculable, but it's OK to skip.
+  if (evaluation.trainingRecord?.actualHours != null && evaluation.trainingRecord?.score == null) {
+    missing.push('Training score could not be calculated — check minimum hours.')
+  }
 
   if (!hasText(evaluation.comment?.strengths)) missing.push('Comment requires strengths.')
   if (!hasText(evaluation.comment?.improvements)) missing.push('Comment requires areas for improvement.')

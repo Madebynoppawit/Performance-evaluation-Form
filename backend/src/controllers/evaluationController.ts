@@ -24,11 +24,17 @@ const createSchema = z
         jobTitle: z.string().trim().max(200).optional(),
       })
       .optional(),
+    // Optional second-stage reviewer (manager) for 2-stage workflow.
+    reviewerId: z.string().min(1).optional(),
   })
   .refine((d) => Boolean(d.evaluateeId) !== Boolean(d.newEvaluatee), {
     message: 'Provide either an existing evaluatee or a new employee.',
     path: ['evaluateeId'],
   })
+
+const submitReviewSchema = z.object({
+  reviewerComment: z.string().max(2000).optional(),
+})
 
 export async function list(req: AuthRequest, res: Response, next: NextFunction) {
   try {
@@ -88,6 +94,21 @@ export async function submit(req: AuthRequest, res: Response, next: NextFunction
   try {
     await assertEvaluationReadyForSubmit(req.params.id)
     const ev = await evaluationService.submitEvaluation(req.params.id, req.body.answers ?? {})
+    res.json(ev)
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function submitReview(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const { reviewerComment } = submitReviewSchema.parse(req.body)
+    const ev = await evaluationService.submitReview(
+      req.params.id,
+      req.user!.userId,
+      req.user!.role,
+      reviewerComment,
+    )
     res.json(ev)
   } catch (err) {
     next(err)

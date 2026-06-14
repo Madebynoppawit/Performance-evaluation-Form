@@ -3,6 +3,9 @@ import { prisma } from '../lib/prisma'
 import { EvaluationStatus, EvaluationType, FormType, Position } from '@prisma/client'
 import { hashPassword } from '../utils/hash'
 import { env } from '../config/env'
+import * as email from './emailService'
+
+const APP_URL = env.CLIENT_URL.replace(/\/$/, '')
 
 /** Each employee level uses its own appraisal form. */
 const POSITION_FORM_TYPE: Record<Position, FormType> = {
@@ -26,6 +29,12 @@ const EVALUATOR_POSITIONS: Position[] = ['CEO', 'MANAGING_DIRECTOR', 'DIRECTOR_U
 function badRequest(message: string) {
   const err = new Error(message) as Error & { status: number }
   err.status = 400
+  return err
+}
+
+function forbidden(message = 'Forbidden') {
+  const err = new Error(message) as Error & { status: number }
+  err.status = 403
   return err
 }
 
@@ -53,6 +62,7 @@ const EVALUATION_INCLUDE = {
   },
   evaluatee: { select: { id: true, name: true, email: true, department: true, position: true, jobTitle: true } },
   evaluator: { select: { id: true, name: true, email: true } },
+  reviewer:  { select: { id: true, name: true, email: true } },
   answers: true,
 }
 
@@ -60,9 +70,10 @@ export async function getEvaluationsForUser(userId: string, role: string) {
   if (role === 'ADMIN' || role === 'DEVELOPER') {
     return prisma.evaluation.findMany({ include: EVALUATION_INCLUDE, orderBy: { updatedAt: 'desc' } })
   }
+  // Managers see evaluations they created OR are assigned as reviewer for 2-stage flow.
   if (role === 'MANAGER') {
     return prisma.evaluation.findMany({
-      where: { OR: [{ evaluatorId: userId }, { evaluateeId: userId }] },
+      where: { OR: [{ evaluatorId: userId }, { evaluateeId: userId }, { reviewerId: userId }] },
       include: EVALUATION_INCLUDE,
       orderBy: { updatedAt: 'desc' },
     })
@@ -106,6 +117,7 @@ export async function createEvaluation(data: {
   type: EvaluationType
   evaluateeId?: string
   newEvaluatee?: { name: string; position: Position; department?: string; jobTitle?: string }
+  reviewerId?: string
 }) {
   const evaluator = await prisma.user.findUniqueOrThrow({ where: { id: data.evaluatorId }, select: { position: true, role: true } })
   // Admin/developer (system accounts without a job position) may always create
@@ -119,7 +131,14 @@ export async function createEvaluation(data: {
     ? await createEvaluateeUser(data.newEvaluatee)
     : await prisma.user.findUniqueOrThrow({ where: { id: data.evaluateeId! }, select: { id: true, position: true } })
 
-  return prisma.evaluation.create({
+  // Resolve reviewer name for denormalization.
+  let reviewerName: string | null = null
+  if (data.reviewerId) {
+    const rev = await prisma.user.findUnique({ where: { id: data.reviewerId }, select: { name: true } })
+    reviewerName = rev?.name ?? null
+  }
+
+  const created = await prisma.evaluation.create({
     data: {
       cycleId: data.cycleId,
       evaluatorId: data.evaluatorId,
@@ -127,9 +146,26 @@ export async function createEvaluation(data: {
       type: data.type,
       evaluateeId: evaluatee.id,
       formType: formTypeForPosition(evaluatee.position),
+      reviewerId: data.reviewerId ?? null,
+      reviewerName,
     },
     include: EVALUATION_INCLUDE,
   })
+
+  // Notify evaluator that a new evaluation has been assigned to them.
+  if (created.evaluator?.email) {
+    void email.sendEvaluationAssigned({
+      to:            created.evaluator.email,
+      evaluatorName: created.evaluator.name ?? 'Evaluator',
+      evaluateeName: created.evaluatee?.name ?? 'Employee',
+      formType:      created.formType,
+      cycleTitle:    created.cycle?.name ?? created.cycleId,
+      appUrl:        APP_URL,
+      evaluationId:  created.id,
+    })
+  }
+
+  return created
 }
 
 export async function deleteEvaluation(id: string) {
@@ -176,14 +212,85 @@ export async function submitEvaluation(evaluationId: string, answers: Record<str
   const totalScore = calculateTotalScore(
     evaluation.answers.map(a => ({ type: a.question.type, score: a.score, weight: a.question.weight }))
   )
+  const nextTotalScore = totalScore ?? evaluation.totalScore
 
-  return prisma.evaluation.update({
+  // If a reviewer is assigned (2-stage workflow), move to PENDING_REVIEW so the
+  // reviewer (manager) can do a second-pass before final submission.
+  const nextStatus = evaluation.reviewerId
+    ? EvaluationStatus.PENDING_REVIEW
+    : EvaluationStatus.SUBMITTED
+
+  const updated = await prisma.evaluation.update({
     where: { id: evaluationId },
     data: {
-      status: EvaluationStatus.SUBMITTED,
-      totalScore,
+      status: nextStatus,
+      totalScore: nextTotalScore,
       submittedAt: new Date(),
     },
     include: EVALUATION_INCLUDE,
   })
+
+  if (nextStatus === EvaluationStatus.PENDING_REVIEW && updated.reviewer?.email) {
+    // 2-stage: notify reviewer (manager) that their review is needed.
+    void email.sendPendingReview({
+      to:            updated.reviewer.email,
+      reviewerName:  updated.reviewer.name ?? 'Reviewer',
+      evaluateeName: updated.evaluatee?.name ?? 'Employee',
+      evaluatorName: updated.evaluator?.name ?? 'Evaluator',
+      appUrl:        APP_URL,
+      evaluationId:  updated.id,
+    })
+  } else if (nextStatus === EvaluationStatus.SUBMITTED && updated.evaluatee?.email) {
+    // Direct submit (no reviewer): notify evaluatee their eval is ready to acknowledge.
+    void email.sendReadyToAcknowledge({
+      to:            updated.evaluatee.email,
+      evaluateeName: updated.evaluatee.name ?? 'Employee',
+      appUrl:        APP_URL,
+      evaluationId:  updated.id,
+    })
+  }
+
+  return updated
+}
+
+/** Manager (reviewer) approves the evaluation after the supervisor's submission.
+ *  Moves status from PENDING_REVIEW → SUBMITTED. */
+export async function submitReview(
+  evaluationId: string,
+  actorId: string,
+  actorRole: string,
+  reviewerComment: string | undefined,
+) {
+  const evaluation = await prisma.evaluation.findUniqueOrThrow({
+    where: { id: evaluationId },
+    select: { status: true, reviewerId: true },
+  })
+  if (actorRole !== 'DEVELOPER' && evaluation.reviewerId !== actorId) {
+    throw forbidden('Only the assigned reviewer can submit this review.')
+  }
+  if (evaluation.status !== EvaluationStatus.PENDING_REVIEW) {
+    throw badRequest('This evaluation is not awaiting review.')
+  }
+
+  const updated = await prisma.evaluation.update({
+    where: { id: evaluationId },
+    data: {
+      status: EvaluationStatus.SUBMITTED,
+      reviewerComment: reviewerComment?.trim() || null,
+      reviewedAt: new Date(),
+    },
+    include: EVALUATION_INCLUDE,
+  })
+
+  // Notify evaluatee that their evaluation is now submitted and ready to acknowledge.
+  if (updated.evaluatee?.email) {
+    void email.sendReadyToAcknowledge({
+      to:            updated.evaluatee.email,
+      evaluateeName: updated.evaluatee.name ?? 'Employee',
+      appUrl:        APP_URL,
+      evaluationId:  updated.id,
+    })
+  }
+
+  return updated
 }

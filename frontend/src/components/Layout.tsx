@@ -8,10 +8,12 @@ import TopProgressBar from './TopProgressBar'
 import CorporateBar from './CorporateBar'
 import CorporateFooter from './CorporateFooter'
 import { useCardSpotlight } from '@/hooks/useCardSpotlight'
+import { useSideNav } from './sideNavStore'
 
 export default function Layout() {
   const location = useLocation()
   useCardSpotlight()
+  const { open, setOpen } = useSideNav()
 
   return (
     <div className="amw-app-shell">
@@ -19,6 +21,7 @@ export default function Layout() {
       <div className="amw-aurora" aria-hidden="true" />
       <TopProgressBar />
       <ShellBar />
+      {open && <div className="kbt-sidebar-backdrop" onClick={() => setOpen(false)} aria-hidden="true" />}
       <div className="amw-shell-body">
         <SideNav />
         <div className="amw-workspace-frame">

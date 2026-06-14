@@ -1,6 +1,6 @@
 {
   "name": "performance-evaluation-form",
-  "version": "0.2.0-rc.1",
+  "version": "1.0.0",
   "private": true,
   "workspaces": [
     "frontend",
@@ -19,7 +19,11 @@
     "db:migrate": "npm run db:migrate -w backend",
     "db:deploy": "npm run db:deploy -w backend",
     "db:seed": "npm run db:seed -w backend",
-    "db:studio": "npm run db:studio -w backend"
+    "db:studio": "npm run db:studio -w backend",
+    "qa": "node scripts/qa-robot/index.js",
+    "qa:watch": "node scripts/qa-robot/index.js --watch",
+    "qa:auth": "node scripts/qa-robot/index.js --suite auth",
+    "qa:mobile": "node scripts/qa-robot/index.js --suite mobile"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

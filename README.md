@@ -169,6 +169,33 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 to `ghcr.io/<owner>/amw-{backend,frontend}`. The deploy step is left to the
 target platform, which pulls those tags.
 
+## Deployment (Demo)
+
+Use the demo compose file for an internal deployable demo. It keeps production
+runtime guards enabled, labels the app as `Demo`, runs migrations, seeds demo
+accounts/workflow data, and serves the frontend through nginx.
+
+```bash
+docker compose -f docker-compose.demo.yml up -d --build
+```
+
+Open `http://localhost:8080`.
+
+Demo credentials:
+
+- `developer@amw-ems.com` / `P@ssw0rd!`
+- `admin@amw-ems.com` / `P@ssw0rd!`
+- `manager.eng@amw-ems.com` / `P@ssw0rd!`
+- `supervisor1@amw-ems.com` / `P@ssw0rd!`
+- `officer1@amw-ems.com` / `P@ssw0rd!`
+
+Optional overrides live in `.env.demo.example`. For a shared demo, copy it to
+`.env.demo`, change the demo passwords/secrets, and run:
+
+```bash
+docker compose -f docker-compose.demo.yml --env-file .env.demo up -d --build
+```
+
 ## Release Flavors
 
 ### Standard
@@ -211,7 +238,8 @@ Use `AI_PROVIDER=azure-openai` when the preview deployment is wired to Azure Ope
 
 ## Demo Accounts
 
-Development seed data includes (the seed is **blocked in production**):
+Development/demo seed data includes (production seeding still requires the
+explicit demo override `ALLOW_PROD_SEED=true`):
 
 | Role / Position | Email | Password |
 |---|---|---|
@@ -221,8 +249,8 @@ Development seed data includes (the seed is **blocked in production**):
 | Supervisor | `supervisor1@amw-ems.com` | `P@ssw0rd!` |
 | Officer | `officer1@amw-ems.com` | `P@ssw0rd!` |
 
-Dev-only credentials. The seed refuses to run when `NODE_ENV=production`; change
-credentials and disable public registration before any real rollout.
+Demo-only credentials. Change credentials and keep public registration disabled
+before any shared rollout.
 
 ## Quality Gate
 

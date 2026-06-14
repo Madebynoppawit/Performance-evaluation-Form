@@ -11,7 +11,7 @@ interface ImportMetaEnv {
   readonly VITE_SENTRY_DSN?: string
   /** Deployment environment label shown in the governance bar (PROD | UAT | DEV). */
   readonly VITE_APP_ENV?: string
-  /** Release channel shown in the shell (standard | ai-preview). */
+  /** Release channel shown in the shell (standard | demo | ai-preview). */
   readonly VITE_RELEASE_CHANNEL?: string
   /** Enables AI Preview UI flags. No secrets or model keys belong in frontend env. */
   readonly VITE_ENABLE_AI_FEATURES?: string

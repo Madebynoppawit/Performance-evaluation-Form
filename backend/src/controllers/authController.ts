@@ -6,6 +6,19 @@ import { env } from '../config/env'
 import { companyEmailSchema } from '../utils/companyEmail'
 import { recordAuditEventBestEffort } from '../services/auditEventService'
 
+const forgotSchema = z.object({
+  employeeNo:  z.string().trim().min(1, 'Employee number is required'),
+  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+})
+
+const resetSchema = z.object({
+  token:    z.string().min(1),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
+    .regex(/[0-9]/, 'Must contain at least one number'),
+})
+
 // Login identifier is an employee number or an email (back-compat: still
 // accepts an `email` field from older clients).
 const loginSchema = z.object({
@@ -88,6 +101,7 @@ const updateMeSchema = z.object({
   department: z.string().trim().max(120).nullable().optional(),
   position: z.enum(['CEO', 'MANAGING_DIRECTOR', 'DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']).nullable().optional(),
   jobTitle: z.string().trim().max(120).nullable().optional(),
+  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters')
@@ -96,10 +110,51 @@ const updateMeSchema = z.object({
     .optional(),
 })
 
+export async function forgotPassword(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { employeeNo, dateOfBirth } = forgotSchema.parse(req.body)
+    const dob = new Date(`${dateOfBirth}T00:00:00Z`)
+    const resetToken = await authService.forgotPassword(employeeNo, dob)
+    res.json({ resetToken })
+  } catch (err) {
+    if ((err as Error).message === 'No matching account found') {
+      res.status(400).json({ message: 'Employee number or date of birth is incorrect.' })
+      return
+    }
+    next(err)
+  }
+}
+
+export async function resetPassword(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { token, password } = resetSchema.parse(req.body)
+    await authService.resetPassword(token, password)
+    recordAuditEventBestEffort({
+      eventType: 'auth_password_changed',
+      requestId: req.requestId,
+      method: req.method,
+      path: req.originalUrl,
+      statusCode: 200,
+      ip: req.ip,
+      userAgent: req.get('user-agent') ?? null,
+      metadata: { via: 'forgot_password' },
+    })
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(400).json({ message: 'Reset link has expired or is invalid. Please try again.' })
+  }
+}
+
 export async function updateMe(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const body = updateMeSchema.parse(req.body)
-    const user = await authService.updateProfile(req.user!.userId, body)
+    const parsed = {
+      ...body,
+      dateOfBirth: body.dateOfBirth != null
+        ? (body.dateOfBirth === null ? null : new Date(`${body.dateOfBirth}T00:00:00Z`))
+        : undefined,
+    }
+    const user = await authService.updateProfile(req.user!.userId, parsed)
     if (body.password) {
       recordAuditEventBestEffort({
         eventType: 'auth_password_changed',

@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import {
   AlertTriangle,
   Bell,
-  CheckCircle2,
   ChevronDown,
   Clock4,
   LogOut,
+  Menu,
   Search,
   ShieldCheck,
   User,
@@ -16,22 +16,16 @@ import {
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/i18n/languageContext'
 import { useCommandPalette } from './commandPaletteStore'
+import { useSideNav } from './sideNavStore'
 import ThemeToggle from './ThemeToggle'
 import LanguageSwitcher from './LanguageSwitcher'
+import { useNotifications, type AppNotification } from '@/hooks/useNotifications'
 
-interface NotificationItem {
-  title: string
-  description: string
-  time: string
-  type: 'approval' | 'deadline' | 'system'
-  icon: LucideIcon
+const TYPE_ICON: Record<AppNotification['type'], LucideIcon> = {
+  approval: ShieldCheck,
+  deadline: Clock4,
+  system:   AlertTriangle,
 }
-
-const NOTIFICATIONS: NotificationItem[] = [
-  { title: '3 reviews need acknowledgement', description: 'Pending employee or manager sign-off in the current cycle.', time: 'Today', type: 'approval', icon: ShieldCheck },
-  { title: 'Cycle closes in 5 days', description: 'Complete remaining evaluations before the review window closes.', time: 'Jun 9', type: 'deadline', icon: Clock4 },
-  { title: 'Report snapshot is ready', description: 'Department summary and completion metrics have been refreshed.', time: '30 min', type: 'system', icon: CheckCircle2 },
-]
 
 function getDisplayRole(user: ReturnType<typeof useAuth>['user']) {
   if (user?.position === 'DIRECTOR_UP') return 'Director'
@@ -43,10 +37,13 @@ export default function ShellBar() {
   const navigate = useNavigate()
   const t = useT()
   const openPalette = useCommandPalette(s => s.setOpen)
+  const toggleSideNav = useSideNav(s => s.toggle)
   const [menuOpen, setMenuOpen] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<'all' | 'approval' | 'deadline'>('all')
   const menuRef = useRef<HTMLDivElement>(null)
   const notificationRef = useRef<HTMLDivElement>(null)
+  const { notifications, unreadCount } = useNotifications()
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -76,6 +73,14 @@ export default function ShellBar() {
 
   return (
     <header className="kbt-header">
+      <button
+        type="button"
+        className="kbt-icon-button amw-hamburger"
+        onClick={toggleSideNav}
+        aria-label="Toggle navigation"
+      >
+        <Menu size={18} />
+      </button>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <div style={{
           width: 104, height: 38,
@@ -119,47 +124,69 @@ export default function ShellBar() {
             onClick={() => setNotificationOpen(v => !v)}
             aria-haspopup="dialog"
             aria-expanded={notificationOpen}
-            aria-label="Open notifications"
+            aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount})` : ''}`}
           >
             <Bell size={15} />
-            <span className="amw-notification-dot" />
+            {unreadCount > 0 && <span className="amw-notification-dot" />}
           </button>
 
           {notificationOpen && (
             <div className="amw-notification-popover" role="dialog" aria-label="Notifications">
               <div className="amw-popover-head">
                 <div>
-                  <span>{t('shell.notifications')} <em className="amw-sample-tag">Sample</em></span>
-                  <strong>{t('shell.preview')}</strong>
+                  <span>{t('shell.notifications')}</span>
+                  {unreadCount > 0 && (
+                    <strong style={{ marginLeft: 8, fontSize: '0.7rem', padding: '1px 6px', borderRadius: 99,
+                      background: 'rgba(229,35,33,0.12)', color: 'var(--amw-red)',
+                      border: '1px solid rgba(229,35,33,0.25)' }}>
+                      {unreadCount}
+                    </strong>
+                  )}
                 </div>
                 <button type="button" className="amw-popover-close" onClick={() => setNotificationOpen(false)} aria-label="Close notifications">
                   <X size={14} />
                 </button>
               </div>
               <div className="amw-tag-row">
-                <button type="button" className="active">All</button>
-                <button type="button">Approval</button>
-                <button type="button">Deadline</button>
+                {(['all', 'approval', 'deadline'] as const).map(tab => (
+                  <button key={tab} type="button" className={activeTab === tab ? 'active' : ''}
+                    onClick={() => setActiveTab(tab)} style={{ textTransform: 'capitalize' }}>
+                    {tab}
+                  </button>
+                ))}
               </div>
               <div className="amw-notification-list">
-                {NOTIFICATIONS.map(item => {
-                  const Icon = item.icon
-                  return (
-                    <button key={item.title} type="button" className={`amw-notification-item ${item.type}`} onClick={() => go(item.type === 'system' ? '/reports' : '/evaluations')}>
-                      <div className="amw-result-icon"><Icon size={16} /></div>
-                      <div>
-                        <strong>{item.title}</strong>
-                        <span>{item.description}</span>
+                {(() => {
+                  const visible = notifications.filter(n => activeTab === 'all' || n.type === activeTab)
+                  if (visible.length === 0) {
+                    return (
+                      <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--kbt-text-3)', fontSize: '0.8rem' }}>
+                        No notifications
                       </div>
-                      <em>{item.time}</em>
-                    </button>
-                  )
-                })}
+                    )
+                  }
+                  return visible.map(item => {
+                    const Icon = TYPE_ICON[item.type]
+                    return (
+                      <button key={item.id} type="button" className={`amw-notification-item ${item.type}`}
+                        onClick={() => go(item.href)}>
+                        <div className="amw-result-icon"><Icon size={16} /></div>
+                        <div>
+                          <strong>{item.title}</strong>
+                          <span>{item.description}</span>
+                        </div>
+                        <em>{item.time}</em>
+                      </button>
+                    )
+                  })
+                })()}
               </div>
-              <button type="button" className="amw-popover-action" onClick={() => go('/evaluations')}>
-                <AlertTriangle size={14} />
-                Review pending items
-              </button>
+              {unreadCount > 0 && (
+                <button type="button" className="amw-popover-action" onClick={() => go('/evaluations')}>
+                  <AlertTriangle size={14} />
+                  View all pending items
+                </button>
+              )}
             </div>
           )}
         </div>

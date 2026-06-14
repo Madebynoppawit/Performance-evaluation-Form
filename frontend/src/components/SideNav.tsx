@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { BarChart2, BookOpen, ClipboardList, FileJson2, LayoutDashboard, LayoutTemplate, RefreshCw, Settings, UserCog, UserRound } from 'lucide-react'
+import { BarChart2, BookOpen, ClipboardList, Database, FileJson2, LayoutDashboard, LayoutTemplate, ListChecks, RefreshCw, Settings, SlidersHorizontal, UserCog, UserRound } from 'lucide-react'
 import { APP_VERSION } from '@/config/release'
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/i18n/languageContext'
 import type { TranslationKey } from '@/i18n/translations'
+import { useSideNav } from './sideNavStore'
 
 const workspaceNav = [
   { to: '/', labelKey: 'nav.dashboard', subKey: 'nav.dashboard.sub', icon: LayoutDashboard, end: true },
@@ -11,6 +12,8 @@ const workspaceNav = [
   { to: '/templates', labelKey: 'nav.templates', subKey: 'nav.templates.sub', icon: LayoutTemplate },
   { to: '/cycles', labelKey: 'nav.cycles', subKey: 'nav.cycles.sub', icon: RefreshCw },
   { to: '/reports', labelKey: 'nav.reports', subKey: 'nav.reports.sub', icon: BarChart2 },
+  { to: '/calibrate', labelKey: 'nav.calibrate', subKey: 'nav.calibrate.sub', icon: SlidersHorizontal },
+  { to: '/calibration', labelKey: 'nav.calibration', subKey: 'nav.calibration.sub', icon: ListChecks },
 ] as const
 
 const userNav = [
@@ -21,6 +24,7 @@ const userNav = [
 
 const adminPages = [
   { to: '/users', labelKey: 'nav.users', subKey: 'nav.users.sub', icon: UserCog },
+  { to: '/data', labelKey: 'nav.data', subKey: 'nav.data.sub', icon: Database },
 ] as const
 
 const adminNav = [
@@ -123,8 +127,10 @@ function ExternalNavItem({ href, labelKey, subKey, icon: Icon }: ExternalNavItem
 export default function SideNav() {
   const t = useT()
   const { isAdmin } = useAuth()
+  const { open, setOpen } = useSideNav()
+  const close = () => setOpen(false)
   return (
-    <aside className="kbt-sidebar">
+    <aside className={`kbt-sidebar${open ? ' is-open' : ''}`}>
       <div style={{ padding: '18px 16px 10px', borderBottom: '1px solid var(--kbt-border)' }}>
         <p style={{
           fontSize: '0.625rem',
@@ -137,12 +143,12 @@ export default function SideNav() {
         </p>
       </div>
 
-      <nav style={{ padding: '8px 0', flex: 1 }}>
+      <nav style={{ padding: '8px 0', flex: 1 }} onClick={close}>
         {workspaceNav.map(item => <NavItem key={item.to} {...item} />)}
         {isAdmin && adminPages.map(item => <NavItem key={item.to} {...item} />)}
       </nav>
 
-      <nav className="kbt-user-nav">
+      <nav className="kbt-user-nav" onClick={close}>
         {userNav.map(item => <NavItem key={item.to} {...item} />)}
         {isAdmin && adminNav.map(item => <ExternalNavItem key={item.href} {...item} />)}
       </nav>

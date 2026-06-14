@@ -199,27 +199,27 @@ describe('API integration', () => {
     assert.match(res.text, /"Scores","Total Score"/)
   })
 
-  it('rejects invalid acknowledgement signer types', async () => {
-    const token = await loginAs('admin@amw-ems.com')
+  it('rejects invalid acknowledgement timestamps', async () => {
+    const token = await loginAs('manager.eng@amw-ems.com')
     const evaluationId = await firstEvaluationId(token)
 
     const res = await request(app)
-      .post(`/api/evaluations/${evaluationId}/acknowledge`)
+      .patch(`/api/evaluations/${evaluationId}/acknowledgement`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ signerType: 'board' })
+      .send({ evaluatorSignedAt: 'not-a-date' })
 
     assert.equal(res.status, 400)
-    assert.ok(res.body.errors.signerType)
+    assert.ok(res.body.errors.evaluatorSignedAt)
   })
 
-  it('prevents evaluatees from signing director acknowledgement', async () => {
+  it('prevents evaluatees from editing acknowledgement timestamps', async () => {
     const token = await loginAs('officer1@amw-ems.com')
     const evaluationId = await firstEvaluationId(token)
 
     const res = await request(app)
-      .post(`/api/evaluations/${evaluationId}/acknowledge`)
+      .patch(`/api/evaluations/${evaluationId}/acknowledgement`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ signerType: 'director' })
+      .send({ directorSignedAt: new Date().toISOString() })
 
     assert.equal(res.status, 403)
   })

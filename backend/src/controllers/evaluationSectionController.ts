@@ -8,10 +8,9 @@ import * as trainingService from '../services/trainingService'
 import * as sectionService from '../services/evaluationSectionService'
 
 const nullableText = z.string().trim().max(2000).nullable().optional()
-const nullableNumberText = z.string()
+const nullableGoalText = z.string()
   .trim()
   .max(100)
-  .regex(/^$|^\d+(\.\d+)?$/, 'Must be a number')
   .nullable()
   .optional()
 
@@ -21,12 +20,12 @@ const goalsSchema = z.object({
     goal: z.string().trim().min(1).max(500),
     goalDescription: nullableText,
     weight: z.number().min(0).max(100),
-    targetRating5: nullableNumberText,
-    targetRating4: nullableNumberText,
-    targetRating3: nullableNumberText,
-    targetRating2: nullableNumberText,
-    targetRating1: nullableNumberText,
-    wig: z.enum(['WIG_1_CUSTOMER', 'WIG_2_PEOPLE', 'WIG_3_RESULT']).nullable().optional(),
+    targetRating5: nullableGoalText,
+    targetRating4: nullableGoalText,
+    targetRating3: nullableGoalText,
+    targetRating2: nullableGoalText,
+    targetRating1: nullableGoalText,
+    wig: z.string().trim().max(100).nullable().optional(),
     kpiCategory: z.string().trim().max(200).nullable().optional(),
     result: nullableText,
     evaluationScore: z.number().int().min(1).max(5).nullable().optional(),
@@ -75,8 +74,10 @@ const salarySchema = z.object({
   effectiveDate: z.string().datetime().nullable().optional(),
 })
 
-const acknowledgementSchema = z.object({
-  signerType: z.enum(['employee', 'evaluator', 'director']),
+const acknowledgementManualSchema = z.object({
+  employeeSignedAt: z.string().datetime().nullable().optional(),
+  evaluatorSignedAt: z.string().datetime().nullable().optional(),
+  directorSignedAt: z.string().datetime().nullable().optional(),
 })
 
 const summarySchema = z.object({
@@ -135,7 +136,9 @@ export async function saveAttendance(req: AuthRequest, res: Response, next: Next
 export async function saveTraining(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const body = trainingSchema.parse(req.body)
-    res.json(await trainingService.upsertTrainingScore(req.params.id, body))
+    const result = await trainingService.upsertTrainingScore(req.params.id, body)
+    await sectionService.recalculateTotalScore(req.params.id)
+    res.json(result)
   } catch (err) {
     next(err)
   }
@@ -159,10 +162,10 @@ export async function saveSalary(req: AuthRequest, res: Response, next: NextFunc
   }
 }
 
-export async function acknowledge(req: AuthRequest, res: Response, next: NextFunction) {
+export async function saveAcknowledgement(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const body = acknowledgementSchema.parse(req.body)
-    res.json(await sectionService.signAcknowledgement(req.params.id, body.signerType, req.user!))
+    const body = acknowledgementManualSchema.parse(req.body)
+    res.json(await sectionService.saveAcknowledgementManual(req.params.id, body))
   } catch (err) {
     next(err)
   }

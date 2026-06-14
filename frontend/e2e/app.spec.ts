@@ -286,6 +286,7 @@ async function mockApi(page: Page) {
 async function signIn(page: Page) {
   await page.addInitScript(({ authUser }) => {
     window.localStorage.setItem('theme-mode', 'light')
+    window.localStorage.setItem('app-locale', 'en')
     window.sessionStorage.setItem(
       'auth-storage',
       JSON.stringify({ state: { user: authUser, token: 'e2e-token', expiresAt: Date.now() + 60 * 60 * 1000 }, version: 0 }),

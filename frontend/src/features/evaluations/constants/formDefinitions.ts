@@ -277,7 +277,9 @@ export const FORM_DEFINITIONS: Record<FormTypeId, FormDefinition> = {
     titleEn: 'Performance Evaluation Form (Supervisor Level)',
     titleTh: 'แบบประเมินผลการปฏิบัติงาน สำหรับระดับหัวหน้างาน',
     ratingScale: RATING_SCALE, gradeScale: GRADE_SCALE,
-    categories: buildCategories(SUPERVISOR_CRITERIA), sections: NO_EXTRA_SECTIONS,
+    categories: buildCategories(SUPERVISOR_CRITERIA),
+    // Weighted scoring: Goal(60-70%) + Competency(20%) + Attendance(10%) + Training(10%)
+    sections: { goalSetting: true, salary: false },
   },
   PRODUCTION_LEVEL: {
     id: 'PRODUCTION_LEVEL',
@@ -285,7 +287,9 @@ export const FORM_DEFINITIONS: Record<FormTypeId, FormDefinition> = {
     titleEn: 'Performance Evaluation Form (Production Staff Level)',
     titleTh: 'แบบประเมินผลการปฏิบัติงาน สำหรับพนักงานฝ่ายผลิต',
     ratingScale: RATING_SCALE, gradeScale: GRADE_SCALE,
-    categories: buildCategories(PRODUCTION_CRITERIA), sections: NO_EXTRA_SECTIONS,
+    categories: buildCategories(PRODUCTION_CRITERIA),
+    // Weighted scoring: Goal(60-70%) + Competency(20%) + Attendance(10%) + Training(10%)
+    sections: { goalSetting: true, salary: false },
   },
 }
 

@@ -19,6 +19,9 @@ interface ManagedUser {
   department?: string | null
   jobTitle?: string | null
   employeeNo?: string | null
+  hireDate?: string | null
+  dateOfBirth?: string | null
+  sourceData?: Record<string, string> | null
   mustChangePassword?: boolean
   _count?: { evaluationsAsEvaluatee: number; evaluationsAsEvaluator: number }
 }
@@ -42,6 +45,52 @@ const OTHER_ROLES: Role[] = ['DEVELOPER', 'ADMIN']
 const ROLE_LABEL: Record<Role, string> = {
   DEVELOPER: 'Developer', ADMIN: 'Administrator', MANAGER: 'Manager', EMPLOYEE: 'Employee',
 }
+
+const EMPLOYEE_CSV_HEADERS = [
+  'No',
+  'Team',
+  'Title',
+  'Thai Title',
+  'Name',
+  'Surname',
+  'Thai name',
+  'Thai surname',
+  'Position Level',
+  'Positiion',
+  'Department',
+  'Code',
+  'Birthday',
+  'Start date',
+  'Resigned Date',
+  'Years',
+  'Supervisor',
+  'SALARY EVALUATOR',
+  'APPROVER',
+  'DIRECTOR',
+  'Staff type',
+  'Email',
+] as const
+
+function formatCsvDate(value?: string | null) {
+  if (!value) return ''
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return ''
+  return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`
+}
+
+function csvCellValue(user: ManagedUser, header: string) {
+  const raw = user.sourceData?.[header]
+  if (raw != null && raw !== '') return raw
+  if (header === 'No') return user.employeeNo ?? ''
+  if (header === 'Email') return user.email
+  if (header === 'Department') return user.department ?? ''
+  if (header === 'Positiion') return user.jobTitle ?? ''
+  if (header === 'Position Level') return user.position ? POSITION_LABELS[user.position] : ''
+  if (header === 'Birthday') return formatCsvDate(user.dateOfBirth)
+  if (header === 'Start date') return formatCsvDate(user.hireDate)
+  if (header === 'Name') return user.name
+  return ''
+}
 // Distinct colour per role so they read apart at a glance.
 const ROLE_STYLE: Record<Role, { bg: string; border: string; color: string; dot: string }> = {
   DEVELOPER: { bg: 'rgba(168,85,247,0.13)', border: 'rgba(168,85,247,0.4)', color: '#c084fc', dot: '#a855f7' },
@@ -61,30 +110,6 @@ function RoleBadge({ role }: { role: Role }) {
   )
 }
 
-// Corporate seniority ladder using the AMW brand palette — red (CEO) down
-// through navy and the corporate blues to slate/grey, no off-brand hues.
-const POSITION_STYLE: Record<Position, { bg: string; border: string; color: string }> = {
-  CEO:               { bg: 'rgba(229,35,33,0.14)',   border: 'rgba(229,35,33,0.42)',   color: '#f6717a' }, // amw-red
-  MANAGING_DIRECTOR: { bg: 'rgba(41,37,82,0.45)',    border: 'rgba(105,99,170,0.55)',  color: '#9a96d8' }, // amw-navy
-  DIRECTOR_UP:       { bg: 'rgba(46,42,94,0.22)',   border: 'rgba(46,42,94,0.5)',    color: '#5a9bd4' }, // m-blue
-  MANAGER:           { bg: 'rgba(92,86,144,0.16)',  border: 'rgba(92,86,144,0.45)',  color: '#4d9fe8' }, // sap-blue
-  SUPERVISOR:        { bg: 'rgba(150,144,196,0.14)', border: 'rgba(150,144,196,0.4)',  color: '#9690c4' }, // m-light-blue
-  OFFICER:           { bg: 'rgba(53,74,95,0.4)',     border: 'rgba(110,135,160,0.5)',  color: '#8aa1b8' }, // sap-shell slate
-  PRODUCTION_STAFF:  { bg: 'rgba(106,109,112,0.2)',  border: 'rgba(106,109,112,0.42)', color: '#9aa0a6' }, // grey
-}
-
-function PositionBadge({ position }: { position?: Position | null }) {
-  if (!position) return <span style={{ color: 'var(--kbt-text-3)' }}>—</span>
-  const s = POSITION_STYLE[position]
-  return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 10px', borderRadius: 999,
-      fontSize: '0.6875rem', fontWeight: 700, whiteSpace: 'nowrap',
-      background: s.bg, border: `1px solid ${s.border}`, color: s.color }}>
-      {POSITION_LABELS[position]}
-    </span>
-  )
-}
-
 type Draft = {
   id: string | null
   name: string
@@ -94,10 +119,11 @@ type Draft = {
   department: string
   jobTitle: string
   password: string
+  dateOfBirth: string
 }
 
 const emptyDraft = (): Draft => ({
-  id: null, name: '', email: '', role: 'EMPLOYEE', position: '', department: '', jobTitle: '', password: '',
+  id: null, name: '', email: '', role: 'EMPLOYEE', position: '', department: '', jobTitle: '', password: '', dateOfBirth: '',
 })
 
 export default function UserManagementPage() {
@@ -135,6 +161,7 @@ export default function UserManagementPage() {
         position: draft.position || undefined,
         department: draft.department.trim() || undefined,
         jobTitle: draft.jobTitle.trim() || null,
+        dateOfBirth: draft.dateOfBirth || null,
       }
       if (draft.id) {
         const payload: Record<string, unknown> = { ...base }
@@ -220,6 +247,7 @@ export default function UserManagementPage() {
       id: u.id, name: u.name, email: u.email, role: u.role,
       position: (u.position ?? '') as '' | Position,
       department: u.department ?? '', jobTitle: u.jobTitle ?? '', password: '',
+      dateOfBirth: (u as { dateOfBirth?: string | null }).dateOfBirth?.slice(0, 10) ?? '',
     })
   }
 
@@ -322,36 +350,43 @@ export default function UserManagementPage() {
           <div style={{ padding: 24 }}><EmptyState icon={UserCog} title={t('users.empty')} description={t('users.emptyDesc')} /></div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table className="kbt-table">
+            <table className="kbt-table amw-user-master-table" style={{ minWidth: 2600 }}>
               <thead>
                 <tr>
-                  <th>{t('users.empNo')}</th>
-                  <th>{t('acc.displayName')}</th>
-                  <th>{t('acc.email')}</th>
+                  {EMPLOYEE_CSV_HEADERS.map(header => (
+                    <th key={header}>{header}</th>
+                  ))}
                   <th>{t('acc.role')}</th>
-                  <th>{t('acc.position')}</th>
-                  <th>{t('acc.department')}</th>
                   <th style={{ textAlign: 'right' }}>{t('users.actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(u => (
                   <tr key={u.id}>
-                    <td style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8125rem', color: u.employeeNo ? 'var(--kbt-text-2)' : 'var(--kbt-text-3)' }}>{u.employeeNo ?? '—'}</td>
-                    <td style={{ fontWeight: 700 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {u.name}
-                        {u.mustChangePassword && (
-                          <span title={t('users.defaultPwHint')} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '1px 7px', borderRadius: 999, fontSize: '0.625rem', fontWeight: 800, whiteSpace: 'nowrap', background: 'rgba(245,158,11,0.14)', border: '1px solid rgba(245,158,11,0.4)', color: '#fbbf24' }}>
-                            <KeyRound size={10} /> {t('users.defaultPw')}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td style={{ color: 'var(--kbt-text-2)', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8125rem' }}>{u.email}</td>
+                    {EMPLOYEE_CSV_HEADERS.map(header => {
+                      const value = csvCellValue(u, header)
+                      const mono = ['No', 'Code', 'Birthday', 'Start date', 'Years', 'Email'].includes(header)
+                      const strong = header === 'Name' || header === 'Surname' || header === 'Thai name' || header === 'Thai surname'
+                      return (
+                        <td
+                          key={header}
+                          style={{
+                            color: value ? 'var(--kbt-text-2)' : 'var(--kbt-text-3)',
+                            fontFamily: mono ? 'JetBrains Mono, monospace' : undefined,
+                            fontSize: mono ? '0.75rem' : '0.8125rem',
+                            fontWeight: strong ? 700 : undefined,
+                            whiteSpace: 'nowrap',
+                            maxWidth: header === 'Email' ? 230 : header === 'Positiion' ? 260 : 190,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                          title={value || undefined}
+                        >
+                          {value || '-'}
+                        </td>
+                      )
+                    })}
                     <td><RoleBadge role={u.role} /></td>
-                    <td><PositionBadge position={u.position} /></td>
-                    <td style={{ color: 'var(--kbt-text-2)' }}>{u.department ?? '-'}</td>
                     <td>
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                         <button className="kbt-btn-ghost" style={{ height: 30, padding: '0 10px', gap: 5 }} onClick={() => openEdit(u)}>
@@ -422,6 +457,12 @@ export default function UserManagementPage() {
               <label>
                 {t('acc.jobTitle')}
                 <input className="kbt-input" value={draft.jobTitle} onChange={e => setDraft(d => d && ({ ...d, jobTitle: e.target.value }))} />
+              </label>
+              <label>
+                Date of Birth
+                <input className="kbt-input" type="date" value={draft.dateOfBirth}
+                  onChange={e => setDraft(d => d && ({ ...d, dateOfBirth: e.target.value }))} />
+                <span style={{ fontSize: '0.6875rem', color: 'var(--kbt-text-3)', marginTop: 2 }}>Used for password recovery</span>
               </label>
               <label>
                 {isEditing ? t('acc.newPassword') : t('users.password')}

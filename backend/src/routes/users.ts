@@ -1,14 +1,16 @@
 import { Router, text } from 'express'
-import { authenticate, authorizeSupervisory, requireRole } from '../middleware/auth'
-import { list, getOne, create, update, remove, importEmployees, importHistory, resetPassword } from '../controllers/userController'
+import { authenticate, requireRole } from '../middleware/auth'
+import { list, getOne, create, update, remove, importEmployees, importHistory, resetPassword, directory } from '../controllers/userController'
 
 const router = Router()
 
 router.use(authenticate)
 
-// Supervisors/managers may read the list to pick an evaluatee, but creating,
-// editing, importing and deleting accounts stays with Developer/admin.
-router.get('/',        authorizeSupervisory, list)
+// Lightweight employee directory — any authenticated user can fetch this
+// (needed by supervisors/managers when creating evaluations).
+router.get('/directory', directory)
+
+router.get('/',        requireRole('ADMIN'), list)
 // Employee master-file import (literal paths before the /:id matcher).
 router.get('/imports', requireRole('ADMIN'), importHistory)
 router.post('/import', requireRole('ADMIN'), text({ type: () => true, limit: '15mb' }), importEmployees)

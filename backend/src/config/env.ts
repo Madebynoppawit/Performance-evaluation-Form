@@ -8,7 +8,7 @@ loadDotenv()
 if (process.env.NODE_ENV === 'test') loadDotenv({ path: '.env.test', override: true })
 
 const NODE_ENVS = ['development', 'test', 'production'] as const
-const RELEASE_CHANNELS = ['standard', 'ai-preview'] as const
+const RELEASE_CHANNELS = ['standard', 'demo', 'ai-preview'] as const
 const AI_PROVIDERS = ['none', 'openai', 'azure-openai'] as const
 
 /* Comma-separated origin list → string[] (trimmed, empty removed). */
@@ -47,6 +47,15 @@ const schema = z.object({
   API_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
 
   BCRYPT_ROUNDS: z.coerce.number().int().min(8).max(15).default(10),
+
+  /* SMTP — optional. When unset the email service runs in "log-only" mode
+     (prints the email to stdout). Configure all four to actually send mail. */
+  SMTP_HOST:     z.string().min(1).optional(),
+  SMTP_PORT:     z.coerce.number().int().positive().default(587),
+  SMTP_SECURE:   boolEnv,
+  SMTP_USER:     z.string().min(1).optional(),
+  SMTP_PASS:     z.string().min(1).optional(),
+  SMTP_FROM:     z.string().default('AMW EMS <noreply@amw-ems.com>'),
 
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 

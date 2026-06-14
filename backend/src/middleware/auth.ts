@@ -6,16 +6,23 @@ export interface AuthRequest extends Request {
   user?: { userId: string; role: string }
 }
 
-/** DEVELOPER is a super-role that has the full control of ADMIN (and above). */
+/** DEVELOPER is a super-role with full system access. ADMIN is HR read-only for evaluations. */
 export function isAdminRole(role: string) {
   return role === 'ADMIN' || role === 'DEVELOPER'
 }
 
+export function isDeveloperRole(role: string) {
+  return role === 'DEVELOPER'
+}
+
 export function canAccessEvaluation(
   user: { userId: string; role: string },
-  evaluation: { evaluateeId: string; evaluatorId: string }
+  evaluation: { evaluateeId: string; evaluatorId: string; reviewerId?: string | null }
 ) {
-  return isAdminRole(user.role) || evaluation.evaluateeId === user.userId || evaluation.evaluatorId === user.userId
+  return isAdminRole(user.role)
+    || evaluation.evaluateeId === user.userId
+    || evaluation.evaluatorId === user.userId
+    || evaluation.reviewerId === user.userId
 }
 
 export function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
@@ -42,7 +49,7 @@ export async function authorizeSupervisory(req: AuthRequest, res: Response, next
     res.status(401).json({ message: 'Unauthorized', requestId: req.requestId })
     return
   }
-  if (isAdminRole(req.user.role)) {
+  if (isDeveloperRole(req.user.role)) {
     next()
     return
   }
@@ -89,7 +96,7 @@ export async function authorizeEvaluationAccess(req: AuthRequest, res: Response,
   try {
     const evaluation = await prisma.evaluation.findUnique({
       where: { id: req.params.id },
-      select: { evaluateeId: true, evaluatorId: true },
+      select: { evaluateeId: true, evaluatorId: true, reviewerId: true },
     })
 
     if (!evaluation) {

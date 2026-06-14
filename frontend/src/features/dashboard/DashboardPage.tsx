@@ -5,6 +5,7 @@ import { Activity, AlertTriangle, ArrowUpRight, BarChart2, BookOpen, CalendarClo
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/i18n/languageContext'
 import { useLabels } from '@/i18n/useLabels'
+import { usePreferences } from '@/hooks/usePreferences'
 import api from '@/lib/api'
 import type { Evaluation } from '@/types'
 import DashboardAnalytics from './DashboardAnalytics'
@@ -120,6 +121,7 @@ export default function DashboardPage() {
   const navigate = useNavigate()
   const t = useT()
   const { statusLabel, typeLabel } = useLabels()
+  const { prefs } = usePreferences()
   const hour = new Date().getHours()
   const greeting = hour < 12 ? t('dash.morning') : hour < 17 ? t('dash.afternoon') : t('dash.evening')
 
@@ -303,14 +305,19 @@ export default function DashboardPage() {
       )}
 
       <section className="amw-exec-strip kbt-animate-up">
-        <div className="amw-exec-insight">
-          <CalendarClock size={18} />
-          <div>
-            <span>{t('dash.cycleDeadline')}</span>
-            <strong>{executiveInsights.deadlineName}</strong>
+        {prefs.deadlineWarnings !== 'off' && (
+          prefs.deadlineWarnings === 'all' ||
+          (executiveInsights.daysLeft != null && executiveInsights.daysLeft <= 7)
+        ) && (
+          <div className="amw-exec-insight">
+            <CalendarClock size={18} />
+            <div>
+              <span>{t('dash.cycleDeadline')}</span>
+              <strong>{executiveInsights.deadlineName}</strong>
+            </div>
+            <em>{executiveInsights.daysLeft == null ? 'n/a' : `${executiveInsights.daysLeft}d`}</em>
           </div>
-          <em>{executiveInsights.daysLeft == null ? 'n/a' : `${executiveInsights.daysLeft}d`}</em>
-        </div>
+        )}
         <div className="amw-exec-insight">
           <AlertTriangle size={18} />
           <div>

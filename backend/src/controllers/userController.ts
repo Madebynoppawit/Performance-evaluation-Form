@@ -17,16 +17,23 @@ const createSchema = z.object({
 })
 
 const updateSchema = z.object({
-  name:       z.string().min(1).optional(),
-  role:       z.enum(['DEVELOPER', 'ADMIN', 'MANAGER', 'EMPLOYEE']).optional(),
-  position:   z.enum(['CEO', 'MANAGING_DIRECTOR', 'DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']).optional(),
-  department: z.string().optional(),
-  managerId:  z.string().nullable().optional(),
-  password:   z.string().min(6).optional(),
+  name:        z.string().min(1).optional(),
+  role:        z.enum(['DEVELOPER', 'ADMIN', 'MANAGER', 'EMPLOYEE']).optional(),
+  position:    z.enum(['CEO', 'MANAGING_DIRECTOR', 'DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']).optional(),
+  department:  z.string().optional(),
+  managerId:   z.string().nullable().optional(),
+  password:    z.string().min(6).optional(),
+  jobTitle:    z.string().max(120).nullable().optional(),
+  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
 })
 
 export async function list(_req: AuthRequest, res: Response, next: NextFunction) {
   try { res.json(await userService.getAllUsers()) }
+  catch (err) { next(err) }
+}
+
+export async function directory(_req: AuthRequest, res: Response, next: NextFunction) {
+  try { res.json(await userService.getDirectory()) }
   catch (err) { next(err) }
 }
 
@@ -45,7 +52,13 @@ export async function create(req: AuthRequest, res: Response, next: NextFunction
 export async function update(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const body = updateSchema.parse(req.body)
-    res.json(await userService.updateUser(req.params.id, body))
+    const parsed = {
+      ...body,
+      dateOfBirth: body.dateOfBirth != null
+        ? (body.dateOfBirth === null ? null : new Date(`${body.dateOfBirth}T00:00:00Z`))
+        : undefined,
+    }
+    res.json(await userService.updateUser(req.params.id, parsed))
   } catch (err) { next(err) }
 }
 

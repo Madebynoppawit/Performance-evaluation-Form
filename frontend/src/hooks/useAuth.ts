@@ -12,6 +12,7 @@ export function useAuth() {
   const isSessionValid = useAuthStore((s) => s.isSessionValid)
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'DEVELOPER'
+  const isDeveloper = user?.role === 'DEVELOPER'
   const isSupervisory = SUPERVISORY_POSITIONS.includes(user?.position ?? '')
 
   return {
@@ -20,9 +21,10 @@ export function useAuth() {
     logout,
     updateUser,
     isAdmin,
+    isDeveloper,
     isManager: user?.role === 'MANAGER' || isAdmin,
-    // Can create evaluations and build templates (admin/dev or supervisory).
-    canManage: isAdmin || isSupervisory,
+    // Only Developer and supervisory roles (Supervisor/Manager/Director) can create evaluations.
+    canManage: isDeveloper || isSupervisory || user?.role === 'MANAGER',
     isAuthenticated: !!token && isSessionValid(),
   }
 }

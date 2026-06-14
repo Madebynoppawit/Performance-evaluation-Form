@@ -3,12 +3,22 @@ import { Role, Position } from '@prisma/client'
 import { hashPassword } from '../utils/hash'
 import { env } from '../config/env'
 
+/** Minimal user directory — id, name, role, position, department only.
+ *  Accessible by any authenticated role (used for evaluation create dropdowns). */
+export async function getDirectory() {
+  return prisma.user.findMany({
+    select: { id: true, name: true, role: true, position: true, department: true, employeeNo: true },
+    orderBy: { name: 'asc' },
+  })
+}
+
 export async function getAllUsers() {
   return prisma.user.findMany({
     select: {
       id: true, email: true, name: true, role: true,
       position: true, department: true, jobTitle: true, managerId: true,
-      employeeNo: true, mustChangePassword: true,
+      employeeNo: true, mustChangePassword: true, sourceData: true,
+      hireDate: true, dateOfBirth: true,
       createdAt: true, updatedAt: true,
       manager: { select: { id: true, name: true } },
       _count: {
@@ -62,6 +72,8 @@ export async function updateUser(
     department?: string
     managerId?: string | null
     password?: string
+    jobTitle?: string | null
+    dateOfBirth?: Date | null
   }
 ) {
   const payload: Record<string, unknown> = { ...data }

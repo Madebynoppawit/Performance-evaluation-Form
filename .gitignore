@@ -39,3 +39,4 @@ playwright-report/
 reports/
 .tmp_pdf_review/
 .env.prod
+.env.demo

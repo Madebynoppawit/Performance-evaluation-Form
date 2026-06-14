@@ -1215,6 +1215,27 @@ body,
     flex-shrink: 0;
   }
 
+  .kbt-badge-orange {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    background: rgba(234,128,0,0.12);
+    color: #ea8000;
+    border: 1px solid rgba(234,128,0,0.28);
+  }
+  .kbt-badge-orange::before {
+    content: '';
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #ea8000;
+    flex-shrink: 0;
+  }
+
   /* ── Message Strips ──────────────────────────────────────────────────────── */
   .kbt-msg-info {
     display: flex;
@@ -1754,6 +1775,9 @@ body,
     justify-content: center;
     box-shadow: 0 18px 42px rgba(3,11,22,0.2);
   }
+  .amw-login-copy {
+    margin-top: 48px;
+  }
   .amw-login-eyebrow {
     color: var(--sap-blue);
     font-size: 0.72rem;
@@ -1776,6 +1800,44 @@ body,
     color: var(--kbt-text-2);
     font-size: 1rem;
     line-height: 1.65;
+  }
+  .amw-login-trust {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--kbt-text-2);
+    font-size: 0.8125rem;
+    font-weight: 700;
+  }
+  .amw-login-panel-heading {
+    margin-bottom: 24px;
+  }
+  .amw-login-panel-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--brand-gradient);
+    color: #ffffff;
+    box-shadow: 0 16px 32px rgba(92,86,144,0.28), var(--glow-blue);
+    position: relative;
+    overflow: hidden;
+  }
+  .amw-login-panel-heading h2 {
+    margin-top: 18px;
+    color: var(--kbt-text);
+    font-size: 1.6rem;
+    font-weight: 900;
+    letter-spacing: 0;
+  }
+  .amw-login-panel-heading p {
+    margin-top: 7px;
+    color: var(--kbt-text-3);
+    font-size: 0.875rem;
+    line-height: 1.55;
   }
   .amw-status-grid {
     display: grid;
@@ -2037,6 +2099,75 @@ body,
     border-top-color: rgba(229,35,33,0.52);
     border-bottom-color: rgba(150,144,196,0.48);
     pointer-events: none;
+  }
+  .amw-login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .amw-demo-login {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--kbt-border);
+  }
+  .amw-demo-login-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+    color: var(--kbt-text-3);
+    font-size: 0.6875rem;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .amw-demo-login-header code {
+    color: var(--kbt-text-2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .amw-demo-login-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .amw-demo-account {
+    min-height: 66px;
+    padding: 10px;
+    border: 1px solid var(--kbt-border);
+    border-radius: 9px;
+    background: var(--control-bg);
+    color: var(--kbt-text);
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+  }
+  .amw-demo-account:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--m-light-blue) 45%, var(--kbt-border));
+    background: color-mix(in srgb, var(--control-bg) 82%, var(--m-light-blue));
+  }
+  .amw-demo-account strong {
+    display: block;
+    color: var(--m-light-blue);
+    font-size: 0.75rem;
+    font-weight: 900;
+  }
+  .amw-demo-account span {
+    display: block;
+    margin-top: 5px;
+    color: var(--kbt-text-3);
+    font-size: 0.68rem;
+    line-height: 1.35;
+  }
+  .amw-login-footer {
+    margin-top: 18px;
+    color: var(--kbt-text-3);
+    font-size: 0.6875rem;
+    text-align: center;
   }
 
   .amw-corporate-seal::after {
@@ -4181,16 +4312,64 @@ body,
     }
     .amw-login {
       grid-template-columns: 1fr;
+      gap: 12px;
+      padding: 14px;
     }
     .amw-login-brand,
     .amw-login-panel {
       min-height: auto;
+      border-radius: 16px;
     }
     .amw-login-brand {
-      padding: 24px;
+      padding: 20px;
+      gap: 18px;
+      justify-content: flex-start;
+    }
+    .amw-login-panel {
+      padding: 20px;
+    }
+    .amw-login-logo {
+      width: 170px;
+      max-width: 54vw;
+      height: 74px;
+    }
+    .amw-login-copy {
+      margin-top: 22px;
+    }
+    .amw-login-title {
+      font-size: 2.35rem;
+      line-height: 0.98;
+    }
+    .amw-login-subtitle {
+      margin-top: 14px;
+      font-size: 0.94rem;
+      line-height: 1.55;
     }
     .amw-status-grid {
       grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .amw-status-tile {
+      padding: 11px 13px;
+    }
+    .amw-login-trust {
+      margin-top: 18px;
+    }
+    .amw-login-panel-heading {
+      margin-bottom: 16px;
+    }
+    .amw-login-panel-heading h2 {
+      font-size: 1.35rem;
+    }
+    .amw-login-form-card {
+      padding: 18px;
+    }
+    .amw-demo-login-grid {
+      grid-template-columns: 1fr;
+    }
+    .amw-demo-account {
+      min-height: 54px;
     }
     .amw-studio-hero {
       flex-direction: column;
@@ -4394,6 +4573,49 @@ body,
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.001ms !important;
+  }
+}
+
+/* ── Mobile hamburger (hidden on desktop) ──────────────────────────────────── */
+.amw-hamburger { display: none; }
+
+/* ── Mobile sidebar drawer + backdrop ──────────────────────────────────────── */
+.kbt-sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Hamburger visible */
+  .amw-hamburger { display: flex; }
+
+  /* Sidebar becomes a fixed off-canvas drawer */
+  .kbt-sidebar {
+    position: fixed;
+    top: var(--kbt-header-height, 48px);
+    left: 0;
+    bottom: 0;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.26s ease;
+    box-shadow: none;
+    width: 260px;
+  }
+  .kbt-sidebar.is-open {
+    transform: translateX(0);
+    box-shadow: 6px 0 32px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Semi-transparent backdrop behind the open drawer */
+  .kbt-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.52);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 999;
+    animation: fadeIn 0.2s ease;
   }
 }
 
@@ -4639,6 +4861,14 @@ body,
 .amw-route-view {
   width: min(100%, 1480px);
   margin: 0 auto;
+}
+
+.amw-route-view:has(.kbt-modal-backdrop) {
+  z-index: 12000;
+}
+
+.amw-app-main:has(.kbt-modal-backdrop) .amw-corp-footer {
+  pointer-events: none;
 }
 
 .amw-skip-link {
@@ -5657,8 +5887,26 @@ body {
     font-size: 0.86rem;
   }
 
+  /* Tables scroll horizontally on phones instead of clipping */
+  .kbt-card > .kbt-table,
+  .kbt-card > * > .kbt-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .amw-corp-bar {
-    padding: 8px 12px;
+    padding: 6px 12px;
+    min-height: 34px;
+  }
+
+  /* Hide heavy governance chip cluster on phones — keep only breadcrumb + env */
+  .amw-corp-chips {
+    display: none;
+  }
+
+  .amw-corp-ref {
+    display: none;
   }
 
   .amw-corp-chip {
@@ -5786,3 +6034,94 @@ body {
 .amw-grade-chip.active { border-color: transparent; background: var(--brand-gradient); }
 .amw-grade-chip.active strong, .amw-grade-chip.active span { color: #fff; }
 .amw-grade-chip:disabled { opacity: 0.6; cursor: default; }
+
+/* ── CalendarPicker ─────────────────────────────────────────────────────── */
+.kbt-cal-trigger {
+  width: 100%; padding: 9px 12px;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--kbt-input-bg);
+  border: 1.5px solid var(--kbt-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.kbt-cal-trigger:hover:not(:disabled) { border-color: var(--kbt-border-focus, rgba(150,144,196,0.55)); }
+.kbt-cal-trigger:disabled { cursor: not-allowed; }
+
+.kbt-cal-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  min-width: 272px;
+  background: var(--kbt-card-bg);
+  border: 1.5px solid var(--kbt-border);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+}
+
+.kbt-cal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.kbt-cal-month { font-size: 0.875rem; font-weight: 700; color: var(--kbt-text); }
+.kbt-cal-nav {
+  background: none; border: none; cursor: pointer;
+  color: var(--kbt-text-2); padding: 4px 6px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.12s, color 0.12s;
+}
+.kbt-cal-nav:hover { background: rgba(255,255,255,0.07); color: var(--kbt-text); }
+
+.kbt-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 10px;
+}
+.kbt-cal-dow {
+  text-align: center; padding: 4px 0;
+  font-size: 0.65rem; font-weight: 700; color: var(--kbt-text-3);
+}
+.kbt-cal-day {
+  height: 34px; width: 100%;
+  background: none; border: none; border-radius: 7px;
+  font-size: 0.8125rem; font-weight: 400;
+  color: var(--kbt-text-2);
+  cursor: pointer; transition: background 0.12s, color 0.12s;
+}
+.kbt-cal-day:hover:not(:disabled):not(.kbt-cal-day--selected) {
+  background: rgba(255,255,255,0.08); color: var(--kbt-text);
+}
+.kbt-cal-day--empty { pointer-events: none; opacity: 0; }
+.kbt-cal-day--today {
+  background: rgba(229,35,33,0.10);
+  color: var(--amw-red);
+  font-weight: 700;
+}
+.kbt-cal-day--today:hover:not(.kbt-cal-day--selected) {
+  background: rgba(229,35,33,0.18);
+}
+.kbt-cal-day--selected {
+  background: var(--amw-red) !important;
+  color: #fff !important;
+  font-weight: 700;
+}
+
+.kbt-cal-footer {
+  padding-top: 10px;
+  border-top: 1px solid var(--kbt-border);
+  display: flex; justify-content: center;
+}
+.kbt-cal-today-btn {
+  background: rgba(229,35,33,0.08);
+  border: 1px solid rgba(229,35,33,0.28);
+  border-radius: 6px;
+  color: var(--amw-red);
+  font-size: 0.78rem; font-weight: 700;
+  padding: 5px 20px; cursor: pointer;
+  transition: background 0.12s;
+}
+.kbt-cal-today-btn:hover { background: rgba(229,35,33,0.16); }

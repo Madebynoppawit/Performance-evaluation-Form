@@ -75,7 +75,7 @@ export default function AccountPage() {
   const profileKey = useMemo(() => `amw-account-profile:${user?.id ?? 'guest'}`, [user?.id])
   const [form, setForm] = useState({
     name: '', email: '', department: '', position: '' as '' | Position, jobTitle: '',
-    phone: '', bio: '', password: '',
+    phone: '', bio: '', password: '', dateOfBirth: '',
   })
   const [savedFlash, setSavedFlash] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -105,6 +105,7 @@ export default function AccountPage() {
       phone: local.phone ?? '',
       bio: local.bio ?? '',
       password: '',
+      dateOfBirth: user?.dateOfBirth ? user.dateOfBirth.slice(0, 10) : '',
     })
   }, [profileKey, user])
 
@@ -118,6 +119,7 @@ export default function AccountPage() {
         department: form.department.trim() || null,
         position: form.position || null,
         jobTitle: form.jobTitle.trim() || null,
+        dateOfBirth: form.dateOfBirth || null,
       }
       if (form.password) payload.password = form.password
       const { data } = await api.patch<UserType>('/auth/me', payload)
@@ -351,6 +353,15 @@ export default function AccountPage() {
             <input className="kbt-input" value={form.phone}
               onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
               placeholder="+66 ..." />
+          </label>
+          <label className="amw-account-edit-field">
+            <span className="kbt-label">Date of Birth</span>
+            <input className="kbt-input" type="date" value={form.dateOfBirth}
+              onChange={e => setForm(f => ({ ...f, dateOfBirth: e.target.value }))}
+              autoComplete="bday" />
+            <p style={{ fontSize: '0.6875rem', color: 'var(--kbt-text-3)', marginTop: 3 }}>
+              Used for password recovery
+            </p>
           </label>
           <label className="amw-account-edit-field">
             <span className="kbt-label">{t('acc.newPassword')}</span>

@@ -1,0 +1,28 @@
+name: Database backup
+
+# Daily at 02:00 UTC, or manually triggered
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    name: Backup production database
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: SSH backup
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            /opt/amw/scripts/backup-db.sh
+
+      - name: Confirm backup
+        if: success()
+        run: echo "Backup completed successfully at $(date -Iseconds)"

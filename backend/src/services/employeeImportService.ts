@@ -148,6 +148,7 @@ export async function importEmployees(
       jobTitle: pick(raw, 'Position', 'Positiion', 'Job Title') || null,
       position: mapPositionLevel(pick(raw, 'Position Level', 'Position level')),
       hireDate: parseDate(pick(raw, 'Start date', 'Start Date')),
+      dateOfBirth: parseDate(pick(raw, 'Date of Birth', 'DOB', 'Birth Date', 'Birthday')),
       sourceData: raw as Prisma.InputJsonValue,
     }
     const role = roleForPosition(data.position)
