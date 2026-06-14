@@ -26,7 +26,7 @@
     "qa:mobile": "node scripts/qa-robot/index.js --suite mobile"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^10.0.3"
   },
   "allowScripts": {
     "@prisma/client@5.22.0": true,
