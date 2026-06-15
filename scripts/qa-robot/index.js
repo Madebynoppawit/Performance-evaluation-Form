@@ -7,6 +7,7 @@
  *   node scripts/qa-robot --watch  # run on schedule (see config.intervalMinutes)
  *   node scripts/qa-robot --suite auth        # run single suite
  *   node scripts/qa-robot --url http://...    # override target URL
+ *   node scripts/qa-robot --api http://...    # override API URL
  *
  * Exit codes:
  *   0  — all tests passed (or only LOW/INFO bugs)
@@ -31,7 +32,15 @@ const suiteArg = args.find(a => a.startsWith('--suite='))?.split('=').slice(1).j
 const _urlIdx = args.indexOf('--url')
 const urlArg = args.find(a => a.startsWith('--url='))?.split('=').slice(1).join('=')
   || (_urlIdx >= 0 && args[_urlIdx + 1] && !args[_urlIdx + 1].startsWith('--') ? args[_urlIdx + 1] : null)
-if (urlArg) cfg.baseUrl = urlArg
+if (urlArg) {
+  cfg.baseUrl = urlArg.replace(/\/+$/, '')
+  cfg.apiUrl = `${cfg.baseUrl}/api`
+}
+
+const _apiIdx = args.indexOf('--api')
+const apiArg = args.find(a => a.startsWith('--api='))?.split('=').slice(1).join('=')
+  || (_apiIdx >= 0 && args[_apiIdx + 1] && !args[_apiIdx + 1].startsWith('--') ? args[_apiIdx + 1] : null)
+if (apiArg) cfg.apiUrl = apiArg.replace(/\/+$/, '')
 
 // ── Load suite definitions ────────────────────────────────────────────────────
 const ALL_SUITES = [
@@ -82,6 +91,7 @@ async function runOnce() {
   await notify(result).catch(err => console.warn(`  [Slack] ${err.message}`))
 
   // Exit code based on severity
+  if (result.stats.setupFailures > 0) return 2
   const critical = result.bugs.filter(b => cfg.failOnSeverity.includes(b.sev))
   return critical.length > 0 ? 1 : 0
 }

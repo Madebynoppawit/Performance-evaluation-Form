@@ -18,7 +18,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/i18n/languageContext'
 import api from '@/lib/api'
-import type { Position, User as UserType } from '@/types'
+import type { User as UserType } from '@/types'
 
 const roleLabel = {
   DEVELOPER: 'Developer',
@@ -60,8 +60,6 @@ function getDisplayRole(user: ReturnType<typeof useAuth>['user']) {
   return user?.role ? roleLabel[user.role] : '-'
 }
 
-const POSITION_OPTIONS: Position[] = ['CEO', 'MANAGING_DIRECTOR', 'DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']
-
 export default function AccountPage() {
   const { user, updateUser } = useAuth()
   const qc = useQueryClient()
@@ -74,8 +72,8 @@ export default function AccountPage() {
   const [layoutOpen, setLayoutOpen] = useState(false)
   const profileKey = useMemo(() => `amw-account-profile:${user?.id ?? 'guest'}`, [user?.id])
   const [form, setForm] = useState({
-    name: '', email: '', department: '', position: '' as '' | Position, jobTitle: '',
-    phone: '', bio: '', password: '', confirmPassword: '', dateOfBirth: '',
+    name: '', email: '', jobTitle: '',
+    phone: '', bio: '', password: '', confirmPassword: '',
   })
   const [savedFlash, setSavedFlash] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -99,14 +97,11 @@ export default function AccountPage() {
     setForm({
       name: user?.name ?? '',
       email: user?.email ?? '',
-      department: user?.department ?? '',
-      position: (user?.position ?? '') as '' | Position,
       jobTitle: user?.jobTitle ?? '',
       phone: local.phone ?? '',
       bio: local.bio ?? '',
       password: '',
       confirmPassword: '',
-      dateOfBirth: user?.dateOfBirth ? user.dateOfBirth.slice(0, 10) : '',
     })
   }, [profileKey, user])
 
@@ -121,10 +116,7 @@ export default function AccountPage() {
       const payload: Record<string, unknown> = {
         name: form.name.trim(),
         email: form.email.trim(),
-        department: form.department.trim() || null,
-        position: form.position || null,
         jobTitle: form.jobTitle.trim() || null,
-        dateOfBirth: form.dateOfBirth || null,
       }
       if (form.password) payload.password = form.password
       const { data } = await api.patch<UserType>('/auth/me', payload)
@@ -334,20 +326,6 @@ export default function AccountPage() {
               placeholder={user?.email ?? ''} />
           </label>
           <label className="amw-account-edit-field">
-            <span className="kbt-label">{t('acc.department')}</span>
-            <input className="kbt-input" value={form.department}
-              onChange={e => setForm(f => ({ ...f, department: e.target.value }))}
-              placeholder={t('acc.notAssigned')} />
-          </label>
-          <label className="amw-account-edit-field">
-            <span className="kbt-label">{t('acc.position')}</span>
-            <select className="kbt-input" value={form.position}
-              onChange={e => setForm(f => ({ ...f, position: e.target.value as '' | Position }))}>
-              <option value="">{t('acc.notAssigned')}</option>
-              {POSITION_OPTIONS.map(p => <option key={p} value={p}>{positionLabel[p]}</option>)}
-            </select>
-          </label>
-          <label className="amw-account-edit-field">
             <span className="kbt-label">{t('acc.jobTitle')}</span>
             <input className="kbt-input" value={form.jobTitle}
               onChange={e => setForm(f => ({ ...f, jobTitle: e.target.value }))}
@@ -358,15 +336,6 @@ export default function AccountPage() {
             <input className="kbt-input" value={form.phone}
               onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
               placeholder="+66 ..." />
-          </label>
-          <label className="amw-account-edit-field">
-            <span className="kbt-label">Date of Birth</span>
-            <input className="kbt-input" type="date" value={form.dateOfBirth}
-              onChange={e => setForm(f => ({ ...f, dateOfBirth: e.target.value }))}
-              autoComplete="bday" />
-            <p style={{ fontSize: '0.6875rem', color: 'var(--kbt-text-3)', marginTop: 3 }}>
-              Used for password recovery
-            </p>
           </label>
           <label className="amw-account-edit-field">
             <span className="kbt-label">{t('acc.newPassword')}</span>

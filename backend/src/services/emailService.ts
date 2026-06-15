@@ -66,6 +66,22 @@ function layout(title: string, body: string) {
 
 // ── Notification functions ────────────────────────────────────────────────────
 
+export async function sendPasswordReset(opts: {
+  to: string
+  name: string
+  resetUrl: string
+}) {
+  const html = layout('Password Reset', `
+    <h2>Reset your password</h2>
+    <p>Hi <b>${opts.name}</b>,</p>
+    <p>A password reset was requested for your account. This link expires shortly.</p>
+    <a href="${opts.resetUrl}" class="cta">Reset Password</a>
+    <p>If you did not request this, you can ignore this message.</p>
+  `)
+  const text = `Hi ${opts.name},\n\nReset your password: ${opts.resetUrl}\n\nIf you did not request this, ignore this message.`
+  await send({ to: opts.to, subject: '[AMW EMS] Password reset request', html, text })
+}
+
 /** Evaluator is notified when a new evaluation is created and assigned to them. */
 export async function sendEvaluationAssigned(opts: {
   to: string

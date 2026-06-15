@@ -1,11 +1,11 @@
 import { Response, NextFunction } from 'express'
-import { EvaluationType } from '@prisma/client'
+import { EvaluationType, Position } from '@prisma/client'
 import { z } from 'zod'
 import { AuthRequest, isAdminRole } from '../middleware/auth'
 import * as evaluationService from '../services/evaluationService'
 import { assertEvaluationReadyForSubmit } from '../services/evaluationSectionService'
 
-const positionEnum = z.enum(['DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF'])
+const positionEnum = z.nativeEnum(Position)
 
 const createSchema = z
   .object({

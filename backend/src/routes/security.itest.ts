@@ -213,6 +213,24 @@ describe('Privilege escalation — role-gated endpoints', () => {
       .send({ oldSalary: 50000, newSalary: 60000 })
     assert.equal(res.status, 403)
   })
+
+  test('evaluatee cannot edit evaluator-owned sections', async () => {
+    if (!seededEvalId) return
+
+    const res = await request(app)
+      .patch(`/api/evaluations/${seededEvalId}/answers`)
+      .set('Authorization', `Bearer ${officerToken}`)
+      .send({ answers: [] })
+    assert.equal(res.status, 403)
+  })
+
+  test('self-service profile cannot change HR-owned position', async () => {
+    const res = await request(app)
+      .patch('/api/auth/me')
+      .set('Authorization', `Bearer ${officerToken}`)
+      .send({ position: 'MANAGER' })
+    assert.equal(res.status, 400)
+  })
 })
 
 // ── 4. Input Injection ────────────────────────────────────────────────────────

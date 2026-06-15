@@ -5,24 +5,26 @@ import * as userService from '../services/userService'
 import * as employeeImport from '../services/employeeImportService'
 import { companyEmailSchema } from '../utils/companyEmail'
 import { recordAuditEventBestEffort } from '../services/auditEventService'
+import { Position, Role } from '@prisma/client'
+import { passwordSchema } from '../validation/passwordPolicy'
 
 const createSchema = z.object({
   email:      companyEmailSchema,
   name:       z.string().min(1),
-  password:   z.string().min(6),
-  role:       z.enum(['DEVELOPER', 'ADMIN', 'MANAGER', 'EMPLOYEE']),
-  position:   z.enum(['CEO', 'MANAGING_DIRECTOR', 'DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']).optional(),
+  password:   passwordSchema,
+  role:       z.nativeEnum(Role),
+  position:   z.nativeEnum(Position).optional(),
   department: z.string().optional(),
   managerId:  z.string().optional(),
 })
 
 const updateSchema = z.object({
   name:        z.string().min(1).optional(),
-  role:        z.enum(['DEVELOPER', 'ADMIN', 'MANAGER', 'EMPLOYEE']).optional(),
-  position:    z.enum(['CEO', 'MANAGING_DIRECTOR', 'DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']).optional(),
+  role:        z.nativeEnum(Role).optional(),
+  position:    z.nativeEnum(Position).optional(),
   department:  z.string().optional(),
   managerId:   z.string().nullable().optional(),
-  password:    z.string().min(6).optional(),
+  password:    passwordSchema.optional(),
   jobTitle:    z.string().max(120).nullable().optional(),
   dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
 })

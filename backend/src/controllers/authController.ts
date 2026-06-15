@@ -5,6 +5,7 @@ import { AuthRequest } from '../middleware/auth'
 import { env } from '../config/env'
 import { companyEmailSchema } from '../utils/companyEmail'
 import { recordAuditEventBestEffort } from '../services/auditEventService'
+import { passwordSchema } from '../validation/passwordPolicy'
 
 const forgotSchema = z.object({
   employeeNo:  z.string().trim().min(1, 'Employee number is required'),
@@ -13,10 +14,7 @@ const forgotSchema = z.object({
 
 const resetSchema = z.object({
   token:    z.string().min(1),
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
-    .regex(/[0-9]/, 'Must contain at least one number'),
+  password: passwordSchema,
 })
 
 // Login identifier is an employee number or an email (back-compat: still
@@ -29,10 +27,7 @@ const loginSchema = z.object({
 
 const registerSchema = z.object({
   email: companyEmailSchema,
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
-    .regex(/[0-9]/, 'Must contain at least one number'),
+  password: passwordSchema,
   name: z.string().min(1, 'Name is required'),
   department: z.string().optional(),
 })
@@ -98,29 +93,17 @@ export async function me(req: AuthRequest, res: Response, next: NextFunction) {
 const updateMeSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').optional(),
   email: companyEmailSchema.optional(),
-  department: z.string().trim().max(120).nullable().optional(),
-  position: z.enum(['CEO', 'MANAGING_DIRECTOR', 'DIRECTOR_UP', 'MANAGER', 'OFFICER', 'SUPERVISOR', 'PRODUCTION_STAFF']).nullable().optional(),
   jobTitle: z.string().trim().max(120).nullable().optional(),
-  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
-    .regex(/[0-9]/, 'Must contain at least one number')
-    .optional(),
-})
+  password: passwordSchema.optional(),
+}).strict()
 
 export async function forgotPassword(req: Request, res: Response, next: NextFunction) {
   try {
     const { employeeNo, dateOfBirth } = forgotSchema.parse(req.body)
     const dob = new Date(`${dateOfBirth}T00:00:00Z`)
-    const resetToken = await authService.forgotPassword(employeeNo, dob)
-    res.json({ resetToken })
+    await authService.requestPasswordReset(employeeNo, dob)
+    res.json({ ok: true })
   } catch (err) {
-    if ((err as Error).message === 'No matching account found') {
-      res.status(400).json({ message: 'Employee number or date of birth is incorrect.' })
-      return
-    }
     next(err)
   }
 }
@@ -148,13 +131,7 @@ export async function resetPassword(req: Request, res: Response, next: NextFunct
 export async function updateMe(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const body = updateMeSchema.parse(req.body)
-    const parsed = {
-      ...body,
-      dateOfBirth: body.dateOfBirth != null
-        ? (body.dateOfBirth === null ? null : new Date(`${body.dateOfBirth}T00:00:00Z`))
-        : undefined,
-    }
-    const user = await authService.updateProfile(req.user!.userId, parsed)
+    const user = await authService.updateProfile(req.user!.userId, body)
     if (body.password) {
       recordAuditEventBestEffort({
         eventType: 'auth_password_changed',

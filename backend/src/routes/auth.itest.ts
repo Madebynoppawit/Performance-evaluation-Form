@@ -104,6 +104,18 @@ describe('GET /api/auth/me', () => {
   })
 })
 
+describe('POST /api/auth/forgot-password', () => {
+  test('does not expose account existence or a reset token', async () => {
+    const res = await request(app)
+      .post('/api/auth/forgot-password')
+      .send({ employeeNo: 'NOT-A-REAL-EMPLOYEE', dateOfBirth: '1990-01-01' })
+
+    assert.equal(res.status, 200)
+    assert.deepEqual(res.body, { ok: true })
+    assert.equal((res.body as Record<string, unknown>).resetToken, undefined)
+  })
+})
+
 // ── POST /api/auth/register ───────────────────────────────────────────────────
 
 describe('POST /api/auth/register', () => {

@@ -86,8 +86,11 @@ module.exports = {
         await wait(page, 800)
         await page.goBack()
         await wait(page, 1000)
-        const url = page.url()
-        if (!url.match(/5173\/?$/)) throw new Error(`Back navigation failed — URL: ${url}`)
+        const url = new URL(page.url())
+        const expected = new URL(cfg.baseUrl)
+        if (url.origin !== expected.origin || url.pathname !== '/') {
+          throw new Error(`Back navigation failed - URL: ${url.href}`)
+        }
       },
     },
 

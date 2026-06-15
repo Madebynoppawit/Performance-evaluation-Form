@@ -5,7 +5,7 @@ import { z } from 'zod'
    Under NODE_ENV=test, .env.test (committed, dummy values) takes precedence so
    the suite boots without a real .env in CI. */
 loadDotenv()
-if (process.env.NODE_ENV === 'test') loadDotenv({ path: '.env.test', override: true })
+if (process.env.NODE_ENV === 'test') loadDotenv({ path: '.env.test' })
 
 const NODE_ENVS = ['development', 'test', 'production'] as const
 const RELEASE_CHANNELS = ['standard', 'demo', 'ai-preview'] as const
@@ -29,7 +29,7 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required').url('DATABASE_URL must be a valid connection URL'),
 
   JWT_SECRET: z.string().min(1, 'JWT_SECRET is required'),
-  JWT_EXPIRES_IN: z.string().default('7d'),
+  JWT_EXPIRES_IN: z.string().default('12h'),
   ALLOW_PUBLIC_REGISTRATION: boolEnv,
   COMPANY_EMAIL_DOMAIN: z.string().trim().min(1).default('amw-ems.com'),
 

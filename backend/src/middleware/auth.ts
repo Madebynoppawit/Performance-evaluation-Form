@@ -1,38 +1,45 @@
 import { Request, Response, NextFunction } from 'express'
 import { verifyToken } from '../utils/jwt'
 import { prisma } from '../lib/prisma'
+import { Role } from '@prisma/client'
+import {
+  type Actor,
+  type EvaluationPermission,
+  canAccessEvaluation,
+  isPrivilegedRole,
+  isSupervisoryActor,
+} from '../security/accessPolicy'
 
 export interface AuthRequest extends Request {
-  user?: { userId: string; role: string }
+  user?: Actor
 }
 
 /** DEVELOPER is a super-role with full system access. ADMIN is HR read-only for evaluations. */
-export function isAdminRole(role: string) {
-  return role === 'ADMIN' || role === 'DEVELOPER'
+export function isAdminRole(role: Role) {
+  return isPrivilegedRole(role)
 }
 
-export function isDeveloperRole(role: string) {
-  return role === 'DEVELOPER'
+export function isDeveloperRole(role: Role) {
+  return role === Role.DEVELOPER
 }
 
-export function canAccessEvaluation(
-  user: { userId: string; role: string },
-  evaluation: { evaluateeId: string; evaluatorId: string; reviewerId?: string | null }
-) {
-  return isAdminRole(user.role)
-    || evaluation.evaluateeId === user.userId
-    || evaluation.evaluatorId === user.userId
-    || evaluation.reviewerId === user.userId
-}
-
-export function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
+export async function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
   const header = req.headers.authorization
   if (!header?.startsWith('Bearer ')) {
     res.status(401).json({ message: 'Unauthorized', requestId: req.requestId })
     return
   }
   try {
-    req.user = verifyToken(header.slice(7))
+    const token = verifyToken(header.slice(7))
+    const actor = await prisma.user.findUnique({
+      where: { id: token.userId },
+      select: { id: true, role: true, position: true },
+    })
+    if (!actor) {
+      res.status(401).json({ message: 'Invalid or expired token', requestId: req.requestId })
+      return
+    }
+    req.user = { userId: actor.id, role: actor.role, position: actor.position }
     next()
   } catch {
     res.status(401).json({ message: 'Invalid or expired token', requestId: req.requestId })
@@ -42,39 +49,25 @@ export function authenticate(req: AuthRequest, res: Response, next: NextFunction
 /** Supervisory positions (หัวหน้างานขึ้นไป): Supervisor / Manager / Director-up
     (MD, CEO). They may create evaluations and build templates. Admins/developers
     always allowed. */
-const SUPERVISORY_POSITIONS = ['CEO', 'MANAGING_DIRECTOR', 'DIRECTOR_UP', 'MANAGER', 'SUPERVISOR']
-
 export async function authorizeSupervisory(req: AuthRequest, res: Response, next: NextFunction) {
   if (!req.user) {
     res.status(401).json({ message: 'Unauthorized', requestId: req.requestId })
     return
   }
-  if (isDeveloperRole(req.user.role)) {
+  if (isSupervisoryActor(req.user)) {
     next()
     return
   }
-  try {
-    const actor = await prisma.user.findUnique({
-      where: { id: req.user.userId },
-      select: { position: true },
-    })
-    if (actor?.position && SUPERVISORY_POSITIONS.includes(actor.position)) {
-      next()
-      return
-    }
-    res.status(403).json({
-      message: 'Only supervisors, managers or directors can perform this action',
-      requestId: req.requestId,
-    })
-  } catch (err) {
-    next(err)
-  }
+  res.status(403).json({
+    message: 'Only supervisors, managers or directors can perform this action',
+    requestId: req.requestId,
+  })
 }
 
-export function requireRole(...roles: string[]) {
+export function requireRole(...roles: Role[]) {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     // DEVELOPER passes every role gate; admins pass any ADMIN-or-lower gate.
-    if (!req.user || !(roles.includes(req.user.role) || req.user.role === 'DEVELOPER')) {
+    if (!req.user || !(roles.includes(req.user.role) || req.user.role === Role.DEVELOPER)) {
       res.status(403).json({ message: 'Forbidden', requestId: req.requestId })
       return
     }
@@ -82,35 +75,32 @@ export function requireRole(...roles: string[]) {
   }
 }
 
-export async function authorizeEvaluationAccess(req: AuthRequest, res: Response, next: NextFunction) {
-  if (!req.user) {
-    res.status(401).json({ message: 'Unauthorized', requestId: req.requestId })
-    return
-  }
-
-  if (isAdminRole(req.user.role)) {
-    next()
-    return
-  }
-
-  try {
-    const evaluation = await prisma.evaluation.findUnique({
-      where: { id: req.params.id },
-      select: { evaluateeId: true, evaluatorId: true, reviewerId: true },
-    })
-
-    if (!evaluation) {
-      res.status(404).json({ message: 'Evaluation not found', requestId: req.requestId })
+export function authorizeEvaluation(permission: EvaluationPermission) {
+  return async (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      res.status(401).json({ message: 'Unauthorized', requestId: req.requestId })
       return
     }
 
-    if (!canAccessEvaluation(req.user, evaluation)) {
-      res.status(403).json({ message: 'Forbidden', requestId: req.requestId })
-      return
-    }
+    try {
+      const evaluation = await prisma.evaluation.findUnique({
+        where: { id: req.params.id },
+        select: { evaluateeId: true, evaluatorId: true, reviewerId: true },
+      })
 
-    next()
-  } catch (err) {
-    next(err)
+      if (!evaluation) {
+        res.status(404).json({ message: 'Evaluation not found', requestId: req.requestId })
+        return
+      }
+
+      if (!canAccessEvaluation(req.user, evaluation, permission)) {
+        res.status(403).json({ message: 'Forbidden', requestId: req.requestId })
+        return
+      }
+
+      next()
+    } catch (err) {
+      next(err)
+    }
   }
 }

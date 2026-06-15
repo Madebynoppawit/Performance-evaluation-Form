@@ -136,11 +136,20 @@ async function runAll(suiteDefs) {
   const passed   = allTests.filter(t => t.status === 'pass').length
   const skipped  = allTests.filter(t => t.status === 'skip').length
   const failed   = total - passed - skipped
+  const setupFailures = suites.filter(s => s.setupFailed).length
 
   const finishedAt  = new Date().toISOString()
   const durationMs  = Date.now() - new Date(startedAt).getTime()
 
-  return { runId, startedAt, finishedAt, durationMs, suites, bugs, stats: { total, passed, failed, skipped } }
+  return {
+    runId,
+    startedAt,
+    finishedAt,
+    durationMs,
+    suites,
+    bugs,
+    stats: { total, passed, failed, skipped, setupFailures },
+  }
 }
 
 // Heuristic severity based on test/suite name keywords

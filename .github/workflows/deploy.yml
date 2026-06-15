@@ -23,7 +23,7 @@ on:
 
 concurrency:
   group: deploy-${{ github.event.inputs.environment || 'production' }}
-  prevent-parallel-runs: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -70,6 +70,12 @@ jobs:
             docker pull ghcr.io/${GHCR_OWNER}/amw-backend:${IMAGE_TAG}
             docker pull ghcr.io/${GHCR_OWNER}/amw-frontend:${IMAGE_TAG}
 
+            # Preserve the running release before replacing the current tags.
+            docker image inspect amw-backend:current >/dev/null 2>&1 \
+              && docker tag amw-backend:current amw-backend:previous || true
+            docker image inspect amw-frontend:current >/dev/null 2>&1 \
+              && docker tag amw-frontend:current amw-frontend:previous || true
+
             # Tag as 'current' so the compose file always pins to a real digest
             docker tag ghcr.io/${GHCR_OWNER}/amw-backend:${IMAGE_TAG}  amw-backend:current
             docker tag ghcr.io/${GHCR_OWNER}/amw-frontend:${IMAGE_TAG} amw-frontend:current
@@ -84,8 +90,8 @@ jobs:
               STATUS=$(docker compose -f "${COMPOSE_FILE}" ps --format json \
                 | python3 -c "import sys,json; s=[c['State'] for c in json.load(sys.stdin) if c['Service']=='backend']; print(s[0] if s else 'unknown')" 2>/dev/null || true)
               if [[ "$STATUS" == "running" ]]; then
-                HTTP=$(curl -fsS -o /dev/null -w "%{http_code}" http://localhost:3001/api/health || true)
-                if [[ "$HTTP" == "200" ]]; then
+                if docker compose -f "${COMPOSE_FILE}" exec -T backend \
+                  curl -fsS http://localhost:3001/api/ready >/dev/null; then
                   echo "Backend healthy after ${i}x5s"
                   break
                 fi
@@ -100,10 +106,6 @@ jobs:
               fi
               sleep 5
             done
-
-            # Snapshot the new images as 'previous' for next-deploy rollback
-            docker tag amw-backend:current  amw-backend:previous  2>/dev/null || true
-            docker tag amw-frontend:current amw-frontend:previous 2>/dev/null || true
 
             echo "==> Prune dangling images"
             docker image prune -f

@@ -122,6 +122,7 @@ module.exports = {
         await login(page, cfg.accounts.admin)
         await wait(page, 800)
         const headerBtns = await page.locator('.kbt-header button').all()
+        if (!headerBtns.length) throw new Error('Login did not create an authenticated session')
         await headerBtns[headerBtns.length - 1].click()
         await wait(page, 500)
         await page.locator('button:has-text("Sign out")').first().click()

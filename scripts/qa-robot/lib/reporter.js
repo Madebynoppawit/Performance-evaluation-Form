@@ -37,6 +37,8 @@ function saveRun(result) {
     total:      result.stats.total,
     passed:     result.stats.passed,
     failed:     result.stats.failed,
+    skipped:    result.stats.skipped,
+    setupFailures: result.stats.setupFailures,
     bugs:       result.bugs.length,
     critical:   result.bugs.filter(b => b.sev === 'CRITICAL').length,
     high:       result.bugs.filter(b => b.sev === 'HIGH').length,
@@ -53,7 +55,7 @@ function buildLogLines(r) {
     hr,
     `  QA ROBOT RUN — ${ts}  (${r.durationMs}ms)  runId: ${r.runId}`,
     hr,
-    `  Tests: ${r.stats.total}  Passed: ${r.stats.passed}  Failed: ${r.stats.failed}  Bugs: ${r.bugs.length}`,
+    `  Tests: ${r.stats.total}  Passed: ${r.stats.passed}  Failed: ${r.stats.failed}  Skipped: ${r.stats.skipped}  Setup failures: ${r.stats.setupFailures}  Bugs: ${r.bugs.length}`,
     '',
   ]
 
@@ -79,6 +81,8 @@ function buildLogLines(r) {
       if (b.detail) lines.push(`             Detail: ${b.detail}`)
       if (b.screenshot) lines.push(`             Screenshot: ${b.screenshot}`)
     }
+  } else if (r.stats.setupFailures > 0) {
+    lines.push('', `  Run incomplete: ${r.stats.setupFailures} suite setup failure(s)`)
   } else {
     lines.push('', '  No bugs detected ✓')
   }
@@ -212,7 +216,9 @@ function printSummary(result) {
   console.log(`  ${result.stats.passed}/${result.stats.total} passed · ${result.bugs.length} bugs · ${result.durationMs}ms`)
   console.log(hr)
   const sorted = [...result.bugs].sort((a, b) => (SEV_ORDER[a.sev] || 9) - (SEV_ORDER[b.sev] || 9))
-  if (sorted.length) {
+  if (result.stats.setupFailures > 0) {
+    console.log(`  Run incomplete: ${result.stats.setupFailures} suite setup failure(s), ${result.stats.skipped} test(s) skipped`)
+  } else if (sorted.length) {
     sorted.forEach(b => console.log(`  ${SEV_EMOJI[b.sev]} [${b.sev.padEnd(8)}] ${b.id} | ${b.page.padEnd(18)} | ${b.desc}`))
   } else {
     console.log('  ✅ All clear — no bugs found')

@@ -1,7 +1,8 @@
-import { Position } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { comparePassword, hashPassword } from '../utils/hash'
 import { signToken, signResetToken, verifyResetToken } from '../utils/jwt'
+import { env } from '../config/env'
+import { sendPasswordReset } from './emailService'
 
 export async function login(identifier: string, password: string) {
   // Accept either an employee number or an email (admins/dev accounts have no
@@ -54,11 +55,8 @@ export async function updateProfile(
   data: {
     name?: string
     email?: string
-    department?: string | null
-    position?: Position | null
     jobTitle?: string | null
     password?: string
-    dateOfBirth?: Date | null
   }
 ) {
   if (data.email) {
@@ -76,10 +74,7 @@ export async function updateProfile(
   const payload: Record<string, unknown> = {}
   if (data.name !== undefined) payload.name = data.name
   if (data.email !== undefined) payload.email = data.email
-  if (data.department !== undefined) payload.department = data.department
-  if (data.position !== undefined) payload.position = data.position
   if (data.jobTitle !== undefined) payload.jobTitle = data.jobTitle
-  if (data.dateOfBirth !== undefined) payload.dateOfBirth = data.dateOfBirth
   // Changing the password also clears the forced-change flag.
   if (data.password) {
     payload.password = await hashPassword(data.password)
@@ -93,14 +88,12 @@ export async function updateProfile(
 
 /** Verify employee number + date of birth; if match → return a short-lived
     reset token (15 min). Uses a generic error to avoid user enumeration. */
-export async function forgotPassword(employeeNo: string, dateOfBirth: Date): Promise<string> {
-  const genericErr = new Error('No matching account found')
-
+export async function requestPasswordReset(employeeNo: string, dateOfBirth: Date): Promise<void> {
   const user = await prisma.user.findFirst({
     where: { employeeNo: employeeNo.trim() },
-    select: { id: true, dateOfBirth: true },
+    select: { id: true, name: true, email: true, dateOfBirth: true },
   })
-  if (!user || !user.dateOfBirth) throw genericErr
+  if (!user || !user.dateOfBirth) return
 
   // Compare calendar date only (ignore stored time component).
   const stored = user.dateOfBirth
@@ -108,9 +101,14 @@ export async function forgotPassword(employeeNo: string, dateOfBirth: Date): Pro
     stored.getUTCFullYear() === dateOfBirth.getUTCFullYear() &&
     stored.getUTCMonth()    === dateOfBirth.getUTCMonth()    &&
     stored.getUTCDate()     === dateOfBirth.getUTCDate()
-  if (!match) throw genericErr
+  if (!match) return
 
-  return signResetToken(user.id)
+  const token = signResetToken(user.id)
+  await sendPasswordReset({
+    to: user.email,
+    name: user.name,
+    resetUrl: `${env.CLIENT_URL}/forgot-password?token=${encodeURIComponent(token)}`,
+  })
 }
 
 /** Consume a reset token and set a new password. */

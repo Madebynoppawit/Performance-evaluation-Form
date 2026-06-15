@@ -31,6 +31,7 @@ services:
     # Not published to the host by default — only the app talks to it.
 
   migrate:
+    image: amw-backend:current
     build:
       context: .
       dockerfile: backend/Dockerfile
@@ -46,6 +47,7 @@ services:
     restart: "no"
 
   backend:
+    image: amw-backend:current
     build:
       context: .
       dockerfile: backend/Dockerfile
@@ -55,12 +57,20 @@ services:
       PORT: 3001
       DATABASE_URL: postgresql://${POSTGRES_USER:-amw}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-performance_eval}?schema=public
       JWT_SECRET: ${JWT_SECRET:?set a 32+ char JWT_SECRET in .env.prod}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-12h}
       COMPANY_EMAIL_DOMAIN: ${COMPANY_EMAIL_DOMAIN:-amw-ems.com}
       CLIENT_URL: ${CLIENT_URL:?set CLIENT_URL (public frontend URL) in .env.prod}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
+      ALLOW_PUBLIC_REGISTRATION: ${ALLOW_PUBLIC_REGISTRATION:-false}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       SENTRY_DSN: ${SENTRY_DSN:-}
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-AMW Evaluations <noreply@amw-ems.com>}
     depends_on:
       postgres:
         condition: service_healthy
@@ -75,6 +85,7 @@ services:
           memory: 128m
 
   frontend:
+    image: amw-frontend:current
     build:
       context: .
       dockerfile: frontend/Dockerfile

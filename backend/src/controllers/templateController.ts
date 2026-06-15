@@ -2,8 +2,9 @@ import { Response, NextFunction } from 'express'
 import { z } from 'zod'
 import { AuthRequest } from '../middleware/auth'
 import * as templateService from '../services/templateService'
+import { EvaluationType } from '@prisma/client'
 
-const EvalType = z.enum(['SELF', 'MANAGER', 'PEER', 'THREE_SIXTY'])
+const EvalType = z.nativeEnum(EvaluationType)
 const QuestionType = z.enum(['rating', 'text', 'multiple_choice'])
 
 const createTemplateSchema = z.object({

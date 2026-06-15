@@ -3,9 +3,9 @@ import { AuthRequest } from '../middleware/auth'
 import * as reportService from '../services/reportService'
 import { recordAuditEventBestEffort } from '../services/auditEventService'
 
-export async function summary(_req: AuthRequest, res: Response, next: NextFunction) {
+export async function summary(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    res.json(await reportService.getSummaryReport())
+    res.json(await reportService.getSummaryReport(req.user!))
   } catch (err) {
     next(err)
   }

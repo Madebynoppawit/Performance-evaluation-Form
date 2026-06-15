@@ -1,16 +1,31 @@
 import { prisma } from '../lib/prisma'
 import { EvaluationStatus } from '@prisma/client'
-import { canAccessEvaluation } from '../middleware/auth'
+import {
+  type Actor,
+  canAccessEvaluation,
+  canIncludeSalary,
+  isPrivilegedRole,
+} from '../security/accessPolicy'
 const COMPLETED: EvaluationStatus[] = [
   EvaluationStatus.SUBMITTED,
   EvaluationStatus.REVIEWED,
   EvaluationStatus.CLOSED,
 ]
 
-export async function getSummaryReport() {
+export async function getSummaryReport(actor: Actor) {
+  const evaluationWhere = isPrivilegedRole(actor.role)
+    ? undefined
+    : {
+        OR: [
+          { evaluatorId: actor.userId },
+          { reviewerId: actor.userId },
+        ],
+      }
+
   const cycles = await prisma.cycle.findMany({
     include: {
       evaluations: {
+        where: evaluationWhere,
         include: {
           evaluatee: { select: { department: true } },
         },
@@ -100,7 +115,7 @@ function dateCell(value?: Date | string | null) {
 
 export async function exportEvaluationCsv(
   evaluationId: string,
-  user: { userId: string; role: string }
+  user: Actor,
 ) {
   const evaluation = await prisma.evaluation.findUniqueOrThrow({
     where: { id: evaluationId },
@@ -118,13 +133,13 @@ export async function exportEvaluationCsv(
     },
   })
 
-  if (!canAccessEvaluation(user, evaluation)) {
+  if (!canAccessEvaluation(user, evaluation, 'read')) {
     const err = new Error('Forbidden') as Error & { status: number }
     err.status = 403
     throw err
   }
 
-  const includeSalary = user.role === 'ADMIN' || user.role === 'MANAGER' || user.role === 'DEVELOPER'
+  const includeSalary = canIncludeSalary(user, evaluation)
   const exportedAt = new Date().toISOString()
   const rows = [
     csvRow('AMW PERFORMANCE EVALUATION EXPORT'),

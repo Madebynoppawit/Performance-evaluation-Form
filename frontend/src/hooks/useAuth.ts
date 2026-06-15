@@ -1,8 +1,5 @@
 import { useAuthStore } from '@/features/auth/authStore'
-
-// Supervisory positions (หัวหน้างานขึ้นไป): Supervisor / Manager / Director-up
-// (MD, CEO). They may create evaluations and build templates.
-const SUPERVISORY_POSITIONS = ['DIRECTOR_UP', 'MANAGER', 'SUPERVISOR']
+import { SUPERVISORY_POSITIONS } from '@/config/accessPolicy'
 
 export function useAuth() {
   const user = useAuthStore((s) => s.user)
@@ -13,7 +10,9 @@ export function useAuth() {
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'DEVELOPER'
   const isDeveloper = user?.role === 'DEVELOPER'
-  const isSupervisory = SUPERVISORY_POSITIONS.includes(user?.position ?? '')
+  const isSupervisory = user?.position
+    ? SUPERVISORY_POSITIONS.includes(user.position)
+    : false
 
   return {
     user,
