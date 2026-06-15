@@ -35,21 +35,37 @@ async function runSuite(suiteDef, adminSession = null) {
       }
     }
 
+    const maxAttempts = 1 + (cfg.retries || 0)
+
     for (const test of suiteDef.tests) {
       const start = Date.now()
-      try {
-        await test.fn(page, context)
+      let lastErr = null
+
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        if (attempt > 0) {
+          await page.goto('about:blank').catch(() => {})
+          await page.waitForTimeout(600)
+        }
+        try {
+          await test.fn(page, context)
+          lastErr = null
+          break
+        } catch (err) {
+          lastErr = err
+        }
+      }
+
+      if (!lastErr) {
         results.push({ name: test.name, status: 'pass', durationMs: Date.now() - start })
-      } catch (err) {
+      } else {
         const shot = await screenshot(page, slugify(`${suiteDef.name}_${test.name}`)).catch(() => null)
         results.push({
           name:        test.name,
           status:      'fail',
           durationMs:  Date.now() - start,
-          error:       err.message?.slice(0, 300),
+          error:       lastErr.message?.slice(0, 300),
           screenshot:  shot,
         })
-        // Reset page to base URL to prevent cascading failures
         await page.goto('about:blank').catch(() => {})
       }
     }

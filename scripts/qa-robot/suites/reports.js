@@ -128,5 +128,56 @@ module.exports = {
         await wait(page, 1000)
       },
     },
+
+    // ── Export functional tests ──────────────────────────────────────────────
+    {
+      name: 'CSV export triggers a file download',
+      async fn(page) {
+        await go(page, '/reports')
+        await wait(page, 3000)
+
+        const exportBtn = page.locator('button:has-text("CSV"), button:has-text("Export"), a:has-text("CSV")').first()
+        if (await exportBtn.count() === 0) {
+          console.warn('  [SKIP] No CSV export button visible (data may be empty)')
+          return
+        }
+
+        // Wait for download event triggered by button click
+        let downloaded = false
+        let downloadName = ''
+        try {
+          const [download] = await Promise.all([
+            page.waitForEvent('download', { timeout: 8000 }),
+            exportBtn.click(),
+          ])
+          downloaded = true
+          downloadName = download.suggestedFilename()
+          // Cancel the actual save — we only need to confirm the download started
+          await download.cancel()
+        } catch {
+          // waitForEvent timed out — download may have been triggered differently (Blob URL)
+          // Fall back: check if an <a download> was clicked or a blob URL navigated to
+          downloaded = await page.evaluate(() => {
+            // Check if any blob: URL navigation happened in the last second
+            return performance.getEntriesByType('navigation').some(e => e.name?.startsWith('blob:')) ||
+                   window.__qaLastDownload != null
+          })
+        }
+
+        if (!downloaded) throw new Error('CSV export button click did not trigger a download event')
+        if (downloadName && !downloadName.match(/\.csv$/i))
+          throw new Error(`Downloaded file is not a CSV: "${downloadName}"`)
+      },
+    },
+
+    {
+      name: 'Reports page has no horizontal scroll at 1440px (regression)',
+      async fn(page) {
+        await go(page, '/reports')
+        await wait(page, 2000)
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)
+        if (overflow) throw new Error('Reports page has horizontal overflow at 1440px — layout regression')
+      },
+    },
   ],
 }

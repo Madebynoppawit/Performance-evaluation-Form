@@ -116,5 +116,78 @@ module.exports = {
         await page.keyboard.press('Escape')
       },
     },
+
+    // ── Command Palette — interaction tests ──────────────────────────────────
+    {
+      name: 'Command palette filters results when typing',
+      async fn(page) {
+        await go(page, '/')
+        await wait(page, 1200)
+        await page.keyboard.press('Control+k')
+        await wait(page, 700)
+        const dialog = page.locator('[role="dialog"], [class*="cmdk"]').first()
+        if (await dialog.count() === 0) throw new Error('Command palette did not open')
+
+        // Type a keyword that should match at least one command
+        const input = dialog.locator('input').first()
+        if (await input.count() === 0) throw new Error('No search input inside command palette')
+        await input.fill('report')
+        await wait(page, 500)
+
+        // Results should be filtered — look for "Reports" in the visible results
+        const text = await dialog.evaluate(el => el.innerText)
+        if (!text.match(/report/i))
+          throw new Error('Command palette does not show "Reports" when typing "report"')
+
+        await page.keyboard.press('Escape')
+      },
+    },
+
+    {
+      name: 'Command palette navigates to page on Enter',
+      async fn(page) {
+        await go(page, '/')
+        await wait(page, 1200)
+        await page.keyboard.press('Control+k')
+        await wait(page, 700)
+        const dialog = page.locator('[role="dialog"], [class*="cmdk"]').first()
+        if (await dialog.count() === 0) throw new Error('Command palette did not open')
+
+        const input = dialog.locator('input').first()
+        if (await input.count() === 0) { await page.keyboard.press('Escape'); return }
+
+        // Type "reports" and press Enter to navigate
+        await input.fill('reports')
+        await wait(page, 600)
+        await page.keyboard.press('Enter')
+        await wait(page, 1500)
+
+        // Should have navigated away from dashboard
+        const url = page.url()
+        if (url === cfg.baseUrl + '/' || url === cfg.baseUrl)
+          throw new Error('Command palette Enter did not navigate — still on dashboard')
+      },
+    },
+
+    {
+      name: 'Notification panel shows notification items or empty state',
+      async fn(page) {
+        await go(page, '/')
+        await wait(page, 1200)
+        const bell = page.locator('button[aria-label*="otif"]').first()
+        if (await bell.count() === 0) throw new Error('Bell button not found')
+        await bell.click()
+        await wait(page, 800)
+        const panel = page.locator('.amw-notification-popover, [class*="notification-popover"]').first()
+        if (await panel.count() === 0) throw new Error('Notification panel did not open')
+
+        // Panel should contain either notification items or an empty state
+        const text = await panel.evaluate(el => el.innerText)
+        if (text.trim().length < 2)
+          throw new Error('Notification panel is empty with no items or empty state text')
+
+        await page.keyboard.press('Escape')
+      },
+    },
   ],
 }

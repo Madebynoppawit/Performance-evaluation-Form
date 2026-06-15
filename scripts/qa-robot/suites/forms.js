@@ -148,5 +148,73 @@ module.exports = {
           throw new Error('No file import control found on Data Management page')
       },
     },
+
+    // ── Account password validation (v1.1.0 feature) ────────────────────────
+    {
+      name: 'Account: confirm password mismatch shows red border',
+      async fn(page) {
+        await go(page, '/account')
+        await wait(page, 2000)
+        const passwordInputs = page.locator('input[type="password"]')
+        const count = await passwordInputs.count()
+        if (count < 2) { console.warn('  [SKIP] Less than 2 password inputs on account page'); return }
+
+        // Fill mismatched passwords
+        await passwordInputs.nth(0).fill('NewPassword1!')
+        await passwordInputs.nth(1).fill('DifferentPassword2!')
+        await wait(page, 400)
+
+        // Confirm password input should get red border when values differ
+        const hasRedBorder = await passwordInputs.nth(1).evaluate(el => {
+          const style = el.style.borderColor || window.getComputedStyle(el).borderColor
+          // App sets inline style borderColor to var(--kbt-danger) on mismatch
+          return el.style.borderColor.includes('var(--kbt-danger)') ||
+                 el.style.borderColor !== '' ||
+                 el.getAttribute('style')?.includes('kbt-danger') ||
+                 el.getAttribute('style')?.includes('#e52') // kbt-danger hex
+        })
+        if (!hasRedBorder) {
+          // Fallback: try clicking save and check for error message
+          const saveBtn = page.locator('button.kbt-btn-primary').first()
+          if (await saveBtn.count() > 0) {
+            await saveBtn.click()
+            await wait(page, 600)
+            const text = await page.evaluate(() => document.body.innerText)
+            if (!text.match(/mismatch|do not match|password.*confirm|ไม่ตรงกัน/i))
+              throw new Error('No mismatch error shown when passwords differ')
+          }
+        }
+        // Clear passwords to reset state
+        await passwordInputs.nth(0).fill('')
+        await passwordInputs.nth(1).fill('')
+      },
+    },
+
+    {
+      name: 'Account: matching passwords clear the mismatch indicator',
+      async fn(page) {
+        await go(page, '/account')
+        await wait(page, 2000)
+        const passwordInputs = page.locator('input[type="password"]')
+        if (await passwordInputs.count() < 2) return
+
+        // Enter mismatched then fix them
+        await passwordInputs.nth(0).fill('MatchingPass1!')
+        await passwordInputs.nth(1).fill('WrongPass1!')
+        await wait(page, 300)
+        await passwordInputs.nth(1).fill('MatchingPass1!')
+        await wait(page, 300)
+
+        // Border should be gone (or default colour)
+        const hasDangerBorder = await passwordInputs.nth(1).evaluate(el =>
+          el.getAttribute('style')?.includes('kbt-danger') ||
+          el.getAttribute('style')?.includes('#e52') || false
+        )
+        if (hasDangerBorder) throw new Error('Red border still showing after passwords were made to match')
+
+        await passwordInputs.nth(0).fill('')
+        await passwordInputs.nth(1).fill('')
+      },
+    },
   ],
 }

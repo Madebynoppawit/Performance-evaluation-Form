@@ -142,5 +142,67 @@ module.exports = {
         if (link === 0) throw new Error('No "Forgot password" link on login page')
       },
     },
+
+    // ── Forgot Password page ─────────────────────────────────────────────────
+    {
+      name: 'Forgot password page renders at /forgot-password',
+      async fn(page) {
+        await go(page, '/forgot-password')
+        await wait(page, 1200)
+        const text = await page.evaluate(() => document.body.innerText)
+        if (text.length < 10) throw new Error('Forgot password page loaded blank')
+        if (page.url().includes('/login')) throw new Error('/forgot-password redirected to /login — route not registered')
+        if (!text.match(/forgot|reset|employee|password/i))
+          throw new Error('Forgot password page has no relevant text')
+      },
+    },
+
+    {
+      name: 'Forgot password form has employeeNo and date inputs',
+      async fn(page) {
+        await go(page, '/forgot-password')
+        await wait(page, 1000)
+        const textInputs = await cnt(page, 'input[type="text"], input:not([type]), input[name="employeeNo"]')
+        const dateInputs = await cnt(page, 'input[type="date"]')
+        if (textInputs === 0) throw new Error('No text/employeeNo input on forgot-password page')
+        if (dateInputs === 0) throw new Error('No date input (date of birth) on forgot-password page')
+      },
+    },
+
+    {
+      name: 'Forgot password: empty submit shows field-level validation',
+      async fn(page) {
+        await go(page, '/forgot-password')
+        await wait(page, 1000)
+        const submitBtn = page.locator('button[type="submit"]').first()
+        if (await submitBtn.count() === 0) throw new Error('No submit button on forgot-password page')
+        await submitBtn.click()
+        await wait(page, 700)
+        const hasErrors = await page.evaluate(() =>
+          document.body.innerText.match(/required|enter your|must|cannot be/i) !== null ||
+          document.querySelectorAll('p.kbt-msg-error, [class*="msg-error"]').length > 0
+        )
+        if (!hasErrors) throw new Error('Empty forgot-password form submit shows no validation errors')
+      },
+    },
+
+    {
+      name: 'Forgot password: submit does not crash the page',
+      async fn(page) {
+        await go(page, '/forgot-password')
+        await wait(page, 1000)
+        const textInput = page.locator('input[type="text"], input[name="employeeNo"]').first()
+        const dateInput = page.locator('input[type="date"]').first()
+        if (await textInput.count() === 0 || await dateInput.count() === 0) return
+        await textInput.fill('EMP-QATEST')
+        await dateInput.fill('1990-01-01')
+        await page.locator('button[type="submit"]').first().click()
+        await wait(page, 3000)
+        // Either shows confirmation or an error — should not crash or go blank
+        const text = await page.evaluate(() => document.body.innerText)
+        if (text.length < 10) throw new Error('Page went blank after forgot-password submission')
+        if (page.url().includes('/login')) throw new Error('Page redirected to /login unexpectedly after submit')
+      },
+    },
   ],
 }

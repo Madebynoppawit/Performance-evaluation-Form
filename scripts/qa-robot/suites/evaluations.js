@@ -1,5 +1,5 @@
 const cfg  = require('../config')
-const { login } = require('../lib/browser')
+const { login, newPage } = require('../lib/browser')
 
 const go   = (page, path) => page.goto(cfg.baseUrl + path, { waitUntil: 'load' })
 const wait = (page, ms)   => page.waitForTimeout(ms)
@@ -146,6 +146,84 @@ module.exports = {
                  document.querySelector('[class*="pagination"], button[aria-label*="next"]') !== null
         })
         if (!pager) throw new Error('Pagination controls not visible with > 25 rows')
+      },
+    },
+
+    // ── Write-path tests (require developer role — read/write access) ────────
+    {
+      name: 'Save Draft button present on eval form (developer session)',
+      async fn(_page) {
+        const devAccount = cfg.accounts.developer
+        if (!devAccount) { console.warn('  [SKIP] No developer account in config'); return }
+
+        const { page: p, context: ctx } = await newPage('desktop', null)
+        try {
+          const { ok } = await login(p, devAccount)
+          if (!ok) { console.warn('  [SKIP] Developer login failed'); return }
+
+          await p.goto(cfg.baseUrl + '/evaluations', { waitUntil: 'load' })
+          await wait(p, 2000)
+          const rows = await cnt(p, 'table tbody tr')
+          if (rows === 0) { console.warn('  [SKIP] No evaluations in list'); return }
+
+          const openBtn = p.locator('table tbody tr').first().locator('a[href*="/evaluations/"]').first()
+          if (await openBtn.count() === 0) { console.warn('  [SKIP] No Open link found'); return }
+          await openBtn.click()
+          await wait(p, 2500)
+
+          // Developer is NOT read-only — Save Draft button should be enabled
+          const saveBtn = await p.evaluate(() => {
+            const btns = [...document.querySelectorAll('button')]
+            return btns.find(b => /save draft|save|บันทึก/i.test(b.textContent || ''))?.textContent?.trim() ?? null
+          })
+          if (!saveBtn) throw new Error('Save Draft button not found on eval form (developer role)')
+        } finally {
+          await ctx.close().catch(() => {})
+        }
+      },
+    },
+
+    {
+      name: 'Save Draft API call succeeds (developer session)',
+      async fn(_page) {
+        const devAccount = cfg.accounts.developer
+        if (!devAccount) { console.warn('  [SKIP] No developer account in config'); return }
+
+        const { page: p, context: ctx } = await newPage('desktop', null)
+        try {
+          const { ok } = await login(p, devAccount)
+          if (!ok) { console.warn('  [SKIP] Developer login failed'); return }
+
+          await p.goto(cfg.baseUrl + '/evaluations', { waitUntil: 'load' })
+          await wait(p, 2000)
+          const rows = await cnt(p, 'table tbody tr')
+          if (rows === 0) { console.warn('  [SKIP] No evaluations in list'); return }
+
+          const openBtn = p.locator('table tbody tr').first().locator('a[href*="/evaluations/"]').first()
+          if (await openBtn.count() === 0) { console.warn('  [SKIP] No Open link'); return }
+          await openBtn.click()
+          await wait(p, 2500)
+
+          const saveBtn = p.locator('button').filter({ hasText: /save draft|save|บันทึก/i }).first()
+          if (await saveBtn.count() === 0) { console.warn('  [SKIP] Save button not found'); return }
+
+          // Listen for any API error responses
+          const errors = []
+          p.on('response', r => { if (r.status() >= 400 && r.url().includes('/evaluations/')) errors.push(`${r.status()} ${r.url()}`) })
+
+          await saveBtn.click()
+          await wait(p, 2500)
+
+          // Check for success indicator or that no error appeared
+          const text = await p.evaluate(() => document.body.innerText)
+          const hasError = text.match(/save.*fail|failed|error.*save/i) || errors.length > 0
+          if (hasError) throw new Error(`Save Draft failed — API errors: ${errors.join(', ')}`)
+
+          const hasSavedIndicator = text.match(/saved|บันทึกแล้ว|enregistré/i)
+          if (!hasSavedIndicator) console.warn('  [WARN] No "Saved" indicator after save — may be async')
+        } finally {
+          await ctx.close().catch(() => {})
+        }
       },
     },
   ],

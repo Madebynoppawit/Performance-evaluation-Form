@@ -51,13 +51,25 @@ const ALL_SUITES = [
   require('./suites/forms'),
   require('./suites/users'),
   require('./suites/reports'),
+  require('./suites/calibration'),
+  require('./suites/rbac'),
+  require('./suites/api'),
   require('./suites/mobile'),
+  require('./suites/tablet'),
   require('./suites/performance'),
 ]
 
+const smokeArg = args.includes('--smoke')
+
 function getActiveSuites() {
-  if (!suiteArg) return ALL_SUITES
-  const found = ALL_SUITES.filter(s => s.name.toLowerCase().includes(suiteArg.toLowerCase()))
+  let suites = ALL_SUITES
+  // --smoke or QA_SMOKE=1: run only the smoke subset
+  if (smokeArg || cfg.smokeMode) {
+    suites = ALL_SUITES.filter(s => cfg.smokeSuites.includes(s.name))
+    console.log(`  [smoke] Running ${suites.length} suites: ${suites.map(s => s.name).join(', ')}`)
+  }
+  if (!suiteArg) return suites
+  const found = suites.filter(s => s.name.toLowerCase().includes(suiteArg.toLowerCase()))
   if (found.length === 0) {
     console.error(`Unknown suite: "${suiteArg}". Available: ${ALL_SUITES.map(s => s.name).join(', ')}`)
     process.exit(2)
