@@ -85,6 +85,10 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   const attRecord = ev.attendanceRecord ?? null
   const attScore = attRecord?.attendanceAvgScore ?? ev.attendanceScore ?? null
   const goalScore = ev.goalScore ?? null
+  const scoredGoals = goals.filter(g => g.evaluationScore != null)
+  const effectiveGoalScore = goalScore ?? (scoredGoals.length > 0
+    ? scoredGoals.reduce((s, g) => s + Number(g.evaluationScore!), 0) / scoredGoals.length
+    : null)
   const competencyScore = ev.competencyScore ?? null
 
   const TRAINING_WEIGHT = 10
@@ -692,6 +696,103 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     y += 12
 
   } else {
+    // ── OSE GOAL SETTING TABLE (shown when goal entries exist) ──────────
+    if (goals.length > 0) {
+      partBanner(`ส่วนที่ ${partN++}`, 'การตั้งเป้าหมาย (KPI)', 'Goal Setting (KPI)')
+
+      const hasTargets = goals.some(g => g.targetRating5 || g.targetRating4 || g.targetRating3)
+      let GK: readonly number[]
+      if (hasTargets) {
+        GK = [20, 160, 36, 36, 36, 36, 36, 70, 40] as const
+        tblHeader([
+          { text: '#', w: GK[0] },
+          { text: 'KPI Goal Description', w: GK[1] },
+          { text: 'Wt%', w: GK[2] },
+          { text: '★5', w: GK[3] },
+          { text: '★4', w: GK[4] },
+          { text: '★3', w: GK[5] },
+          { text: '★2', w: GK[6] },
+          { text: '★1', w: GK[7] },
+          { text: 'Score', w: GK[8] },
+        ], 20)
+      } else {
+        const resultW = 90, scoreW = 44, wtW2 = 36
+        GK = [20, CW - 20 - wtW2 - resultW - scoreW] as const
+        tblHeader([
+          { text: '#', w: GK[0] },
+          { text: 'KPI Goal Description', w: GK[1] },
+          { text: 'Wt%', w: wtW2 },
+          { text: 'Actual Result', w: resultW },
+          { text: 'Score', w: scoreW },
+        ], 20)
+      }
+
+      goals.forEach((goal, gi) => {
+        if (hasTargets) {
+          const goalLines = doc.splitTextToSize(goal.goal || '—', GK[1] - 10)
+          const rh = Math.max(22, goalLines.length * 9.5 + 10)
+          needPage(rh)
+          const rowBg: RGB = gi % 2 === 0 ? C.white : C.paper
+          doc.setFillColor(...rowBg); doc.setDrawColor(...C.border)
+          doc.rect(M, y, CW, rh, 'FD')
+          let gx = M
+          cellText(String(gi + 1), gx, y, GK[0], rh, 'center')
+          colDivider(gx + GK[0], y, rh); gx += GK[0]
+          cellText(goal.goal || '—', gx, y, GK[1], rh, 'left', false, C.ink, 7.5)
+          colDivider(gx + GK[1], y, rh); gx += GK[1]
+          cellText(`${goal.weight ?? 0}%`, gx, y, GK[2], rh, 'center')
+          colDivider(gx + GK[2], y, rh); gx += GK[2]
+          ;[goal.targetRating5, goal.targetRating4, goal.targetRating3, goal.targetRating2, goal.targetRating1].forEach((t, ti) => {
+            const isMatch = goal.evaluationScore != null && (5 - ti) === goal.evaluationScore
+            if (isMatch) { doc.setFillColor(...C.blueLt); doc.rect(gx, y, GK[3 + ti], rh, 'F') }
+            cellText(t ?? '—', gx, y, GK[3 + ti], rh, 'center', false, C.ink, 6.5)
+            colDivider(gx + GK[3 + ti], y, rh); gx += GK[3 + ti]
+          })
+          if (goal.evaluationScore != null) {
+            scoreBox(goal.evaluationScore, gx + 4, y + rh / 2 - 11, GK[8] - 8, 22)
+          } else {
+            cellText('—', gx, y, GK[8], rh, 'center')
+          }
+          y += rh
+        } else {
+          const resultW = 90, scoreW = 44
+          const descW = GK[1]
+          const wtW = CW - GK[0] - descW - resultW - scoreW
+          const goalLines = doc.splitTextToSize(goal.goal || '—', descW - 10)
+          const rh = Math.max(22, goalLines.length * 9.5 + 10)
+          needPage(rh)
+          const rowBg: RGB = gi % 2 === 0 ? C.white : C.paper
+          doc.setFillColor(...rowBg); doc.setDrawColor(...C.border)
+          doc.rect(M, y, CW, rh, 'FD')
+          let gx = M
+          cellText(String(gi + 1), gx, y, GK[0], rh, 'center')
+          colDivider(gx + GK[0], y, rh); gx += GK[0]
+          cellText(goal.goal || '—', gx, y, descW, rh, 'left', false, C.ink, 7.5)
+          colDivider(gx + descW, y, rh); gx += descW
+          cellText(`${goal.weight ?? 0}%`, gx, y, wtW, rh, 'center')
+          colDivider(gx + wtW, y, rh); gx += wtW
+          cellText(goal.result ?? '—', gx, y, resultW, rh, 'left', false, C.ink, 7.5)
+          colDivider(gx + resultW, y, rh); gx += resultW
+          if (goal.evaluationScore != null) {
+            scoreBox(goal.evaluationScore, gx + 4, y + rh / 2 - 11, scoreW - 8, 22)
+          } else {
+            cellText('—', gx, y, scoreW, rh, 'center')
+          }
+          y += rh
+        }
+      })
+
+      const totalGoalWeight = goals.reduce((s, g) => s + (Number(g.weight) || 0), 0)
+      needPage(18)
+      doc.setFillColor(...C.blueLt); doc.setDrawColor(...C.border)
+      doc.rect(M, y, CW, 16, 'FD')
+      pf(true); doc.setFontSize(7.5); doc.setTextColor(...C.navy)
+      doc.text(`Total Goal Weight: ${totalGoalWeight}%`, M + 8, y + 11)
+      doc.text(`Goal Score: ${fmtScore(effectiveGoalScore)}`, PW - M - 8, y + 11, { align: 'right' })
+      y += 16
+      y += 10
+    }
+
     // ── OSE FORM: EVALUATION CRITERIA ──────────────────────────────────
     partBanner(`ส่วนที่ ${partN++}`, 'การประเมินผลการปฏิบัติงาน', 'Evaluation Criteria')
 
@@ -875,7 +976,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     }
 
     // ── 1. Goal Setting ──────────────────────────────────────────────────────
-    oseRow('1. Goal Setting (KPI)', goalScore)
+    oseRow('1. Goal Setting (KPI)', effectiveGoalScore)
     if (goals.length) {
       goals.forEach((g, i) => {
         oseSubRow(`${i + 1}. ${g.goal || '—'}  (${g.weight ?? 0}%)`, g.evaluationScore ?? null)
