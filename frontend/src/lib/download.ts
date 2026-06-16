@@ -159,6 +159,12 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     5: C.navy, 4: C.blue, 3: C.green, 2: C.amber, 1: C.red,
   }
 
+  // Convert raw 1-5 score to GPAX 0-4 display scale (score - 1)
+  function toGpax(score: number) { return score - 1 }
+  // Color for GPAX 0-4 value (round to nearest int: 4→navy, 3→blue, 2→green, 1→amber, 0→red)
+  const GPAX_BG: Record<number, RGB> = { 4: C.navy, 3: C.blue, 2: C.green, 1: C.amber, 0: C.red }
+  function gpaxBg(gpax: number): RGB { return GPAX_BG[Math.round(gpax)] ?? C.muted }
+
   let y = M
 
   // pf  → helvetica (supports all Latin/numeric content)
@@ -181,34 +187,33 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   function renderPageFrame() {
     doc.setFillColor(255, 255, 255)
     doc.rect(0, 0, PW, PH, 'F')
-    doc.setFillColor(...C.navy)
-    doc.rect(0, 0, PW, 6, 'F')
-    doc.setFillColor(...C.blue)
-    doc.rect(0, 6, PW * 0.72, 2, 'F')
-    doc.setFillColor(...C.red)
-    doc.rect(PW * 0.72, 6, PW * 0.28, 2, 'F')
-    doc.setFillColor(...C.paper)
-    doc.rect(0, 8, PW, 32, 'F')
+    // Simple header separator
     doc.setDrawColor(...C.borderX)
-    doc.line(M, 38, PW - M, 38)
+    doc.line(M, 34, PW - M, 34)
+    // AMW left
+    pf(true)
+    doc.setFontSize(7.5)
+    doc.setTextColor(...C.navy)
+    doc.text('AMW', M, 24)
+    pf(false)
+    doc.setFontSize(6.5)
+    doc.setTextColor(...C.muted)
+    doc.text('Performance Evaluation System', M + 22, 24)
+    // Employee name center
     pf(true)
     doc.setFontSize(7)
-    doc.setTextColor(...C.navy)
-    doc.text('AMW', M, 27)
-    doc.setTextColor(...C.muted)
-    doc.setFontSize(6.5)
-    doc.text('Performance Evaluation System', M + 20, 27)
     doc.setTextColor(...C.ink)
-    doc.setFontSize(7)
-    doc.text(displayEmployee, PW / 2, 27, { align: 'center' })
-    doc.setTextColor(...C.muted)
+    doc.text(displayEmployee, PW / 2, 24, { align: 'center' })
+    // Doc ID right
+    pf(false)
     doc.setFontSize(6.5)
-    doc.text(documentId, PW - M, 27, { align: 'right' })
+    doc.setTextColor(...C.muted)
+    doc.text(documentId, PW - M, 24, { align: 'right' })
+    // Watermark
     doc.setFontSize(24)
     doc.setTextColor(238, 242, 250)
     doc.text('CONFIDENTIAL', PW / 2, PH / 2 + 20, { align: 'center', angle: 35 })
-    doc.setFillColor(...C.paper)
-    doc.rect(0, PH - 26, PW, 26, 'F')
+    // Footer
     doc.setDrawColor(...C.borderX)
     doc.line(M, PH - 20, PW - M, PH - 20)
     pf(false)
@@ -218,24 +223,30 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   }
 
   function partBanner(num: number, titleTh: string, titleEn: string) {
-    needPage(26)
-    doc.setFillColor(...C.navy)
-    doc.rect(M, y, CW, 22, 'F')
-    doc.setFillColor(...C.blue)
-    doc.rect(M, y + 19, CW * 0.68, 3, 'F')
-    doc.setFillColor(...C.red)
-    doc.rect(M + CW * 0.68, y + 19, CW * 0.32, 3, 'F')
-    // Thai heading — Thai font renders Thai glyphs; Latin number invisible here
+    needPage(56)
+    y += 18
+    // Thai font has no Latin digits — render "ส่วนที่", number, Thai title separately
+    doc.setFontSize(13)
+    doc.setTextColor(...C.ink)
     pfTh()
-    doc.setFontSize(7.5)
-    doc.setTextColor(...C.white)
-    doc.text(`ส่วนที่   ${titleTh}`, M + 10, y + 14)
-    // Section number + English title — Helvetica renders Latin/digits
+    doc.text('ส่วนที่', M, y + 14)
+    const prefixW = doc.getTextWidth('ส่วนที่')
     pf(true)
-    doc.setFontSize(7.5)
-    doc.setTextColor(200, 225, 255)
-    doc.text(`${num}.  ${titleEn}`, PW - M - 8, y + 14, { align: 'right' })
-    y += 22
+    doc.setFontSize(13)
+    doc.text(` ${num}`, M + prefixW, y + 14)
+    const numW = doc.getTextWidth(` ${num}`)
+    pfTh()
+    doc.setFontSize(13)
+    doc.text(`  ${titleTh}`, M + prefixW + numW, y + 14)
+    // English subtitle line
+    pf(true)
+    doc.setFontSize(10)
+    doc.setTextColor(...C.muted)
+    doc.text(`Part ${num}:  ${titleEn}`, M, y + 27)
+    // Bottom divider
+    doc.setDrawColor(...C.border)
+    doc.line(M, y + 36, M + CW, y + 36)
+    y += 44
   }
 
   function colDivider(x: number, top: number, h: number) {
@@ -254,7 +265,9 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     color: RGB = C.ink,
     fontSize = 8,
   ) {
-    pf(bold)
+    // Auto-switch to Thai font when text contains Thai characters so that
+    // goal descriptions, comments, and other user-typed Thai content render correctly.
+    if (/[฀-๿]/.test(text)) { pfTh() } else { pf(bold) }
     doc.setFontSize(fontSize)
     doc.setTextColor(...color)
     const pad = align === 'left' ? 6 : 0
@@ -277,8 +290,209 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     }
   }
 
-  function ratingDots(score: number | null | undefined, x: number, cy: number, r = 5, gap = 4) {
-    for (let i = 1; i <= 5; i++) {
+  function setTextFont(text: string, bold = false) {
+    if (/[\u0E00-\u0E7F]/.test(text)) { pfTh() } else { pf(bold) }
+  }
+
+  function splitReportText(text: string, width: number, fontSize = 8, bold = false) {
+    const safeText = text?.trim() || '—'
+    setTextFont(safeText, bold)
+    doc.setFontSize(fontSize)
+    return doc.splitTextToSize(safeText, width)
+  }
+
+  function drawReportText(
+    text: string,
+    x: number,
+    top: number,
+    width: number,
+    fontSize = 8,
+    color: RGB = C.ink,
+    bold = false,
+    lineGap = 1.35,
+  ) {
+    const lines = splitReportText(text, width, fontSize, bold)
+    setTextFont(text, bold)
+    doc.setFontSize(fontSize)
+    doc.setTextColor(...color)
+    const lineH = fontSize * lineGap
+    doc.text(lines, x, top + fontSize)
+    return lines.length * lineH
+  }
+
+  function scoreLabel(score: number | null | undefined) {
+    if (score == null) return 'Not Rated'
+    const rounded = Math.max(1, Math.min(5, Math.round(score)))
+    return formDef.gradeScale.find(g => g.value === rounded)?.en ?? `Rating ${rounded}`
+  }
+
+  function renderGoalCards(scoreForSection: number | null, maxWeightLabel?: string) {
+    if (goals.length === 0) {
+      tblRow([{ text: 'No goal entries recorded.', align: 'center' }], [CW], 22)
+    }
+
+    goals.forEach((goal, gi) => {
+      const targetRows = [
+        { value: 5, label: '5 - Excellent', text: goal.targetRating5 },
+        { value: 4, label: '4 - Above Average', text: goal.targetRating4 },
+        { value: 3, label: '3 - Meet Standard', text: goal.targetRating3 },
+        { value: 2, label: '2 - Almost Standard', text: goal.targetRating2 },
+        { value: 1, label: '1 - Below Standard', text: goal.targetRating1 },
+      ].filter(row => row.text?.trim())
+
+      const title = goal.goal?.trim() || '—'
+      const description = goal.goalDescription?.trim()
+      const actual = goal.result?.trim() || '—'
+      const meta = [
+        goal.wig ? `WIG: ${goal.wig}` : null,
+        goal.kpiCategory ? `Category: ${goal.kpiCategory}` : null,
+      ].filter(Boolean) as string[]
+      const notes = [
+        goal.employeeComment?.trim() ? { label: 'Employee Comment', value: goal.employeeComment.trim() } : null,
+        goal.superiorComment?.trim() ? { label: 'Superior Comment', value: goal.superiorComment.trim() } : null,
+      ].filter(Boolean) as { label: string; value: string }[]
+
+      const titleLines = splitReportText(`${gi + 1}. ${title}`, CW - 108, 9, true)
+      const descLines = description ? splitReportText(description, CW - 28, 7.5) : []
+      const actualLines = splitReportText(actual, CW - 230, 7.5)
+      const noteLineCount = notes.reduce((sum, note) => (
+        sum + splitReportText(note.value, CW - 34, 7).length
+      ), 0)
+
+      const headerH = Math.max(34, titleLines.length * 11 + 14)
+      const descH = descLines.length ? descLines.length * 10 + 10 : 0
+      const metaH = meta.length ? 14 : 0
+      const detailH = Math.max(40, actualLines.length * 9 + 24)
+      // Match exact render logic: label(7) + each row height(max 17, lines*8.8+8) + gap(4)
+      const targetsH = targetRows.length ? (
+        7 + targetRows.reduce((sum, row) => {
+          const lines = splitReportText(row.text || '—', CW - 138, 7)
+          return sum + Math.max(17, lines.length * 8.8 + 8) + 4
+        }, 0)
+      ) : 0
+      const notesH = noteLineCount ? noteLineCount * 9 + notes.length * 16 + 12 : 0
+      const cardH = headerH + descH + metaH + detailH + targetsH + notesH + 12
+
+      needPage(cardH)
+      const cardTop = y
+      doc.setFillColor(...C.white)
+      doc.setDrawColor(...C.border)
+      doc.roundedRect(M, cardTop, CW, cardH, 6, 6, 'FD')
+
+      doc.setFillColor(...C.paper)
+      doc.roundedRect(M, cardTop, CW, headerH, 6, 6, 'F')
+      doc.setFillColor(...C.paper)
+      doc.rect(M, cardTop + headerH - 6, CW, 6, 'F')
+      // Red left accent bar on card header
+      doc.setFillColor(...C.red)
+      doc.rect(M, cardTop, 4, headerH, 'F')
+      setTextFont(title, true)
+      doc.setFontSize(9)
+      doc.setTextColor(...C.navy)
+      doc.text(titleLines, M + 14, cardTop + 15)
+
+      const pillW = 90
+      doc.setFillColor(...C.navy)
+      doc.roundedRect(M + CW - pillW - 10, cardTop + 8, pillW, 20, 4, 4, 'F')
+      pf(true)
+      doc.setFontSize(7)
+      doc.setTextColor(...C.white)
+      doc.text(`Weight ${Number(goal.weight) || 0}%`, M + CW - pillW / 2 - 10, cardTop + 16, { align: 'center' })
+      doc.setFontSize(6.5)
+      doc.setTextColor(200, 225, 255)
+      doc.text(scoreLabel(goal.evaluationScore), M + CW - pillW / 2 - 10, cardTop + 24, { align: 'center' })
+
+      let gy = cardTop + headerH + 10
+      if (description) {
+        pf(true)
+        doc.setFontSize(7)
+        doc.setTextColor(...C.navy)
+        doc.text('Goal Description', M + 12, gy)
+        gy += 3
+        gy += drawReportText(description, M + 12, gy, CW - 28, 7.5, C.ink, false, 1.35) + 8
+      }
+
+      if (meta.length) {
+        pf(false)
+        doc.setFontSize(6.5)
+        doc.setTextColor(...C.muted)
+        doc.text(meta.join('   |   '), M + 12, gy + 4)
+        gy += 14
+      }
+
+      const detailTop = gy
+      const scoreW = 62
+      const weightW = 58
+      const actualW = CW - scoreW - weightW - 32
+      doc.setFillColor(...C.paper)
+      doc.setDrawColor(...C.border)
+      doc.roundedRect(M + 10, detailTop, CW - 20, detailH, 4, 4, 'FD')
+      pf(true)
+      doc.setFontSize(7)
+      doc.setTextColor(...C.navy)
+      doc.text('Goal Details', M + 18, detailTop + 12)
+      cellText('Weight', M + 14, detailTop + 18, weightW, 14, 'center', true, C.muted, 6.5)
+      cellText(`${Number(goal.weight) || 0}%`, M + 14, detailTop + 32, weightW, Math.max(8, detailH - 34), 'center', true, C.navy, 11)
+      colDivider(M + 14 + weightW, detailTop + 18, detailH - 22)
+      cellText('Actual / Result', M + 20 + weightW, detailTop + 18, actualW, 14, 'left', true, C.muted, 6.5)
+      drawReportText(actual, M + 26 + weightW, detailTop + 31, actualW - 10, 7.5, C.ink)
+      colDivider(M + 20 + weightW + actualW, detailTop + 18, detailH - 22)
+      cellText('Score', M + 24 + weightW + actualW, detailTop + 18, scoreW, 14, 'center', true, C.muted, 6.5)
+      if (goal.evaluationScore != null) {
+        scoreBox(goal.evaluationScore, M + 36 + weightW + actualW, detailTop + 34, scoreW - 24, 22)
+      } else {
+        cellText('—', M + 24 + weightW + actualW, detailTop + 33, scoreW, 20, 'center', false, C.muted, 8)
+      }
+      gy += detailH + 10
+
+      if (targetRows.length) {
+        pf(true)
+        doc.setFontSize(7)
+        doc.setTextColor(...C.navy)
+        doc.text('Rating Basis / Target', M + 12, gy)
+        gy += 7
+        targetRows.forEach(row => {
+          const rowLines = splitReportText(row.text || '—', CW - 138, 7)
+          const rowH = Math.max(17, rowLines.length * 8.8 + 8)
+          const matched = goal.evaluationScore != null && row.value === Math.round(goal.evaluationScore)
+          doc.setFillColor(...(matched ? C.blueLt : C.white))
+          doc.setDrawColor(...C.border)
+          doc.roundedRect(M + 10, gy, CW - 20, rowH, 3, 3, 'FD')
+          cellText(row.label, M + 16, gy, 94, rowH, 'left', true, matched ? C.navy : C.muted, 6.5)
+          drawReportText(row.text || '—', M + 116, gy + 3, CW - 138, 7, C.ink)
+          gy += rowH + 4
+        })
+      }
+
+      notes.forEach(note => {
+        const lines = splitReportText(note.value, CW - 34, 7)
+        const noteH = Math.max(24, lines.length * 9 + 16)
+        pf(true)
+        doc.setFontSize(6.5)
+        doc.setTextColor(...C.navy)
+        doc.text(note.label, M + 14, gy + 8)
+        drawReportText(note.value, M + 18, gy + 13, CW - 34, 7, C.muted)
+        gy += noteH
+      })
+
+      y = cardTop + cardH + 8
+    })
+
+    const totalGoalWeight = goals.reduce((s, g) => s + (Number(g.weight) || 0), 0)
+    needPage(18)
+    doc.setFillColor(...C.blueLt)
+    doc.setDrawColor(...C.border)
+    doc.rect(M, y, CW, 16, 'FD')
+    pf(true)
+    doc.setFontSize(7.5)
+    doc.setTextColor(...C.navy)
+    doc.text(`Total Goal Weight: ${totalGoalWeight}%${maxWeightLabel ? `  (${maxWeightLabel})` : ''}`, M + 8, y + 11)
+    doc.text(`Goal Score: ${fmtScore(scoreForSection)}`, PW - M - 8, y + 11, { align: 'right' })
+    y += 26
+  }
+
+  function ratingDots(score: number | null | undefined, x: number, cy: number, r = 5, gap = 4, max = 5) {
+    for (let i = 1; i <= max; i++) {
       const cx = x + (i - 1) * (r * 2 + gap)
       if (score != null && i <= Math.round(score)) {
         doc.setFillColor(...C.orange)
@@ -291,14 +505,24 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     }
   }
 
-  function scoreBox(score: number | null, x: number, bY: number, w: number, h: number) {
+  function scoreBox(score: number | null, x: number, bY: number, w: number, h: number, label?: string) {
     const bg = score != null ? (SCORE_BG[Math.round(score)] ?? C.muted) : C.muted
     doc.setFillColor(...bg)
     doc.roundedRect(x, bY, w, h, 3, 3, 'F')
     pf(true)
     doc.setFontSize(12)
     doc.setTextColor(...C.white)
-    doc.text(score != null ? String(Math.round(score)) : '—', x + w / 2, bY + h / 2 + 4.5, { align: 'center' })
+    doc.text(label ?? (score != null ? String(Math.round(score)) : '—'), x + w / 2, bY + h / 2 + 4.5, { align: 'center' })
+  }
+
+  // GPAX score box: 0-4 scale, uses GPAX colors
+  function gpaxBox(gpax: number | null, x: number, bY: number, w: number, h: number) {
+    doc.setFillColor(...(gpax != null ? gpaxBg(gpax) : C.muted))
+    doc.roundedRect(x, bY, w, h, 3, 3, 'F')
+    pf(true)
+    doc.setFontSize(11)
+    doc.setTextColor(...C.white)
+    doc.text(gpax != null ? gpax.toFixed(2) : '—', x + w / 2, bY + h / 2 + 4, { align: 'center' })
   }
 
   function tblHeader(cols: { text: string; w: number }[], h = 18) {
@@ -323,7 +547,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   ) {
     needPage(h)
     let bg: RGB
-    if (opts.total) bg = C.navy
+    if (opts.total) bg = C.blueLt
     else if (opts.subHeader) bg = C.rowAlt
     else if (opts.alt) bg = C.paper
     else bg = C.white
@@ -332,7 +556,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     doc.rect(M, y, CW, h, 'FD')
     let x = M
     cells.forEach((cell, i) => {
-      const color: RGB = opts.total ? C.white : C.ink
+      const color: RGB = opts.total ? C.navy : C.ink
       cellText(cell.text, x, y, widths[i], h, cell.align ?? 'left', cell.bold ?? opts.total ?? false, color)
       if (i < cells.length - 1) colDivider(x + widths[i], y, h)
       x += widths[i]
@@ -344,31 +568,23 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   renderPageFrame()
   y = M + 44
 
-  // Title banner
-  doc.setFillColor(...C.navy)
-  doc.rect(M, y, CW, 54, 'F')
-  doc.setFillColor(...C.blue)
-  doc.rect(M, y + 51, CW * 0.68, 3, 'F')
-  doc.setFillColor(...C.red)
-  doc.rect(M + CW * 0.68, y + 51, CW * 0.32, 3, 'F')
-  doc.setFillColor(...C.white)
-  doc.roundedRect(M + 10, y + 9, 50, 36, 6, 6, 'F')
+  // Title — HR4U style: large bold text on white
   pf(true)
-  doc.setFontSize(13)
-  doc.setTextColor(...C.navy)
-  doc.text('AMW', M + 35, y + 30, { align: 'center' })
-  pf(true)
-  doc.setFontSize(12)
-  doc.setTextColor(...C.white)
-  doc.text('Performance Evaluation Form', M + 72, y + 22)
+  doc.setFontSize(20)
+  doc.setTextColor(...C.ink)
+  doc.text('Performance Evaluation Form', M, y + 22)
+  pf(false)
+  doc.setFontSize(8.5)
+  doc.setTextColor(...C.muted)
+  doc.text(`${formDef.code} · ${formDef.titleEn}`, M, y + 38)
+  pf(false)
   doc.setFontSize(7.5)
-  doc.setTextColor(170, 200, 242)
-  doc.text(`${formDef.code} · ${formDef.titleEn}`, M + 72, y + 38)
-  doc.setFontSize(7)
-  doc.setTextColor(140, 170, 210)
-  doc.text(documentId, PW - M - 8, y + 22, { align: 'right' })
-  doc.text(fmtDate(new Date().toISOString()), PW - M - 8, y + 36, { align: 'right' })
-  y += 54
+  doc.setTextColor(...C.muted)
+  doc.text(documentId, PW - M, y + 22, { align: 'right' })
+  doc.text(fmtDate(new Date().toISOString()), PW - M, y + 36, { align: 'right' })
+  doc.setDrawColor(...C.border)
+  doc.line(M, y + 50, M + CW, y + 50)
+  y += 60
 
   // Employee info grid
   const iW: [number, number, number, number] = [CW * 0.18, CW * 0.32, CW * 0.18, CW * 0.32]
@@ -380,17 +596,17 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     ['Reason', ev.evaluationReason ?? '—', 'Status', ev.status ?? '—'],
   ]
 
-  needPage(16 + infoRows.length * 20)
-  doc.setFillColor(...C.blueLt)
-  doc.setDrawColor(...C.border)
-  doc.rect(M, y, CW, 16, 'FD')
+  needPage(32 + infoRows.length * 20)
+  y += 12
+  pf(true)
+  doc.setFontSize(13)
+  doc.setTextColor(...C.ink)
+  doc.text('Employee Information', M, y + 14)
   pfTh()
-  doc.setFontSize(7)
-  doc.setTextColor(...C.navy)
-  doc.text('ข้อมูลพนักงาน', M + 8, y + 11)
-  pf(false)
-  doc.text('Employee Information', PW - M - 8, y + 11, { align: 'right' })
-  y += 16
+  doc.setFontSize(9)
+  doc.setTextColor(...C.muted)
+  doc.text('ข้อมูลพนักงาน', M, y + 26)
+  y += 34
 
   infoRows.forEach((row, ri) => {
     const rh = 20
@@ -421,80 +637,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     // ── PART 1: GOAL SETTING KPI ──────────────────────────────────────────
     partBanner(partN++, 'การตั้งเป้าหมาย (KPI)', 'Goal Setting (KPI)')
 
-    const GW = [20, 196, 38, 32, 32, 32, 32, 32, 48, 39] as const
-    tblHeader([
-      { text: '#', w: GW[0] },
-      { text: 'KPI Goal Description', w: GW[1] },
-      { text: 'Wt%', w: GW[2] },
-      { text: 'T.5', w: GW[3] },
-      { text: 'T.4', w: GW[4] },
-      { text: 'T.3', w: GW[5] },
-      { text: 'T.2', w: GW[6] },
-      { text: 'T.1', w: GW[7] },
-      { text: 'Actual', w: GW[8] },
-      { text: 'Score', w: GW[9] },
-    ], 20)
-
-    if (goals.length === 0) {
-      tblRow([{ text: 'No goal entries recorded.', align: 'center' }], [CW], 22)
-    }
-
-    goals.forEach((goal, gi) => {
-      const goalLines = doc.splitTextToSize(goal.goal || '—', GW[1] - 10)
-      const rh = Math.max(22, goalLines.length * 9.5 + 10)
-      needPage(rh)
-
-      const rowBg: RGB = gi % 2 === 0 ? C.white : C.paper
-      doc.setFillColor(...rowBg)
-      doc.setDrawColor(...C.border)
-      doc.rect(M, y, CW, rh, 'FD')
-
-      let gx = M
-      const cols = [
-        String(gi + 1),
-        goal.goal || '—',
-        `${goal.weight}%`,
-        goal.targetRating5 ?? '—',
-        goal.targetRating4 ?? '—',
-        goal.targetRating3 ?? '—',
-        goal.targetRating2 ?? '—',
-        goal.targetRating1 ?? '—',
-        goal.result ?? '—',
-      ]
-      cols.forEach((t, i) => {
-        const w = GW[i]
-        const isMatched = i >= 3 && i <= 7 && goal.evaluationScore != null && (8 - i) === goal.evaluationScore
-        if (isMatched) {
-          doc.setFillColor(...C.blueLt)
-          doc.rect(gx, y, w, rh, 'F')
-        }
-        const align = i === 1 ? 'left' : 'center'
-        const sz = i === 1 ? 7.5 : 8
-        cellText(t, gx, y, w, rh, align, false, C.ink, sz)
-        if (i < 8) colDivider(gx + w, y, rh)
-        gx += w
-      })
-      const lastW = GW[9]
-      if (goal.evaluationScore != null) {
-        scoreBox(goal.evaluationScore, gx + 4, y + rh / 2 - 11, lastW - 8, 22)
-      } else {
-        cellText('—', gx, y, lastW, rh, 'center')
-      }
-      y += rh
-    })
-
-    const totalGoalWeight = goals.reduce((s, g) => s + (Number(g.weight) || 0), 0)
-    needPage(18)
-    doc.setFillColor(...C.blueLt)
-    doc.setDrawColor(...C.border)
-    doc.rect(M, y, CW, 16, 'FD')
-    pf(true)
-    doc.setFontSize(7.5)
-    doc.setTextColor(...C.navy)
-    doc.text(`Total Goal Weight: ${totalGoalWeight}%  (max 70%)`, M + 8, y + 11)
-    doc.text(`Goal Score: ${fmtScore(goalScore)}`, PW - M - 8, y + 11, { align: 'right' })
-    y += 16
-    y += 10
+    renderGoalCards(goalScore, 'max 70%')
 
     // ── PART 2: CORE COMPETENCY ───────────────────────────────────────────
     partBanner(partN++, 'สมรรถนะหลัก (Core Competency)', 'Core Competency')
@@ -613,11 +756,11 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       needPage(rh)
       const isTotal = opts.total ?? false
       const isSH = opts.subHeader ?? false
-      const bg: RGB = isTotal ? C.navy : isSH ? C.rowAlt : C.white
+      const bg: RGB = isTotal ? C.blueLt : isSH ? C.rowAlt : C.white
       doc.setFillColor(...bg)
       doc.setDrawColor(...C.border)
       doc.rect(M, y, CW, rh, 'FD')
-      const textColor: RGB = isTotal ? C.white : C.ink
+      const textColor: RGB = isTotal ? C.navy : C.ink
       const indent = opts.indent ? 14 : 6
       pf(isTotal || isSH)
       doc.setFontSize(7.5)
@@ -678,27 +821,45 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
 
     // Calibration panel
     if (weightedTotal != null && calibGrade != null) {
-      needPage(60)
-      const roundedTotal = Math.round(weightedTotal)
-      doc.setFillColor(...C.blueLt)
+      needPage(72)
+      const gpax = toGpax(weightedTotal)
+      const perfGradeLabel = ev.performanceGrade
+        ? ({ EXCELLENT: 'Excellent', ABOVE_STANDARD: 'Above Standard', MEETS_STANDARD: 'Meet Standard', ALMOST_STANDARD: 'Almost Standard', BELOW_STANDARD: 'Below Standard' } as Record<string, string>)[ev.performanceGrade] ?? calibGrade.labelEn
+        : calibGrade.labelEn
+      doc.setFillColor(...C.navy)
       doc.setDrawColor(...C.border)
-      doc.rect(M, y, CW, 58, 'FD')
-      pf(true)
-      doc.setFontSize(7.5)
-      doc.setTextColor(...C.navy)
-      doc.text('CALIBRATION RESULT', M + 10, y + 14)
-      ratingDots(roundedTotal, M + 10, y + 32, 6.5, 5)
-      scoreBox(roundedTotal, PW - M - 52, y + 9, 44, 40)
-      doc.setFontSize(12)
-      doc.setTextColor(...C.navy)
-      doc.text(calibGrade.labelEn, M + 110, y + 22)
+      doc.rect(M, y, CW, 70, 'FD')
+      // Left — big GPAX score (0-4 scale)
       pf(false)
-      doc.setFontSize(7.5)
-      doc.setTextColor(...C.muted)
-      doc.text(`${calibGrade.definitionEn}`, M + 110, y + 36, { maxWidth: CW - 180 })
       doc.setFontSize(7)
-      doc.text(`Total Score: ${weightedTotal.toFixed(3)}`, M + 110, y + 50)
-      y += 58
+      doc.setTextColor(170, 200, 242)
+      doc.text('GPAX Score  / ', M + 16, y + 16)
+      pfTh()
+      doc.text('คะแนนรวม', M + 16 + doc.getTextWidth('GPAX Score  / '), y + 16)
+      pf(true)
+      doc.setFontSize(30)
+      doc.setTextColor(...C.white)
+      doc.text(gpax.toFixed(2), M + 16, y + 50)
+      // 4 dots (0-4 scale)
+      ratingDots(gpax, M + 16, y + 62, 5, 5, 4)
+      // Divider
+      doc.setDrawColor(255, 255, 255, 0.12)
+      doc.line(M + 130, y + 12, M + 130, y + 62)
+      // Right — performance grade label
+      pf(true)
+      doc.setFontSize(9)
+      doc.setTextColor(170, 200, 242)
+      doc.text('Performance Grade', M + 142, y + 16)
+      const gradeBadgeBg = gpaxBg(gpax)
+      doc.setFillColor(...gradeBadgeBg)
+      doc.roundedRect(M + 140, y + 22, CW - 150 - 60, 28, 4, 4, 'F')
+      pf(true)
+      doc.setFontSize(13)
+      doc.setTextColor(...C.white)
+      doc.text(perfGradeLabel, M + 140 + (CW - 150 - 60) / 2, y + 42, { align: 'center' })
+      // GPAX box (right edge, 0-4 scale)
+      gpaxBox(gpax, PW - M - 54, y + 14, 44, 44)
+      y += 70
     }
 
     y += 12
@@ -708,97 +869,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     if (goals.length > 0) {
       partBanner(partN++, 'การตั้งเป้าหมาย (KPI)', 'Goal Setting (KPI)')
 
-      const hasTargets = goals.some(g => g.targetRating5 || g.targetRating4 || g.targetRating3)
-      let GK: readonly number[]
-      if (hasTargets) {
-        GK = [20, 160, 36, 36, 36, 36, 36, 70, 40] as const
-        tblHeader([
-          { text: '#', w: GK[0] },
-          { text: 'KPI Goal Description', w: GK[1] },
-          { text: 'Wt%', w: GK[2] },
-          { text: 'T.5', w: GK[3] },
-          { text: 'T.4', w: GK[4] },
-          { text: 'T.3', w: GK[5] },
-          { text: 'T.2', w: GK[6] },
-          { text: 'T.1', w: GK[7] },
-          { text: 'Score', w: GK[8] },
-        ], 20)
-      } else {
-        const resultW = 90, scoreW = 44, wtW2 = 36
-        GK = [20, CW - 20 - wtW2 - resultW - scoreW] as const
-        tblHeader([
-          { text: '#', w: GK[0] },
-          { text: 'KPI Goal Description', w: GK[1] },
-          { text: 'Wt%', w: wtW2 },
-          { text: 'Actual Result', w: resultW },
-          { text: 'Score', w: scoreW },
-        ], 20)
-      }
-
-      goals.forEach((goal, gi) => {
-        if (hasTargets) {
-          const goalLines = doc.splitTextToSize(goal.goal || '—', GK[1] - 10)
-          const rh = Math.max(22, goalLines.length * 9.5 + 10)
-          needPage(rh)
-          const rowBg: RGB = gi % 2 === 0 ? C.white : C.paper
-          doc.setFillColor(...rowBg); doc.setDrawColor(...C.border)
-          doc.rect(M, y, CW, rh, 'FD')
-          let gx = M
-          cellText(String(gi + 1), gx, y, GK[0], rh, 'center')
-          colDivider(gx + GK[0], y, rh); gx += GK[0]
-          cellText(goal.goal || '—', gx, y, GK[1], rh, 'left', false, C.ink, 7.5)
-          colDivider(gx + GK[1], y, rh); gx += GK[1]
-          cellText(`${goal.weight ?? 0}%`, gx, y, GK[2], rh, 'center')
-          colDivider(gx + GK[2], y, rh); gx += GK[2]
-          ;[goal.targetRating5, goal.targetRating4, goal.targetRating3, goal.targetRating2, goal.targetRating1].forEach((t, ti) => {
-            const isMatch = goal.evaluationScore != null && (5 - ti) === goal.evaluationScore
-            if (isMatch) { doc.setFillColor(...C.blueLt); doc.rect(gx, y, GK[3 + ti], rh, 'F') }
-            cellText(t ?? '—', gx, y, GK[3 + ti], rh, 'center', false, C.ink, 6.5)
-            colDivider(gx + GK[3 + ti], y, rh); gx += GK[3 + ti]
-          })
-          if (goal.evaluationScore != null) {
-            scoreBox(goal.evaluationScore, gx + 4, y + rh / 2 - 11, GK[8] - 8, 22)
-          } else {
-            cellText('—', gx, y, GK[8], rh, 'center')
-          }
-          y += rh
-        } else {
-          const resultW = 90, scoreW = 44
-          const descW = GK[1]
-          const wtW = CW - GK[0] - descW - resultW - scoreW
-          const goalLines = doc.splitTextToSize(goal.goal || '—', descW - 10)
-          const rh = Math.max(22, goalLines.length * 9.5 + 10)
-          needPage(rh)
-          const rowBg: RGB = gi % 2 === 0 ? C.white : C.paper
-          doc.setFillColor(...rowBg); doc.setDrawColor(...C.border)
-          doc.rect(M, y, CW, rh, 'FD')
-          let gx = M
-          cellText(String(gi + 1), gx, y, GK[0], rh, 'center')
-          colDivider(gx + GK[0], y, rh); gx += GK[0]
-          cellText(goal.goal || '—', gx, y, descW, rh, 'left', false, C.ink, 7.5)
-          colDivider(gx + descW, y, rh); gx += descW
-          cellText(`${goal.weight ?? 0}%`, gx, y, wtW, rh, 'center')
-          colDivider(gx + wtW, y, rh); gx += wtW
-          cellText(goal.result ?? '—', gx, y, resultW, rh, 'left', false, C.ink, 7.5)
-          colDivider(gx + resultW, y, rh); gx += resultW
-          if (goal.evaluationScore != null) {
-            scoreBox(goal.evaluationScore, gx + 4, y + rh / 2 - 11, scoreW - 8, 22)
-          } else {
-            cellText('—', gx, y, scoreW, rh, 'center')
-          }
-          y += rh
-        }
-      })
-
-      const totalGoalWeight = goals.reduce((s, g) => s + (Number(g.weight) || 0), 0)
-      needPage(18)
-      doc.setFillColor(...C.blueLt); doc.setDrawColor(...C.border)
-      doc.rect(M, y, CW, 16, 'FD')
-      pf(true); doc.setFontSize(7.5); doc.setTextColor(...C.navy)
-      doc.text(`Total Goal Weight: ${totalGoalWeight}%`, M + 8, y + 11)
-      doc.text(`Goal Score: ${fmtScore(effectiveGoalScore)}`, PW - M - 8, y + 11, { align: 'right' })
-      y += 16
-      y += 10
+      renderGoalCards(effectiveGoalScore)
     }
 
     // ── OSE FORM: EVALUATION CRITERIA ──────────────────────────────────
@@ -875,6 +946,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     pfTh()
     doc.text('คะแนนเฉลี่ย:', M + 8 + doc.getTextWidth('Average Score  / '), y + 12)
     if (oseAvg != null) {
+      pf(true)
       doc.text(oseAvg.toFixed(2), M + CW / 2 - 50, y + 12, { align: 'right' })
       ratingDots(oseAvg, M + CW / 2 - 40, y + 11, 5, 5)
     } else {
@@ -891,49 +963,47 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     // ── Calibration banner ────────────────────────────────────────────────────
     needPage(74)
     if (oseGrade != null && oseAvg != null) {
+      const oseGpax = toGpax(oseAvg)
+      const osePerfGradeLabel = ev.performanceGrade
+        ? ({ EXCELLENT: 'Excellent', ABOVE_STANDARD: 'Above Standard', MEETS_STANDARD: 'Meet Standard', ALMOST_STANDARD: 'Almost Standard', BELOW_STANDARD: 'Below Standard' } as Record<string, string>)[ev.performanceGrade] ?? oseGrade.en
+        : oseGrade.en
       doc.setFillColor(...C.navy)
       doc.setDrawColor(...C.border)
       doc.rect(M, y, CW, 72, 'FD')
-      // Left: score label + big number
+      // Left: GPAX score label + big decimal
       pf(false)
       doc.setFontSize(7)
       doc.setTextColor(170, 200, 242)
-      doc.text('Calibrated Score  / ', M + 16, y + 16)
+      doc.text('GPAX Score  / ', M + 16, y + 16)
       pfTh()
-      doc.text('คะแนนรวม', M + 16 + doc.getTextWidth('Calibrated Score  / '), y + 16)
+      doc.text('คะแนนรวม', M + 16 + doc.getTextWidth('GPAX Score  / '), y + 16)
       pf(true)
       doc.setFontSize(30)
       doc.setTextColor(...C.white)
-      doc.text(oseAvg.toFixed(2), M + 16, y + 50)
-      // Rating dots under the big number
-      ratingDots(Math.round(oseAvg), M + 16, y + 60, 5, 5)
+      doc.text(oseGpax.toFixed(2), M + 16, y + 50)
+      // 4 dots (0-4 scale)
+      ratingDots(oseGpax, M + 16, y + 60, 5, 5, 4)
       // Center divider
       doc.setDrawColor(255, 255, 255, 0.12)
       doc.line(M + 110, y + 12, M + 110, y + 60)
-      // Right: grade badge + label + definition
+      // Right: performance grade label
       pf(true)
       doc.setFontSize(9)
       doc.setTextColor(170, 200, 242)
-      doc.text('Grade', M + 122, y + 16)
-      // Grade badge
-      const gradeBg = SCORE_BG[Math.round(oseAvg)] ?? C.blue
-      doc.setFillColor(...gradeBg)
-      doc.roundedRect(M + 120, y + 22, 38, 26, 4, 4, 'F')
-      pf(true)
-      doc.setFontSize(16)
-      doc.setTextColor(...C.white)
-      doc.text(String(Math.round(oseAvg)), M + 139, y + 40, { align: 'center' })
-      // Grade label & definition
+      doc.text('Performance Grade', M + 122, y + 16)
+      doc.setFillColor(...gpaxBg(oseGpax))
+      doc.roundedRect(M + 120, y + 22, 60, 26, 4, 4, 'F')
       pf(true)
       doc.setFontSize(10)
       doc.setTextColor(...C.white)
-      doc.text(oseGrade.en, M + 168, y + 34)
+      doc.text(osePerfGradeLabel, M + 150, y + 40, { align: 'center' })
+      // Grade definition
       pf(false)
       doc.setFontSize(7)
       doc.setTextColor(170, 200, 242)
-      doc.text(oseGrade.definitionEn, M + 168, y + 48, { maxWidth: CW - 182 })
-      // Score box (right edge)
-      scoreBox(Math.round(oseAvg), PW - M - 54, y + 14, 44, 44)
+      doc.text(oseGrade.definitionEn, M + 190, y + 34, { maxWidth: CW - 204 })
+      // GPAX box (right edge, 0-4 scale)
+      gpaxBox(oseGpax, PW - M - 54, y + 14, 44, 44)
       y += 72
     } else {
       doc.setFillColor(...C.paper)
@@ -965,7 +1035,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       cellText(label, M, y, oseBW[0], rh, 'left', true, C.navy, 7.5)
       colDivider(M + oseBW[0], y, rh)
       if (score != null) {
-        cellText(score.toFixed(2), M + oseBW[0], y, oseBW[1], rh, 'center', true, C.navy, 9)
+        cellText(`${score.toFixed(2)} (${(score / 5 * 100).toFixed(0)}%)`, M + oseBW[0], y, oseBW[1], rh, 'center', true, C.navy, 8)
       } else {
         cellText('—', M + oseBW[0], y, oseBW[1], rh, 'center', false, C.muted, 8)
       }
@@ -975,15 +1045,19 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     }
 
     const oseSubRow = (label: string, score: number | null) => {
-      const rh = 16
+      const labelLines = splitReportText(label, oseBW[0] - 28, 6.5)
+      const rh = Math.max(16, labelLines.length * 8.8 + 8)
       needPage(rh)
       doc.setFillColor(...C.white)
       doc.setDrawColor(...C.border)
       doc.rect(M, y, CW, rh, 'FD')
-      cellText(label, M + 14, y, oseBW[0] - 14, rh, 'left', false, C.muted, 6.5)
+      setTextFont(label)
+      doc.setFontSize(6.5)
+      doc.setTextColor(...C.muted)
+      doc.text(labelLines, M + 18, y + 10)
       colDivider(M + oseBW[0], y, rh)
       if (score != null) {
-        cellText(score.toFixed(2), M + oseBW[0], y, oseBW[1], rh, 'center', false, C.ink, 7)
+        cellText(`${score.toFixed(2)} (${(score / 5 * 100).toFixed(0)}%)`, M + oseBW[0], y, oseBW[1], rh, 'center', false, C.ink, 6.5)
       } else {
         cellText('—', M + oseBW[0], y, oseBW[1], rh, 'center', false, C.muted, 7)
       }
@@ -1055,27 +1129,34 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   // ─── COMMENTS ─────────────────────────────────────────────────────────────
   if (ev.comment) {
     partBanner(partN++, 'ความคิดเห็น', 'Comments')
-    const fields: [string, string | null | undefined][] = [
-      ['จุดเด่น  /  Strengths', ev.comment.strengths],
-      ['จุดที่ต้องพัฒนา  /  Areas for Improvement', ev.comment.improvements],
-      ['ความรู้ / ทักษะที่ต้องพัฒนา  /  Required Skills', ev.comment.requiredSkills],
+    const fields: { th: string; en: string; val: string | null | undefined }[] = [
+      { th: 'จุดเด่น', en: 'Strengths', val: ev.comment.strengths },
+      { th: 'จุดที่ต้องพัฒนา', en: 'Areas for Improvement', val: ev.comment.improvements },
+      { th: 'ความรู้ / ทักษะที่ต้องพัฒนา', en: 'Required Skills', val: ev.comment.requiredSkills },
     ]
-    fields.forEach(([label, val], fi) => {
+    fields.forEach(({ th, en, val }, fi) => {
       const text = val?.trim() || '—'
       const textLines = doc.splitTextToSize(text, CW - 20)
-      const bh = Math.max(40, textLines.length * 10 + 22)
+      const bh = Math.max(40, textLines.length * 10 + 24)
       needPage(bh)
       doc.setFillColor(...(fi % 2 === 0 ? C.white : C.paper))
       doc.setDrawColor(...C.border)
       doc.rect(M, y, CW, bh, 'FD')
+      // Thai label part
       pfTh()
       doc.setFontSize(7.5)
       doc.setTextColor(...C.navy)
-      doc.text(label, M + 8, y + 13)
+      doc.text(th, M + 8, y + 13)
+      // English label part — right-aligned so it doesn't need Thai font
+      pf(false)
+      doc.setFontSize(7)
+      doc.setTextColor(...C.muted)
+      doc.text(en, PW - M - 8, y + 13, { align: 'right' })
+      // Content (may be Thai user text)
       pfTh()
       doc.setFontSize(8)
       doc.setTextColor(...C.ink)
-      doc.text(textLines, M + 12, y + 25)
+      doc.text(textLines, M + 12, y + 26)
       y += bh
     })
     y += 12
@@ -1121,24 +1202,27 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   needPage(110)
   partBanner(partN++, 'การรับทราบ / ลายเซ็น', 'Acknowledgement & Signatures')
 
+  const directorName = ev.reviewerName?.trim() || ev.reviewer?.name?.trim() || ''
   const signers = [
-    { label: 'Employee  /  พนักงาน', name: displayEmployee, signedAt: ev.acknowledgement?.employeeSignedAt },
-    { label: 'Evaluator  /  ผู้ประเมิน', name: displayEvaluator, signedAt: ev.acknowledgement?.evaluatorSignedAt },
-    { label: 'Director  /  ผู้บริหาร', name: '—', signedAt: ev.acknowledgement?.directorSignedAt },
+    { en: 'Evaluator', th: 'ผู้ประเมิน', name: displayEvaluator, signedAt: ev.acknowledgement?.evaluatorSignedAt },
+    { en: 'Director / MD', th: 'ผู้บริหาร', name: directorName || '—', signedAt: ev.acknowledgement?.directorSignedAt ?? null },
   ]
 
-  const sigW = CW / 3
-  const sigLabelH = 16
+  const sigW = CW / 2
+  const sigLabelH = 22
   needPage(sigLabelH + 80)
   doc.setFillColor(...C.blueLt)
   doc.setDrawColor(...C.border)
   doc.rect(M, y, CW, sigLabelH, 'FD')
   signers.forEach((s, i) => {
+    pf(true)
+    doc.setFontSize(7.5)
+    doc.setTextColor(...C.navy)
+    doc.text(s.en, M + i * sigW + sigW / 2, y + 9, { align: 'center' })
     pfTh()
     doc.setFontSize(7)
-    doc.setTextColor(...C.navy)
-    doc.text(s.label, M + i * sigW + sigW / 2, y + 11, { align: 'center' })
-    if (i < 2) colDivider(M + (i + 1) * sigW, y, sigLabelH)
+    doc.text(s.th, M + i * sigW + sigW / 2, y + 18, { align: 'center' })
+    if (i < 1) colDivider(M + (i + 1) * sigW, y, sigLabelH)
   })
   y += sigLabelH
 
@@ -1148,15 +1232,18 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   doc.rect(M, y, CW, sigBoxH, 'FD')
   signers.forEach((s, i) => {
     const sx = M + i * sigW
-    if (i < 2) colDivider(sx + sigW, y, sigBoxH)
+    if (i < 1) colDivider(sx + sigW, y, sigBoxH)
 
     if (s.signedAt) {
       doc.setFillColor(...C.green)
       doc.circle(sx + sigW / 2, y + 22, 7, 'F')
-      pf(true)
-      doc.setFontSize(8)
-      doc.setTextColor(...C.white)
-      doc.text('✓', sx + sigW / 2, y + 25, { align: 'center' })
+      // Draw tick mark manually (✓ not in Helvetica/AMWReport glyph sets)
+      const tx = sx + sigW / 2, ty = y + 22
+      doc.setDrawColor(...C.white)
+      doc.setLineWidth(1.6)
+      doc.line(tx - 3.5, ty, tx - 0.5, ty + 3.5)
+      doc.line(tx - 0.5, ty + 3.5, tx + 4, ty - 3)
+      doc.setLineWidth(0.5)
       pf(false)
       doc.setFontSize(7)
       doc.setTextColor(...C.green)

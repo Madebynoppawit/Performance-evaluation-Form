@@ -136,11 +136,12 @@ type Draft = {
   department: string
   jobTitle: string
   password: string
+  employeeNo: string
   dateOfBirth: string
 }
 
 const emptyDraft = (): Draft => ({
-  id: null, name: '', email: '', role: 'EMPLOYEE', position: '', department: '', jobTitle: '', password: '', dateOfBirth: '',
+  id: null, name: '', email: '', role: 'EMPLOYEE', position: '', department: '', jobTitle: '', password: '', employeeNo: '', dateOfBirth: '',
 })
 
 export default function UserManagementPage() {
@@ -178,6 +179,7 @@ export default function UserManagementPage() {
         position: draft.position || undefined,
         department: draft.department.trim() || undefined,
         jobTitle: draft.jobTitle.trim() || null,
+        employeeNo: draft.employeeNo.trim() || null,
         dateOfBirth: draft.dateOfBirth || null,
       }
       if (draft.id) {
@@ -283,6 +285,7 @@ export default function UserManagementPage() {
       id: u.id, name: u.name, email: u.email, role: u.role,
       position: (u.position ?? '') as '' | Position,
       department: u.department ?? '', jobTitle: u.jobTitle ?? '', password: '',
+      employeeNo: (u as { employeeNo?: string | null }).employeeNo ?? '',
       dateOfBirth: (u as { dateOfBirth?: string | null }).dateOfBirth?.slice(0, 10) ?? '',
     })
   }
@@ -493,6 +496,12 @@ export default function UserManagementPage() {
               <label>
                 {t('acc.jobTitle')}
                 <input className="kbt-input" value={draft.jobTitle} onChange={e => setDraft(d => d && ({ ...d, jobTitle: e.target.value }))} />
+              </label>
+              <label>
+                Employee Number
+                <input className="kbt-input" value={draft.employeeNo}
+                  onChange={e => setDraft(d => d && ({ ...d, employeeNo: e.target.value }))}
+                  placeholder="e.g. 6415" />
               </label>
               <label>
                 Date of Birth

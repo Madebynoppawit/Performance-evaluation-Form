@@ -6,6 +6,8 @@ import { CalendarPicker } from './CalendarPicker'
 interface Props {
   data?: EvaluationAcknowledgement | null
   isAdmin: boolean
+  currentUserId?: string
+  evaluatorId?: string
   onUpdate: (field: 'employeeSignedAt' | 'evaluatorSignedAt' | 'directorSignedAt', value: string | null) => void
   isUpdating?: boolean
 }
@@ -20,32 +22,28 @@ function toIso(dateValue: string): string | null {
   return new Date(dateValue + 'T00:00:00.000Z').toISOString()
 }
 
-export default function AcknowledgementSection({ data, isAdmin, onUpdate, isUpdating }: Props) {
+export default function AcknowledgementSection({ data, isAdmin, currentUserId, evaluatorId, onUpdate, isUpdating }: Props) {
   const t = useT()
 
   const parties = [
-    {
-      label: t('ak.employee'),
-      sub: t('ak.employeeSub'),
-      field: 'employeeSignedAt' as const,
-      signedAt: data?.employeeSignedAt,
-    },
     {
       label: t('ak.evaluator'),
       sub: t('ak.evaluatorSub'),
       field: 'evaluatorSignedAt' as const,
       signedAt: data?.evaluatorSignedAt,
+      canEdit: isAdmin || currentUserId === evaluatorId,
     },
     {
       label: t('ak.director'),
       sub: t('ak.directorSub'),
       field: 'directorSignedAt' as const,
       signedAt: data?.directorSignedAt,
+      canEdit: isAdmin,
     },
   ]
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
       {parties.map((party) => (
         <div key={party.field} className="kbt-card" style={{ padding: 18, textAlign: 'center' }}>
           <div style={{ marginBottom: 12 }}>
@@ -61,7 +59,7 @@ export default function AcknowledgementSection({ data, isAdmin, onUpdate, isUpda
               ? <span className="kbt-badge-success">{t('ak.acknowledged')}</span>
               : <span className="kbt-badge-neutral">{t('ak.pending')}</span>}
 
-            {isAdmin ? (
+            {party.canEdit ? (
               <CalendarPicker
                 value={toDateValue(party.signedAt)}
                 onChange={v => onUpdate(party.field, toIso(v))}

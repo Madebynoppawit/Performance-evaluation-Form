@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Calendar, Hash, KeyRound, Loader2, Lock, MailCheck, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Calendar, Hash, KeyRound, Loader2, Lock, ShieldCheck } from 'lucide-react'
 import api from '@/lib/api'
 import ThemeToggle from '@/components/ThemeToggle'
 
@@ -29,15 +29,19 @@ type NewPassData = z.infer<typeof newPassSchema>
 export default function ForgotPasswordPage() {
   const navigate = useNavigate()
   const t = useT()
-  const resetToken = new URLSearchParams(window.location.search).get('token')
-  const [requestSent, setRequestSent] = useState(false)
+  const urlToken = new URLSearchParams(window.location.search).get('token')
+  const [resetToken, setResetToken] = useState<string | null>(urlToken)
   const verifyForm = useForm<VerifyData>({ resolver: zodResolver(verifySchema) })
   const passForm = useForm<NewPassData>({ resolver: zodResolver(newPassSchema) })
 
   async function onVerify(data: VerifyData) {
     try {
-      await api.post('/auth/forgot-password', data)
-      setRequestSent(true)
+      const res = await api.post<{ ok: boolean; token: string | null }>('/auth/forgot-password', data)
+      if (res.data.token) {
+        setResetToken(res.data.token)
+      } else {
+        verifyForm.setError('root', { message: 'Employee number or date of birth is incorrect.' })
+      }
     } catch {
       verifyForm.setError('root', { message: 'Unable to process the request. Please try again.' })
     }
@@ -52,12 +56,6 @@ export default function ForgotPasswordPage() {
     }
   }
 
-  const title = resetToken
-    ? 'Set a new password'
-    : requestSent
-      ? 'Check your email'
-      : 'Forgot your password?'
-
   return (
     <div className="amw-login" style={{ position: 'relative', justifyContent: 'center' }}>
       <div style={{ position: 'fixed', top: 18, right: 18, zIndex: 5 }}><ThemeToggle /></div>
@@ -67,15 +65,11 @@ export default function ForgotPasswordPage() {
             width: 48, height: 48, borderRadius: 14, display: 'flex', alignItems: 'center',
             justifyContent: 'center', background: 'var(--brand-gradient)', color: '#fff',
           }}>
-            {requestSent ? <MailCheck size={22} /> : <KeyRound size={22} />}
+            <KeyRound size={22} />
           </div>
-          <h2 style={{ marginTop: 18, fontSize: '1.5rem', fontWeight: 900 }}>{title}</h2>
+          <h2 style={{ marginTop: 18, fontSize: '1.5rem', fontWeight: 900 }}>{resetToken ? t('cp.setNewTitle') : t('cp.forgotTitle')}</h2>
           <p style={{ marginTop: 7, color: 'var(--kbt-text-3)', lineHeight: 1.55 }}>
-            {resetToken
-              ? 'Choose a strong password for your account.'
-              : requestSent
-                ? 'If the employee details match an account, a reset link has been sent to its registered email.'
-                : 'Enter your employee details. We will send a short-lived reset link to your registered email.'}
+            {resetToken ? t('cp.setNewDesc') : t('cp.forgotDesc')}
           </p>
         </div>
 
@@ -96,18 +90,14 @@ export default function ForgotPasswordPage() {
               </label>
               <button type="submit" disabled={passForm.formState.isSubmitting} className="kbt-btn-primary">
                 {passForm.formState.isSubmitting ? <Loader2 size={16} /> : <Lock size={16} />}
-                Set password <ArrowRight size={16} />
+                {t('cp.setPassword')} <ArrowRight size={16} />
               </button>
             </form>
-          ) : requestSent ? (
-            <button type="button" className="kbt-btn-primary" style={{ width: '100%' }} onClick={() => setRequestSent(false)}>
-              Request another link
-            </button>
           ) : (
             <form onSubmit={verifyForm.handleSubmit(onVerify)} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {verifyForm.formState.errors.root && <div className="kbt-msg-error">{verifyForm.formState.errors.root.message}</div>}
               <label>
-                <span className="kbt-label kbt-label-required">Employee Number</span>
+                <span className="kbt-label kbt-label-required">{t('cp.employeeNumber')}</span>
                 <div style={{ position: 'relative' }}>
                   <Hash size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
                   <input {...verifyForm.register('employeeNo')} className="kbt-input" style={{ paddingLeft: 36 }} autoFocus />
@@ -115,7 +105,7 @@ export default function ForgotPasswordPage() {
                 {verifyForm.formState.errors.employeeNo && <p className="kbt-msg-error">{verifyForm.formState.errors.employeeNo.message}</p>}
               </label>
               <label>
-                <span className="kbt-label kbt-label-required">Date of Birth</span>
+                <span className="kbt-label kbt-label-required">{t('cp.dateOfBirth')}</span>
                 <div style={{ position: 'relative' }}>
                   <Calendar size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
                   <input {...verifyForm.register('dateOfBirth')} type="date" className="kbt-input" style={{ paddingLeft: 36 }} />
@@ -124,7 +114,7 @@ export default function ForgotPasswordPage() {
               </label>
               <button type="submit" disabled={verifyForm.formState.isSubmitting} className="kbt-btn-primary">
                 {verifyForm.formState.isSubmitting ? <Loader2 size={16} /> : <ShieldCheck size={16} />}
-                Send reset link <ArrowRight size={16} />
+                {t('cp.verifyIdentity')} <ArrowRight size={16} />
               </button>
             </form>
           )}
@@ -133,7 +123,7 @@ export default function ForgotPasswordPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             marginTop: 14, color: 'var(--kbt-text-3)', textDecoration: 'none',
           }}>
-            <ArrowLeft size={14} /> Back to sign in
+            <ArrowLeft size={14} /> {t('cp.backToSignIn')}
           </Link>
         </div>
       </section>

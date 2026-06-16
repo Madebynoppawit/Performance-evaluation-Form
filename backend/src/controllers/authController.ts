@@ -100,9 +100,10 @@ const updateMeSchema = z.object({
 export async function forgotPassword(req: Request, res: Response, next: NextFunction) {
   try {
     const { employeeNo, dateOfBirth } = forgotSchema.parse(req.body)
-    const dob = new Date(`${dateOfBirth}T00:00:00Z`)
-    await authService.requestPasswordReset(employeeNo, dob)
-    res.json({ ok: true })
+    const token = await authService.requestPasswordReset(employeeNo, dateOfBirth)
+    // Return the token directly so the frontend can show the reset form immediately
+    // without requiring the user to check their email.
+    res.json({ ok: true, token: token ?? null })
   } catch (err) {
     next(err)
   }

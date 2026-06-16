@@ -53,6 +53,8 @@ export async function createUser(data: {
   position?: Position
   department?: string
   managerId?: string
+  employeeNo?: string | null
+  dateOfBirth?: string | null
 }) {
   const exists = await prisma.user.findUnique({ where: { email: data.email } })
   if (exists) throw new Error('Email นี้มีอยู่ในระบบแล้ว')
@@ -73,6 +75,7 @@ export async function updateUser(
     managerId?: string | null
     password?: string
     jobTitle?: string | null
+    employeeNo?: string | null
     dateOfBirth?: Date | null
   }
 ) {

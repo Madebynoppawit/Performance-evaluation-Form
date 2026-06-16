@@ -1010,6 +1010,8 @@ export default function EvaluationFormPage() {
                 <AcknowledgementSection
                   data={ev.acknowledgement}
                   isAdmin={isDeveloper || isManager}
+                  currentUserId={user?.id}
+                  evaluatorId={ev.evaluatorId}
                   onUpdate={(field, value) => ackMutation.mutate({ field, value })}
                   isUpdating={ackMutation.isPending}
                 />

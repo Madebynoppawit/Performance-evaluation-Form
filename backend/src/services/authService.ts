@@ -88,27 +88,27 @@ export async function updateProfile(
 
 /** Verify employee number + date of birth; if match → return a short-lived
     reset token (15 min). Uses a generic error to avoid user enumeration. */
-export async function requestPasswordReset(employeeNo: string, dateOfBirth: Date): Promise<void> {
+export async function requestPasswordReset(employeeNo: string, dateOfBirth: string): Promise<string | null> {
   const user = await prisma.user.findFirst({
     where: { employeeNo: employeeNo.trim() },
     select: { id: true, name: true, email: true, dateOfBirth: true },
   })
-  if (!user || !user.dateOfBirth) return
+  if (!user || !user.dateOfBirth) return null
 
-  // Compare calendar date only (ignore stored time component).
-  const stored = user.dateOfBirth
-  const match =
-    stored.getUTCFullYear() === dateOfBirth.getUTCFullYear() &&
-    stored.getUTCMonth()    === dateOfBirth.getUTCMonth()    &&
-    stored.getUTCDate()     === dateOfBirth.getUTCDate()
-  if (!match) return
+  // Dates from CSV import are stored as local midnight (UTC+7), so we compare
+  // the stored date in Thai time (+7h) against the YYYY-MM-DD input string.
+  const shifted = new Date(user.dateOfBirth.getTime() + 7 * 60 * 60 * 1000)
+  const storedStr = shifted.toISOString().slice(0, 10)
+  if (storedStr !== dateOfBirth) return null
 
   const token = signResetToken(user.id)
-  await sendPasswordReset({
+  // Best-effort email (no await — don't block if SMTP isn't configured)
+  sendPasswordReset({
     to: user.email,
     name: user.name,
     resetUrl: `${env.CLIENT_URL}/forgot-password?token=${encodeURIComponent(token)}`,
-  })
+  }).catch(() => undefined)
+  return token
 }
 
 /** Consume a reset token and set a new password. */

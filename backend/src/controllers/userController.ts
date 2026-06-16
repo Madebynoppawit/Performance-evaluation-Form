@@ -9,13 +9,15 @@ import { Position, Role } from '@prisma/client'
 import { passwordSchema } from '../validation/passwordPolicy'
 
 const createSchema = z.object({
-  email:      companyEmailSchema,
-  name:       z.string().min(1),
-  password:   passwordSchema,
-  role:       z.nativeEnum(Role),
-  position:   z.nativeEnum(Position).optional(),
-  department: z.string().optional(),
-  managerId:  z.string().optional(),
+  email:       companyEmailSchema,
+  name:        z.string().min(1),
+  password:    passwordSchema,
+  role:        z.nativeEnum(Role),
+  position:    z.nativeEnum(Position).optional(),
+  department:  z.string().optional(),
+  managerId:   z.string().optional(),
+  employeeNo:  z.string().trim().min(1).nullable().optional(),
+  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
 })
 
 const updateSchema = z.object({
@@ -26,6 +28,7 @@ const updateSchema = z.object({
   managerId:   z.string().nullable().optional(),
   password:    passwordSchema.optional(),
   jobTitle:    z.string().max(120).nullable().optional(),
+  employeeNo:  z.string().trim().min(1).nullable().optional(),
   dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
 })
 
@@ -57,8 +60,8 @@ export async function update(req: AuthRequest, res: Response, next: NextFunction
     const parsed = {
       ...body,
       dateOfBirth: body.dateOfBirth != null
-        ? (body.dateOfBirth === null ? null : new Date(`${body.dateOfBirth}T00:00:00Z`))
-        : undefined,
+        ? new Date(`${body.dateOfBirth}T00:00:00Z`)
+        : body.dateOfBirth === null ? null : undefined,
     }
     res.json(await userService.updateUser(req.params.id, parsed))
   } catch (err) { next(err) }

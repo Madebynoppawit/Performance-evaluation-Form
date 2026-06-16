@@ -15,6 +15,7 @@ import EmptyState from '@/components/EmptyState'
 import Spinner from '@/components/Spinner'
 import type { Evaluation } from '@/types'
 import { useLabels } from '@/i18n/useLabels'
+import { useT } from '@/i18n/languageContext'
 
 type BandKey = 'top' | 'strong' | 'solid' | 'watch' | 'risk'
 type PerformanceGrade = 'EXCELLENT' | 'ABOVE_STANDARD' | 'MEETS_STANDARD' | 'ALMOST_STANDARD' | 'BELOW_STANDARD'
@@ -60,6 +61,7 @@ function gradeLabel(grade: PerformanceGrade | null | undefined) {
 
 export default function CalibrationPage() {
   const { statusLabel } = useLabels()
+  const t = useT()
   const qc = useQueryClient()
   const [query, setQuery] = useState('')
   const [bandFilter, setBandFilter] = useState<'ALL' | BandKey>('ALL')
@@ -115,29 +117,29 @@ export default function CalibrationPage() {
     <div className="kbt-page">
       <div className="kbt-page-header">
         <div>
-          <span className="amw-eyebrow">Action</span>
-          <h1>Calibration</h1>
-          <p>Assign final performance grades and lock calibrated evaluations before cycle closure.</p>
+          <span className="amw-eyebrow">{t('cal.eyebrow')}</span>
+          <h1>{t('cal.title')}</h1>
+          <p>{t('cal.desc')}</p>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="amw-loading-panel"><Spinner size={18} /> Loading calibration workspace...</div>
+        <div className="amw-loading-panel"><Spinner size={18} /> {t('cal.loading')}</div>
       ) : isError ? (
         <div className="kbt-card">
           <EmptyState
             icon={Gauge}
-            title="Could not load calibration data"
-            description="Check your connection and try again."
+            title={t('cal.loadFailed')}
+            description={t('cal.loadFailedDesc')}
           />
         </div>
       ) : scored.length === 0 ? (
         <div className="kbt-card">
           <EmptyState
             icon={Gauge}
-            title="No scored evaluations yet"
-            description="Complete evaluation scores first, then return here to set final grades."
-            action={{ label: 'Go to evaluations', to: '/evaluations' }}
+            title={t('cal.noScored')}
+            description={t('cal.noScoredDesc')}
+            action={{ label: t('cal.goToEval'), to: '/evaluations' }}
           />
         </div>
       ) : (
@@ -145,10 +147,10 @@ export default function CalibrationPage() {
           <section className="kbt-card" style={{ padding: 18 }}>
             <div className="kbt-metric-grid kbt-metric-grid-4">
               {[
-                { label: 'Scored',      value: scored.length,                icon: <Gauge size={14} color="var(--sap-blue)" /> },
-                { label: 'Grade set',   value: `${gradeSet}/${scored.length}`, icon: <ListChecks size={14} color="var(--m-blue)" /> },
-                { label: 'Locked',      value: locked,                       icon: <Lock size={14} color="var(--m-light-blue)" /> },
-                { label: 'Pending',     value: pending,                      icon: <ClipboardCheck size={14} color="var(--amw-red)" /> },
+                { label: t('cal.metricScored'),    value: scored.length,                icon: <Gauge size={14} color="var(--sap-blue)" /> },
+                { label: t('cal.metricGradeSet'),  value: `${gradeSet}/${scored.length}`, icon: <ListChecks size={14} color="var(--m-blue)" /> },
+                { label: t('cal.metricLocked'),    value: locked,                       icon: <Lock size={14} color="var(--m-light-blue)" /> },
+                { label: t('cal.metricPending'),   value: pending,                      icon: <ClipboardCheck size={14} color="var(--amw-red)" /> },
               ].map(metric => (
                 <div key={metric.label} className="kbt-metric amw-report-metric">
                   <div className="kbt-metric-head amw-report-metric-head">
@@ -170,17 +172,17 @@ export default function CalibrationPage() {
                   style={{ paddingLeft: 34 }}
                   value={query}
                   onChange={e => setQuery(e.target.value)}
-                  placeholder="Search employee, department, evaluator..."
+                  placeholder={t('cal.searchPlaceholder')}
                 />
               </div>
               <select className="kbt-input" style={{ maxWidth: 180 }} value={bandFilter} onChange={e => setBandFilter(e.target.value as 'ALL' | BandKey)}>
-                <option value="ALL">All bands</option>
+                <option value="ALL">{t('cal.allBands')}</option>
                 {BANDS.map(b => <option key={b.key} value={b.key}>{b.label}</option>)}
               </select>
               <select className="kbt-input" style={{ maxWidth: 180 }} value={statusFilter} onChange={e => setStatusFilter(e.target.value as 'ALL' | 'OPEN' | 'CLOSED')}>
-                <option value="ALL">All statuses</option>
-                <option value="OPEN">Open only</option>
-                <option value="CLOSED">Submitted / closed</option>
+                <option value="ALL">{t('cal.allStatuses')}</option>
+                <option value="OPEN">{t('cal.openOnly')}</option>
+                <option value="CLOSED">{t('cal.submittedClosed')}</option>
               </select>
               <span style={{ marginLeft: 'auto', color: 'var(--kbt-text-3)', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
                 {candidates.length} / {scored.length}
@@ -191,13 +193,13 @@ export default function CalibrationPage() {
               <table className="kbt-table">
                 <thead>
                   <tr>
-                    <th>Employee</th>
-                    <th>Department</th>
-                    <th style={{ textAlign: 'right' }}>Score</th>
-                    <th>Band</th>
-                    <th>Final Grade</th>
-                    <th>Status</th>
-                    <th style={{ textAlign: 'right' }}>Action</th>
+                    <th>{t('table.employee')}</th>
+                    <th>{t('table.department')}</th>
+                    <th style={{ textAlign: 'right' }}>{t('table.score')}</th>
+                    <th>{t('cal.band')}</th>
+                    <th>{t('cal.finalGrade')}</th>
+                    <th>{t('table.status')}</th>
+                    <th style={{ textAlign: 'right' }}>{t('users.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -211,7 +213,7 @@ export default function CalibrationPage() {
                         <td>
                           <strong>{displayName(ev)}</strong>
                           <p style={{ marginTop: 2, color: 'var(--kbt-text-3)', fontSize: '0.7rem' }}>
-                            {ev.evaluatorName || ev.evaluator?.name || 'No evaluator'}
+                            {ev.evaluatorName || ev.evaluator?.name || t('cal.noEvaluator')}
                           </p>
                         </td>
                         <td>{departmentOf(ev)}</td>
@@ -276,7 +278,7 @@ export default function CalibrationPage() {
                                 disabled={lockMutation.isPending}
                                 onClick={() => lockMutation.mutate({ id: ev.id, grade: currentGrade })}
                               >
-                                <Lock size={11} /> Lock
+                                <Lock size={11} /> {t('cal.lock')}
                               </button>
                             )}
                             <Link
@@ -284,7 +286,7 @@ export default function CalibrationPage() {
                               style={{ height: 30, padding: '0 10px' }}
                               to={`/evaluations/${ev.id}`}
                             >
-                              Open
+                              {t('common.open')}
                             </Link>
                           </div>
                         </td>
