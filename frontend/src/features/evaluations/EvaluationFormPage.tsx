@@ -107,6 +107,9 @@ export default function EvaluationFormPage() {
   const [submitErrors, setSubmitErrors] = useState<string[]>([])
   const [reviewerComment, setReviewerComment] = useState('')
 
+  // Only reset form state when navigating to a DIFFERENT evaluation (id changes).
+  // Do NOT reset on every refetch — that wipes data the user is actively editing.
+  const evId = ev?.id
   useEffect(() => {
     if (!ev) return
     const e = ev as typeof ev & {
@@ -133,7 +136,8 @@ export default function EvaluationFormPage() {
       performanceGrade: e.performanceGrade ?? null,
       effectiveDate: e.effectiveDate ? e.effectiveDate.substring(0, 10) : null,
     })
-  }, [ev])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [evId])
 
   const formDef = getFormDefinition((ev as { formType?: string } | undefined)?.formType)
   // Every position-level appraisal form shares the OSE skeleton (flat rating,
