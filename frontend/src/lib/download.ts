@@ -217,7 +217,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     doc.text(`${formDef.code} · ${formDef.titleEn}`, M, PH - 8)
   }
 
-  function partBanner(num: string, titleTh: string, titleEn: string) {
+  function partBanner(num: number, titleTh: string, titleEn: string) {
     needPage(26)
     doc.setFillColor(...C.navy)
     doc.rect(M, y, CW, 22, 'F')
@@ -225,10 +225,16 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     doc.rect(M, y + 19, CW * 0.68, 3, 'F')
     doc.setFillColor(...C.red)
     doc.rect(M + CW * 0.68, y + 19, CW * 0.32, 3, 'F')
+    // Thai heading — Thai font renders Thai glyphs; Latin number invisible here
     pfTh()
     doc.setFontSize(7.5)
     doc.setTextColor(...C.white)
-    doc.text(`${num}   ${titleTh}  /  ${titleEn}`, M + 10, y + 14)
+    doc.text(`ส่วนที่   ${titleTh}`, M + 10, y + 14)
+    // Section number + English title — Helvetica renders Latin/digits
+    pf(true)
+    doc.setFontSize(7.5)
+    doc.setTextColor(200, 225, 255)
+    doc.text(`${num}.  ${titleEn}`, PW - M - 8, y + 14, { align: 'right' })
     y += 22
   }
 
@@ -381,7 +387,9 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   pfTh()
   doc.setFontSize(7)
   doc.setTextColor(...C.navy)
-  doc.text('ข้อมูลพนักงาน  /  Employee Information', M + 8, y + 11)
+  doc.text('ข้อมูลพนักงาน', M + 8, y + 11)
+  pf(false)
+  doc.text('Employee Information', PW - M - 8, y + 11, { align: 'right' })
   y += 16
 
   infoRows.forEach((row, ri) => {
@@ -411,18 +419,18 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
 
   if (isWeighted) {
     // ── PART 1: GOAL SETTING KPI ──────────────────────────────────────────
-    partBanner(`ส่วนที่ ${partN++}`, 'การตั้งเป้าหมาย (KPI)', 'Goal Setting (KPI)')
+    partBanner(partN++, 'การตั้งเป้าหมาย (KPI)', 'Goal Setting (KPI)')
 
     const GW = [20, 196, 38, 32, 32, 32, 32, 32, 48, 39] as const
     tblHeader([
       { text: '#', w: GW[0] },
       { text: 'KPI Goal Description', w: GW[1] },
       { text: 'Wt%', w: GW[2] },
-      { text: '★5', w: GW[3] },
-      { text: '★4', w: GW[4] },
-      { text: '★3', w: GW[5] },
-      { text: '★2', w: GW[6] },
-      { text: '★1', w: GW[7] },
+      { text: 'T.5', w: GW[3] },
+      { text: 'T.4', w: GW[4] },
+      { text: 'T.3', w: GW[5] },
+      { text: 'T.2', w: GW[6] },
+      { text: 'T.1', w: GW[7] },
       { text: 'Actual', w: GW[8] },
       { text: 'Score', w: GW[9] },
     ], 20)
@@ -489,7 +497,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     y += 10
 
     // ── PART 2: CORE COMPETENCY ───────────────────────────────────────────
-    partBanner(`ส่วนที่ ${partN++}`, 'สมรรถนะหลัก (Core Competency)', 'Core Competency')
+    partBanner(partN++, 'สมรรถนะหลัก (Core Competency)', 'Core Competency')
 
     const dotsColW = 84
     const CCW = [30, 160, CW - 30 - 160 - 52 - dotsColW, 52, dotsColW] as const
@@ -498,7 +506,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       { text: 'Competency', w: CCW[1] },
       { text: 'Description (for this position)', w: CCW[2] },
       { text: 'Score', w: CCW[3] },
-      { text: '● Rating', w: CCW[4] },
+      { text: 'Rating', w: CCW[4] },
     ], 20)
 
     if (positionCompetencies.length === 0) {
@@ -550,7 +558,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     y += 10
 
     // ── PART 3: ATTENDANCE ───────────────────────────────────────────────
-    partBanner(`ส่วนที่ ${partN++}`, 'การมาปฏิบัติงาน', 'Attendance')
+    partBanner(partN++, 'การมาปฏิบัติงาน', 'Attendance')
 
     tblHeader([{ text: 'Metric', w: attMW }, { text: 'Value', w: CW - attMW }], 18)
     const attRows: [string, string][] = [
@@ -568,7 +576,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     y += 10
 
     // ── PART 4: TRAINING ─────────────────────────────────────────────────
-    partBanner(`ส่วนที่ ${partN++}`, 'การฝึกอบรม', 'Training')
+    partBanner(partN++, 'การฝึกอบรม', 'Training')
 
     tblHeader([{ text: 'Metric', w: attMW }, { text: 'Value', w: CW - attMW }], 18)
     const trn = ev.trainingRecord
@@ -587,14 +595,14 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     y += 10
 
     // ── PART 5: PERFORMANCE SUMMARY ──────────────────────────────────────
-    partBanner(`ส่วนที่ ${partN++}`, 'สรุปผลการประเมิน', 'Performance Summary')
+    partBanner(partN++, 'สรุปผลการประเมิน', 'Performance Summary')
 
     const SW = [CW * 0.43, CW * 0.15, CW * 0.21, CW * 0.21]
     tblHeader([
-      { text: 'หัวข้อการประเมิน  /  Section', w: SW[0] },
-      { text: 'น้ำหนัก / Weight', w: SW[1] },
-      { text: 'คะแนนที่ได้ / Score', w: SW[2] },
-      { text: 'คะแนนถ่วงน้ำหนัก / Weighted', w: SW[3] },
+      { text: 'Section', w: SW[0] },
+      { text: 'Weight', w: SW[1] },
+      { text: 'Score', w: SW[2] },
+      { text: 'Weighted', w: SW[3] },
     ], 20)
 
     const sumRow = (
@@ -698,7 +706,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   } else {
     // ── OSE GOAL SETTING TABLE (shown when goal entries exist) ──────────
     if (goals.length > 0) {
-      partBanner(`ส่วนที่ ${partN++}`, 'การตั้งเป้าหมาย (KPI)', 'Goal Setting (KPI)')
+      partBanner(partN++, 'การตั้งเป้าหมาย (KPI)', 'Goal Setting (KPI)')
 
       const hasTargets = goals.some(g => g.targetRating5 || g.targetRating4 || g.targetRating3)
       let GK: readonly number[]
@@ -708,11 +716,11 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
           { text: '#', w: GK[0] },
           { text: 'KPI Goal Description', w: GK[1] },
           { text: 'Wt%', w: GK[2] },
-          { text: '★5', w: GK[3] },
-          { text: '★4', w: GK[4] },
-          { text: '★3', w: GK[5] },
-          { text: '★2', w: GK[6] },
-          { text: '★1', w: GK[7] },
+          { text: 'T.5', w: GK[3] },
+          { text: 'T.4', w: GK[4] },
+          { text: 'T.3', w: GK[5] },
+          { text: 'T.2', w: GK[6] },
+          { text: 'T.1', w: GK[7] },
           { text: 'Score', w: GK[8] },
         ], 20)
       } else {
@@ -794,7 +802,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     }
 
     // ── OSE FORM: EVALUATION CRITERIA ──────────────────────────────────
-    partBanner(`ส่วนที่ ${partN++}`, 'การประเมินผลการปฏิบัติงาน', 'Evaluation Criteria')
+    partBanner(partN++, 'การประเมินผลการปฏิบัติงาน', 'Evaluation Criteria')
 
     const dotsW = 82
     const EC = [CW * 0.08, CW * 0.07, CW - CW * 0.08 - CW * 0.07 - 48 - dotsW, 48, dotsW] as const
@@ -803,7 +811,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       { text: 'ID', w: EC[1] },
       { text: 'Criterion', w: EC[2] },
       { text: 'Score', w: EC[3] },
-      { text: '● Rating', w: EC[4] },
+      { text: 'Rating', w: EC[4] },
     ], 20)
 
     let critRow = 0
@@ -812,10 +820,15 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       doc.setFillColor(...C.rowAlt)
       doc.setDrawColor(...C.border)
       doc.rect(M, y, CW, 14, 'FD')
-      pfTh()
+      // Render English portion with Helvetica, then Thai title with Thai font
+      pf(true)
       doc.setFontSize(7)
       doc.setTextColor(...C.blue)
-      doc.text(`${cat.num}. ${cat.titleEn}  /  ${cat.titleTh}`, M + 8, y + 10)
+      const catLatinLabel = `${cat.num}. ${cat.titleEn}  / `
+      doc.text(catLatinLabel, M + 8, y + 10)
+      const catLatinW = doc.getTextWidth(catLatinLabel)
+      pfTh()
+      doc.text(cat.titleTh, M + 8 + catLatinW, y + 10)
       y += 14
 
       cat.criteria.forEach((crit) => {
@@ -855,10 +868,12 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     doc.setFillColor(...C.blueLt)
     doc.setDrawColor(...C.border)
     doc.rect(M, y, CW, 18, 'FD')
-    pfTh()
+    pf(true)
     doc.setFontSize(7.5)
     doc.setTextColor(...C.navy)
-    doc.text('Average Score  /  คะแนนเฉลี่ย:', M + 8, y + 12)
+    doc.text('Average Score  / ', M + 8, y + 12)
+    pfTh()
+    doc.text('คะแนนเฉลี่ย:', M + 8 + doc.getTextWidth('Average Score  / '), y + 12)
     if (oseAvg != null) {
       doc.text(oseAvg.toFixed(2), M + CW / 2 - 50, y + 12, { align: 'right' })
       ratingDots(oseAvg, M + CW / 2 - 40, y + 11, 5, 5)
@@ -871,7 +886,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     y += 10
 
     // OSE Summary
-    partBanner(`ส่วนที่ ${partN++}`, 'สรุปผลการประเมิน', 'Performance Summary')
+    partBanner(partN++, 'สรุปผลการประเมิน', 'Performance Summary')
 
     // ── Calibration banner ────────────────────────────────────────────────────
     needPage(74)
@@ -880,10 +895,12 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       doc.setDrawColor(...C.border)
       doc.rect(M, y, CW, 72, 'FD')
       // Left: score label + big number
-      pfTh()
+      pf(false)
       doc.setFontSize(7)
       doc.setTextColor(170, 200, 242)
-      doc.text('Calibrated Score  /  คะแนนรวม', M + 16, y + 16)
+      doc.text('Calibrated Score  / ', M + 16, y + 16)
+      pfTh()
+      doc.text('คะแนนรวม', M + 16 + doc.getTextWidth('Calibrated Score  / '), y + 16)
       pf(true)
       doc.setFontSize(30)
       doc.setTextColor(...C.white)
@@ -1037,7 +1054,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
 
   // ─── COMMENTS ─────────────────────────────────────────────────────────────
   if (ev.comment) {
-    partBanner(`ส่วนที่ ${partN++}`, 'ความคิดเห็น', 'Comments')
+    partBanner(partN++, 'ความคิดเห็น', 'Comments')
     const fields: [string, string | null | undefined][] = [
       ['จุดเด่น  /  Strengths', ev.comment.strengths],
       ['จุดที่ต้องพัฒนา  /  Areas for Improvement', ev.comment.improvements],
@@ -1055,7 +1072,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       doc.setFontSize(7.5)
       doc.setTextColor(...C.navy)
       doc.text(label, M + 8, y + 13)
-      pf(false)
+      pfTh()
       doc.setFontSize(8)
       doc.setTextColor(...C.ink)
       doc.text(textLines, M + 12, y + 25)
@@ -1067,7 +1084,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   // ─── SALARY SUMMARY (if present) ─────────────────────────────────────────
   if (ev.salarySummary) {
     const ss = ev.salarySummary
-    partBanner(`ส่วนที่ ${partN++}`, 'สรุปเงินเดือน / โบนัส', 'Salary / Compensation')
+    partBanner(partN++, 'สรุปเงินเดือน / โบนัส', 'Salary / Compensation')
     const salW = attMW
     tblHeader([{ text: 'Item', w: salW }, { text: 'Amount', w: CW - salW }], 18)
     const salRows: [string, string][] = [
@@ -1102,7 +1119,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
 
   // ─── ACKNOWLEDGEMENT / SIGNATURES ─────────────────────────────────────────
   needPage(110)
-  partBanner(`ส่วนที่ ${partN++}`, 'การรับทราบ / ลายเซ็น', 'Acknowledgement & Signatures')
+  partBanner(partN++, 'การรับทราบ / ลายเซ็น', 'Acknowledgement & Signatures')
 
   const signers = [
     { label: 'Employee  /  พนักงาน', name: displayEmployee, signedAt: ev.acknowledgement?.employeeSignedAt },
