@@ -79,17 +79,17 @@ function formatCsvDate(value?: string | null) {
 }
 
 function csvCellValue(user: ManagedUser, header: string) {
-  const raw = user.sourceData?.[header]
-  if (raw != null && raw !== '') return raw
-  if (header === 'No') return user.employeeNo ?? ''
-  if (header === 'Email') return user.email
-  if (header === 'Department') return user.department ?? ''
-  if (header === 'Positiion') return user.jobTitle ?? ''
-  if (header === 'Position Level') return user.position ? POSITION_LABELS[user.position] : ''
-  if (header === 'Birthday') return formatCsvDate(user.dateOfBirth)
-  if (header === 'Start date') return formatCsvDate(user.hireDate)
-  if (header === 'Name') return user.name
-  return ''
+  // DB fields take priority over sourceData for editable columns — ensures edits are visible immediately
+  if (header === 'Name')           return user.name || user.sourceData?.['Name'] || ''
+  if (header === 'Email')          return user.email
+  if (header === 'No')             return user.employeeNo ?? user.sourceData?.['No'] ?? ''
+  if (header === 'Department')     return user.department || user.sourceData?.['Department'] || ''
+  if (header === 'Positiion')      return user.jobTitle || user.sourceData?.['Positiion'] || ''
+  if (header === 'Position Level') return user.position ? POSITION_LABELS[user.position] : (user.sourceData?.['Position Level'] ?? '')
+  if (header === 'Birthday')       return user.dateOfBirth ? formatCsvDate(user.dateOfBirth) : formatCsvDate(user.sourceData?.['Birthday'])
+  if (header === 'Start date')     return user.hireDate   ? formatCsvDate(user.hireDate)    : formatCsvDate(user.sourceData?.['Start date'])
+  // Read-only CSV columns (Thai name, Surname, Team, Code, Supervisor, etc.) come from sourceData only
+  return user.sourceData?.[header] ?? ''
 }
 // Distinct colour per role so they read apart at a glance.
 const ROLE_STYLE: Record<Role, { bg: string; border: string; color: string; dot: string }> = {
@@ -171,7 +171,26 @@ export default function UserManagementPage() {
         await api.post('/users', { ...base, email: draft.email.trim(), password: draft.password })
       }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); setDraft(null); setFormError(null) },
+    onSuccess: () => {
+      // Optimistic cache patch — update the cached user immediately so the table
+      // reflects changes before the background refetch completes
+      if (draft?.id) {
+        qc.setQueryData<ManagedUser[]>(['users'], old =>
+          old?.map(u => u.id === draft.id ? {
+            ...u,
+            name: draft.name.trim() || u.name,
+            role: draft.role,
+            position: draft.position || u.position,
+            department: draft.department.trim() || u.department,
+            jobTitle: draft.jobTitle.trim() || u.jobTitle,
+            dateOfBirth: draft.dateOfBirth || u.dateOfBirth,
+          } : u)
+        )
+      }
+      qc.invalidateQueries({ queryKey: ['users'] })
+      setDraft(null)
+      setFormError(null)
+    },
     onError: (err: { response?: { data?: { message?: string } } }) => {
       setFormError(err.response?.data?.message ?? t('users.saveFailed'))
     },
@@ -357,7 +376,7 @@ export default function UserManagementPage() {
                     <th key={header}>{header}</th>
                   ))}
                   <th>{t('acc.role')}</th>
-                  <th style={{ textAlign: 'right' }}>{t('users.actions')}</th>
+                  <th style={{ textAlign: 'right', position: 'sticky', right: 0, background: 'var(--kbt-surface)', zIndex: 2, boxShadow: '-2px 0 6px rgba(0,0,0,0.18)' }}>{t('users.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -387,7 +406,7 @@ export default function UserManagementPage() {
                       )
                     })}
                     <td><RoleBadge role={u.role} /></td>
-                    <td>
+                    <td style={{ position: 'sticky', right: 0, background: 'var(--kbt-surface)', boxShadow: '-2px 0 6px rgba(0,0,0,0.18)' }}>
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                         <button className="kbt-btn-ghost" style={{ height: 30, padding: '0 10px', gap: 5 }} onClick={() => openEdit(u)}>
                           <Pencil size={13} /> {t('common.edit')}
