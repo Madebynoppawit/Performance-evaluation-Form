@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowRight, KeyRound, Loader2, Lock, ShieldCheck } from 'lucide-react'
 import api from '@/lib/api'
 import ThemeToggle from '@/components/ThemeToggle'
+import { useT } from '@/i18n/languageContext'
 import { useAuthStore } from './authStore'
 import type { User } from '@/types'
 
@@ -20,6 +21,7 @@ type FormData = z.infer<typeof schema>
 
 export default function ChangePasswordPage() {
   const navigate = useNavigate()
+  const t = useT()
   const user = useAuthStore((s) => s.user)
   const updateUser = useAuthStore((s) => s.updateUser)
   const logout = useAuthStore((s) => s.logout)
@@ -72,21 +74,21 @@ export default function ChangePasswordPage() {
             )}
 
             <div>
-              <label className="kbt-label kbt-label-required">New Password</label>
+              <label className="kbt-label kbt-label-required">{t('cp.newPassword')}</label>
               <div style={{ position: 'relative' }}>
                 <Lock size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--kbt-text-3)', pointerEvents: 'none' }} />
                 <input {...register('password')} type="password" className="kbt-input" style={{ paddingLeft: 36 }}
-                  placeholder="At least 8 chars, 1 uppercase, 1 number" autoComplete="new-password" autoFocus />
+                  placeholder={t('cp.passwordHint')} autoComplete="new-password" autoFocus />
               </div>
               {errors.password && <p style={{ color: '#e52321', fontSize: '0.75rem', marginTop: 4 }}>{errors.password.message}</p>}
             </div>
 
             <div>
-              <label className="kbt-label kbt-label-required">Confirm Password</label>
+              <label className="kbt-label kbt-label-required">{t('cp.confirmPassword')}</label>
               <div style={{ position: 'relative' }}>
                 <Lock size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--kbt-text-3)', pointerEvents: 'none' }} />
                 <input {...register('confirm')} type="password" className="kbt-input" style={{ paddingLeft: 36 }}
-                  placeholder="Re-enter new password" autoComplete="new-password" />
+                  placeholder={t('cp.confirmHint')} autoComplete="new-password" />
               </div>
               {errors.confirm && <p style={{ color: '#e52321', fontSize: '0.75rem', marginTop: 4 }}>{errors.confirm.message}</p>}
             </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useT } from '@/i18n/languageContext'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -27,6 +28,7 @@ type NewPassData = z.infer<typeof newPassSchema>
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate()
+  const t = useT()
   const resetToken = new URLSearchParams(window.location.search).get('token')
   const [requestSent, setRequestSent] = useState(false)
   const verifyForm = useForm<VerifyData>({ resolver: zodResolver(verifySchema) })
@@ -82,13 +84,13 @@ export default function ForgotPasswordPage() {
             <form onSubmit={passForm.handleSubmit(onReset)} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {passForm.formState.errors.root && <div className="kbt-msg-error">{passForm.formState.errors.root.message}</div>}
               <label>
-                <span className="kbt-label kbt-label-required">New Password</span>
+                <span className="kbt-label kbt-label-required">{t('cp.newPassword')}</span>
                 <input {...passForm.register('password')} type="password" className="kbt-input"
-                  autoComplete="new-password" autoFocus placeholder="At least 8 chars, 1 uppercase, 1 number" />
+                  autoComplete="new-password" autoFocus placeholder={t('cp.passwordHint')} />
                 {passForm.formState.errors.password && <p className="kbt-msg-error">{passForm.formState.errors.password.message}</p>}
               </label>
               <label>
-                <span className="kbt-label kbt-label-required">Confirm Password</span>
+                <span className="kbt-label kbt-label-required">{t('cp.confirmPassword')}</span>
                 <input {...passForm.register('confirm')} type="password" className="kbt-input" autoComplete="new-password" />
                 {passForm.formState.errors.confirm && <p className="kbt-msg-error">{passForm.formState.errors.confirm.message}</p>}
               </label>

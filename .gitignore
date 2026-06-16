@@ -37,6 +37,7 @@ playwright-report/
 
 # Local test runs & scratch artifacts
 /reports/
+backups/
 .tmp_pdf_review/
 .env.prod
 .env.demo

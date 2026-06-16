@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { BarChart2, CheckCircle2, Download, KeyRound, ShieldCheck, TrendingUp, Users } from 'lucide-react'
@@ -92,7 +93,8 @@ function exportReportsCsv(summaries: ReportSummary[]) {
 export default function ReportsPage() {
   const { isAdmin } = useAuth()
   const t = useT()
-  const { data, isLoading } = useQuery<ReportSummary[]>({
+  const [cycleFilter, setCycleFilter] = useState<string>('ALL')
+  const { data, isLoading, isError } = useQuery<ReportSummary[]>({
     queryKey: ['reports'],
     queryFn: () => api.get('/reports/summary').then(r => r.data),
   })
@@ -101,6 +103,8 @@ export default function ReportsPage() {
     queryFn: () => api.get('/reports/audit-events').then(r => r.data),
     enabled: isAdmin,
   })
+  const visibleData = cycleFilter === 'ALL' ? data : data?.filter(r => r.cycleId === cycleFilter)
+
   const exportEvents = auditEvents?.filter((event) => event.eventType.includes('export')).length ?? 0
   const failedLoginEvents = auditEvents?.filter((event) => event.eventType === 'auth_login_failed').length ?? 0
   const mutationEvents = auditEvents?.filter((event) => event.eventType === 'http_mutation').length ?? 0
@@ -113,17 +117,38 @@ export default function ReportsPage() {
           <h1>{t('page.reports.title')}</h1>
           <p>{t('page.reports.desc')}</p>
         </div>
-        {data && data.length > 0 && (
-          <button onClick={() => exportReportsCsv(data)} className="kbt-btn-ghost" style={{ gap: 6 }}>
-            <Download size={14} />
-            {t('rp.exportCsv')}
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {data && data.length > 1 && (
+            <select
+              className="kbt-input"
+              style={{ height: 36, fontSize: '0.8125rem' }}
+              value={cycleFilter}
+              onChange={e => setCycleFilter(e.target.value)}
+            >
+              <option value="ALL">{t('rp.allCycles')}</option>
+              {data.map(r => <option key={r.cycleId} value={r.cycleId}>{r.cycleName}</option>)}
+            </select>
+          )}
+          {data && data.length > 0 && (
+            <button onClick={() => exportReportsCsv(data)} className="kbt-btn-ghost" style={{ gap: 6 }}>
+              <Download size={14} />
+              {t('rp.exportCsv')}
+            </button>
+          )}
+        </div>
       </div>
 
       {isLoading ? (
         <div className="amw-stack">
           <SkeletonReport /><SkeletonReport />
+        </div>
+      ) : isError ? (
+        <div className="kbt-card">
+          <EmptyState
+            icon={BarChart2}
+            title={t('rp.loadFailed')}
+            description={t('rp.loadFailedDesc')}
+          />
         </div>
       ) : !data?.length ? (
         <div className="kbt-card">
@@ -213,7 +238,7 @@ export default function ReportsPage() {
 
           <div className="kbt-section-title amw-section-title-compact">{t('rp.cycleBreakdown')}</div>
 
-          {data.map((report) => {
+          {(visibleData ?? data ?? []).map((report) => {
             const pct = report.totalEvaluations > 0
               ? Math.round((report.completedEvaluations / report.totalEvaluations) * 100)
               : 0

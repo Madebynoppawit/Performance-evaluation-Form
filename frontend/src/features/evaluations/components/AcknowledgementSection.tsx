@@ -66,7 +66,7 @@ export default function AcknowledgementSection({ data, isAdmin, onUpdate, isUpda
                 value={toDateValue(party.signedAt)}
                 onChange={v => onUpdate(party.field, toIso(v))}
                 disabled={isUpdating}
-                placeholder="เลือกวันที่ลงนาม"
+                placeholder={t('ak.selectDate')}
               />
             ) : party.signedAt ? (
               <p style={{

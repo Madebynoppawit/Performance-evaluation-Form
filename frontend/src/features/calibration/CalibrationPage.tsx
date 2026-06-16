@@ -65,7 +65,7 @@ export default function CalibrationPage() {
   const [bandFilter, setBandFilter] = useState<'ALL' | BandKey>('ALL')
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'OPEN' | 'CLOSED'>('ALL')
 
-  const { data: evaluations = [], isLoading } = useQuery<Evaluation[]>({
+  const { data: evaluations = [], isLoading, isError } = useQuery<Evaluation[]>({
     queryKey: ['evaluations', 'calibration'],
     queryFn: () => api.get('/evaluations').then(r => r.data),
   })
@@ -123,6 +123,14 @@ export default function CalibrationPage() {
 
       {isLoading ? (
         <div className="amw-loading-panel"><Spinner size={18} /> Loading calibration workspace...</div>
+      ) : isError ? (
+        <div className="kbt-card">
+          <EmptyState
+            icon={Gauge}
+            title="Could not load calibration data"
+            description="Check your connection and try again."
+          />
+        </div>
       ) : scored.length === 0 ? (
         <div className="kbt-card">
           <EmptyState
