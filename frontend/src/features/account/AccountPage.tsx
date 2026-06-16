@@ -23,8 +23,13 @@ import type { User as UserType } from '@/types'
 const roleLabel = {
   DEVELOPER: 'Developer',
   ADMIN: 'Administrator',
+  MANAGING_DIRECTOR: 'Managing Director',
+  DIRECTOR: 'Director',
   MANAGER: 'Manager',
+  SUPERVISOR: 'Supervisor',
   EMPLOYEE: 'Employee',
+  STAFF: 'Staff',
+  OPERATOR: 'Operator',
 }
 
 const positionLabel = {

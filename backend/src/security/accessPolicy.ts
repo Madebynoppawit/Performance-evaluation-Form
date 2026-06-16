@@ -1,6 +1,17 @@
 import { Position, Role } from '@prisma/client'
 
 export const PRIVILEGED_ROLES = new Set<Role>([Role.DEVELOPER, Role.ADMIN])
+
+/** Roles that carry manager-level access: can create cycles, view reports, manage evaluations. */
+export const MANAGER_LIKE_ROLES = new Set<Role>([
+  Role.MANAGER, Role.MANAGING_DIRECTOR, Role.DIRECTOR, Role.SUPERVISOR,
+])
+
+/** Shorthand list for requireRole() calls that open routes to any manager-like role. */
+export const MANAGER_GATES = [
+  Role.ADMIN, Role.MANAGER, Role.MANAGING_DIRECTOR, Role.DIRECTOR, Role.SUPERVISOR,
+] as const
+
 export const SUPERVISORY_POSITIONS = new Set<Position>([
   Position.CEO,
   Position.MANAGING_DIRECTOR,
@@ -62,16 +73,16 @@ export function canAccessEvaluation(
   }
 
   if (permission === 'salary') {
-    return actor.role === Role.MANAGER && evaluation.evaluatorId === actor.userId
+    return MANAGER_LIKE_ROLES.has(actor.role) && evaluation.evaluatorId === actor.userId
   }
 
-  return actor.role === Role.MANAGER
+  return MANAGER_LIKE_ROLES.has(actor.role)
     && (evaluation.evaluatorId === actor.userId || evaluation.reviewerId === actor.userId)
 }
 
 export function canIncludeSalary(actor: Actor, evaluation: EvaluationAccess) {
   return actor.role === Role.DEVELOPER
     || actor.role === Role.ADMIN
-    || (actor.role === Role.MANAGER
+    || (MANAGER_LIKE_ROLES.has(actor.role)
       && (evaluation.evaluatorId === actor.userId || evaluation.reviewerId === actor.userId))
 }

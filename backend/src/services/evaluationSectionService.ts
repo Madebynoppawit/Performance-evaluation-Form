@@ -9,7 +9,7 @@ const APP_URL = env.CLIENT_URL.replace(/\/$/, '')
 type SignerType = 'employee' | 'evaluator' | 'director'
 type SectionUser = { userId: string; role: string }
 type NullableText = string | null
-type Position = 'CEO' | 'MANAGING_DIRECTOR' | 'DIRECTOR_UP' | 'MANAGER' | 'OFFICER' | 'SUPERVISOR' | 'PRODUCTION_STAFF'
+type Position = 'CEO' | 'MANAGING_DIRECTOR' | 'DIRECTOR_UP' | 'MANAGER' | 'OFFICER' | 'SUPERVISOR' | 'PRODUCTION_STAFF' | 'OTHER'
 
 const POSITION_COMPETENCIES: Record<Position, string[]> = {
   CEO: ['CC1', 'CC2', 'CC3', 'CC4', 'MC1', 'MC2', 'TCM1', 'TCM2', 'TCM3', 'TCM4'],
@@ -21,6 +21,7 @@ const POSITION_COMPETENCIES: Record<Position, string[]> = {
   OFFICER: ['CC1', 'CC2', 'CC3', 'CC4'],
   SUPERVISOR: ['CC1', 'CC2', 'CC3', 'CC4'],
   PRODUCTION_STAFF: ['CC1', 'CC2', 'CC3', 'CC4'],
+  OTHER: ['CC1', 'CC2', 'CC3', 'CC4'],
 }
 
 const REQUIRED_TARGET_FIELDS = ['targetRating5', 'targetRating4', 'targetRating3', 'targetRating2', 'targetRating1'] as const

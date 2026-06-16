@@ -1,4 +1,4 @@
-export type Role = 'DEVELOPER' | 'ADMIN' | 'MANAGER' | 'EMPLOYEE'
+export type Role = 'DEVELOPER' | 'ADMIN' | 'MANAGER' | 'MANAGING_DIRECTOR' | 'DIRECTOR' | 'SUPERVISOR' | 'EMPLOYEE' | 'STAFF' | 'OPERATOR'
 export type Position = 'CEO' | 'MANAGING_DIRECTOR' | 'DIRECTOR_UP' | 'MANAGER' | 'OFFICER' | 'SUPERVISOR' | 'PRODUCTION_STAFF' | 'OTHER'
 export type EvaluationType = 'SELF' | 'MANAGER' | 'PEER' | 'THREE_SIXTY'
 export type EvaluationStatus = 'DRAFT' | 'IN_PROGRESS' | 'PENDING_REVIEW' | 'SUBMITTED' | 'REVIEWED' | 'CLOSED'

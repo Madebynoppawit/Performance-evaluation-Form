@@ -13,6 +13,10 @@ export function useAuth() {
   const isSupervisory = user?.position
     ? SUPERVISORY_POSITIONS.includes(user.position)
     : false
+  const isManagerLike = user?.role === 'MANAGER'
+    || user?.role === 'MANAGING_DIRECTOR'
+    || user?.role === 'DIRECTOR'
+    || user?.role === 'SUPERVISOR'
 
   return {
     user,
@@ -21,9 +25,8 @@ export function useAuth() {
     updateUser,
     isAdmin,
     isDeveloper,
-    isManager: user?.role === 'MANAGER' || isAdmin,
-    // Only Developer and supervisory roles (Supervisor/Manager/Director) can create evaluations.
-    canManage: isDeveloper || isSupervisory || user?.role === 'MANAGER',
+    isManager: isManagerLike || isAdmin,
+    canManage: isDeveloper || isSupervisory || isManagerLike,
     isAuthenticated: !!token && isSessionValid(),
   }
 }

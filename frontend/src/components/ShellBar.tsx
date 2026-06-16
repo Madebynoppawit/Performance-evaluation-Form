@@ -28,8 +28,18 @@ const TYPE_ICON: Record<AppNotification['type'], LucideIcon> = {
 }
 
 function getDisplayRole(user: ReturnType<typeof useAuth>['user']) {
-  if (user?.position === 'DIRECTOR_UP') return 'Director'
-  return user?.role === 'ADMIN' ? 'Administrator' : user?.role === 'MANAGER' ? 'Manager' : 'Employee'
+  const roleNames: Record<string, string> = {
+    DEVELOPER: 'Developer',
+    ADMIN: 'Administrator',
+    MANAGING_DIRECTOR: 'Managing Director',
+    DIRECTOR: 'Director',
+    MANAGER: 'Manager',
+    SUPERVISOR: 'Supervisor',
+    EMPLOYEE: 'Employee',
+    STAFF: 'Staff',
+    OPERATOR: 'Operator',
+  }
+  return user?.role ? (roleNames[user.role] ?? user.role) : 'Employee'
 }
 
 export default function ShellBar() {

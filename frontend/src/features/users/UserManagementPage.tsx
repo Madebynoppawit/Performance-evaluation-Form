@@ -37,13 +37,25 @@ interface ImportSummary {
   missing: { employeeNo: string; name: string }[]
 }
 
-const ROLE_OPTIONS: Role[] = ['DEVELOPER', 'ADMIN', 'MANAGER', 'EMPLOYEE']
+const ROLE_OPTIONS: Role[] = [
+  'DEVELOPER', 'ADMIN',
+  'MANAGING_DIRECTOR', 'DIRECTOR', 'MANAGER', 'SUPERVISOR',
+  'EMPLOYEE', 'STAFF', 'OPERATOR',
+]
 // Filter chips show the workforce roles individually; Developer + Admin are
 // folded into a single "Other" (system-roles) chip.
-const ROLE_FILTER_ORDER: Role[] = ['MANAGER', 'EMPLOYEE']
+const ROLE_FILTER_ORDER: Role[] = ['MANAGING_DIRECTOR', 'DIRECTOR', 'MANAGER', 'SUPERVISOR', 'EMPLOYEE', 'STAFF', 'OPERATOR']
 const OTHER_ROLES: Role[] = ['DEVELOPER', 'ADMIN']
 const ROLE_LABEL: Record<Role, string> = {
-  DEVELOPER: 'Developer', ADMIN: 'Administrator', MANAGER: 'Manager', EMPLOYEE: 'Employee',
+  DEVELOPER: 'Developer',
+  ADMIN: 'Administrator',
+  MANAGING_DIRECTOR: 'Managing Director',
+  DIRECTOR: 'Director',
+  MANAGER: 'Manager',
+  SUPERVISOR: 'Supervisor',
+  EMPLOYEE: 'Employee',
+  STAFF: 'Staff',
+  OPERATOR: 'Operator',
 }
 
 const EMPLOYEE_CSV_HEADERS = [
@@ -93,10 +105,15 @@ function csvCellValue(user: ManagedUser, header: string) {
 }
 // Distinct colour per role so they read apart at a glance.
 const ROLE_STYLE: Record<Role, { bg: string; border: string; color: string; dot: string }> = {
-  DEVELOPER: { bg: 'rgba(168,85,247,0.13)', border: 'rgba(168,85,247,0.4)', color: '#c084fc', dot: '#a855f7' },
-  ADMIN:     { bg: 'rgba(229,35,33,0.13)',  border: 'rgba(229,35,33,0.4)',  color: '#f87171', dot: '#e52321' },
-  MANAGER:   { bg: 'rgba(92,86,144,0.16)', border: 'rgba(92,86,144,0.45)', color: '#4d9fe8', dot: '#5c5690' },
-  EMPLOYEE:  { bg: 'rgba(148,163,184,0.13)', border: 'rgba(148,163,184,0.32)', color: '#94a3b8', dot: '#94a3b8' },
+  DEVELOPER:        { bg: 'rgba(168,85,247,0.13)',  border: 'rgba(168,85,247,0.4)',  color: '#c084fc', dot: '#a855f7' },
+  ADMIN:            { bg: 'rgba(229,35,33,0.13)',   border: 'rgba(229,35,33,0.4)',   color: '#f87171', dot: '#e52321' },
+  MANAGING_DIRECTOR:{ bg: 'rgba(234,179,8,0.16)',   border: 'rgba(234,179,8,0.45)',  color: '#facc15', dot: '#eab308' },
+  DIRECTOR:         { bg: 'rgba(249,115,22,0.14)',  border: 'rgba(249,115,22,0.42)', color: '#fb923c', dot: '#f97316' },
+  MANAGER:          { bg: 'rgba(92,86,144,0.16)',   border: 'rgba(92,86,144,0.45)',  color: '#4d9fe8', dot: '#5c5690' },
+  SUPERVISOR:       { bg: 'rgba(20,184,166,0.14)',  border: 'rgba(20,184,166,0.42)', color: '#2dd4bf', dot: '#14b8a6' },
+  EMPLOYEE:         { bg: 'rgba(148,163,184,0.13)', border: 'rgba(148,163,184,0.32)',color: '#94a3b8', dot: '#94a3b8' },
+  STAFF:            { bg: 'rgba(100,116,139,0.13)', border: 'rgba(100,116,139,0.32)',color: '#94a3b8', dot: '#64748b' },
+  OPERATOR:         { bg: 'rgba(71,85,105,0.13)',   border: 'rgba(71,85,105,0.32)',  color: '#94a3b8', dot: '#475569' },
 }
 
 function RoleBadge({ role }: { role: Role }) {
