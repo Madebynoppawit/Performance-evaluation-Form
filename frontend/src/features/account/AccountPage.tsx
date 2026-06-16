@@ -35,6 +35,7 @@ const positionLabel = {
   OFFICER: 'Officer',
   SUPERVISOR: 'Supervisor',
   PRODUCTION_STAFF: 'Production Staff',
+  OTHER: 'Other',
 }
 
 type PhotoShape = 'rounded' | 'circle' | 'square'

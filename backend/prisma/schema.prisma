@@ -25,6 +25,7 @@ enum Position {
   OFFICER
   SUPERVISOR
   PRODUCTION_STAFF
+  OTHER
 }
 
 enum EvaluationType {

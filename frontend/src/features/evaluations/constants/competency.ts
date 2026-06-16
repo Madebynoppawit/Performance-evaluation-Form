@@ -171,6 +171,7 @@ export const POSITION_LABELS: Record<Position, string> = {
   OFFICER: 'Officer',
   SUPERVISOR: 'Supervisor',
   PRODUCTION_STAFF: 'Production Staff',
+  OTHER: 'Other',
 }
 
 export const DISCIPLINARY_OPTIONS = [
@@ -183,7 +184,9 @@ export const DISCIPLINARY_OPTIONS = [
 /** CEO and Managing Director are evaluated on the "Director and up" competency
     set — collapse them so competencies and descriptions resolve correctly. */
 export function competencyPosition(position: Position): Position {
-  return position === 'CEO' || position === 'MANAGING_DIRECTOR' ? 'DIRECTOR_UP' : position
+  if (position === 'CEO' || position === 'MANAGING_DIRECTOR') return 'DIRECTOR_UP'
+  if (position === 'OTHER') return 'OFFICER'
+  return position
 }
 
 export function getCompetenciesForPosition(position: Position): CompetencyDef[] {

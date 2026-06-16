@@ -304,6 +304,7 @@ export const POSITION_FORM_TYPE: Record<Position, FormTypeId> = {
   OFFICER: 'OFFICER_LEVEL',
   SUPERVISOR: 'SUPERVISOR_LEVEL',
   PRODUCTION_STAFF: 'PRODUCTION_LEVEL',
+  OTHER: 'OFFICER_LEVEL',
 }
 
 export function formTypeForPosition(position?: string | null): FormTypeId {
