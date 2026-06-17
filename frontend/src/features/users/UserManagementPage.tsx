@@ -42,10 +42,6 @@ const ROLE_OPTIONS: Role[] = [
   'MANAGING_DIRECTOR', 'DIRECTOR', 'MANAGER', 'SUPERVISOR',
   'EMPLOYEE', 'STAFF', 'OPERATOR',
 ]
-// Filter chips show the workforce roles individually; Developer + Admin are
-// folded into a single "Other" (system-roles) chip.
-const ROLE_FILTER_ORDER: Role[] = ['MANAGING_DIRECTOR', 'DIRECTOR', 'MANAGER', 'SUPERVISOR', 'EMPLOYEE', 'STAFF', 'OPERATOR']
-const OTHER_ROLES: Role[] = ['DEVELOPER', 'ADMIN']
 const ROLE_LABEL: Record<Role, string> = {
   DEVELOPER: 'Developer',
   ADMIN: 'Administrator',
@@ -149,7 +145,6 @@ export default function UserManagementPage() {
   const qc = useQueryClient()
   const { isAdmin, user } = useAuth()
   const [search, setSearch] = useState('')
-  const [roleFilter, setRoleFilter] = useState<'ALL' | Role | 'OTHER'>('ALL')
   const [positionFilter, setPositionFilter] = useState<'ALL' | Position>('ALL')
   const [deptFilter, setDeptFilter] = useState<string>('ALL')
   const [draft, setDraft] = useState<Draft | null>(null)
@@ -202,6 +197,7 @@ export default function UserManagementPage() {
             position: draft.position || u.position,
             department: draft.department.trim() || u.department,
             jobTitle: draft.jobTitle.trim() || u.jobTitle,
+            employeeNo: draft.employeeNo.trim() || u.employeeNo,
             dateOfBirth: draft.dateOfBirth || u.dateOfBirth,
           } : u)
         )
@@ -256,8 +252,6 @@ export default function UserManagementPage() {
     const q = search.trim().toLowerCase()
     return users
       .filter(u => {
-        if (roleFilter === 'OTHER') { if (!OTHER_ROLES.includes(u.role)) return false }
-        else if (roleFilter !== 'ALL' && u.role !== roleFilter) return false
         if (positionFilter !== 'ALL' && u.position !== positionFilter) return false
         if (deptFilter !== 'ALL' && (u.department ?? '') !== deptFilter) return false
         if (!q) return true
@@ -270,13 +264,7 @@ export default function UserManagementPage() {
         const nb = b.employeeNo ? parseInt(b.employeeNo, 10) : Infinity
         return na !== nb ? na - nb : a.name.localeCompare(b.name)
       })
-  }, [users, search, roleFilter, positionFilter, deptFilter])
-
-  const roleCounts = useMemo(() => {
-    const c: Record<string, number> = {}
-    users.forEach(u => { c[u.role] = (c[u.role] ?? 0) + 1 })
-    return c
-  }, [users])
+  }, [users, search, positionFilter, deptFilter])
 
   function openCreate() { setFormError(null); setDraft(emptyDraft()) }
   function openEdit(u: ManagedUser) {
@@ -343,43 +331,11 @@ export default function UserManagementPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            <button onClick={() => setRoleFilter('ALL')}
-              style={{ height: 28, padding: '0 12px', borderRadius: 999, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
-                border: `1px solid ${roleFilter === 'ALL' ? 'var(--sap-blue)' : 'var(--kbt-border)'}`,
-                background: roleFilter === 'ALL' ? 'rgba(92,86,144,0.15)' : 'transparent',
-                color: roleFilter === 'ALL' ? '#4d9fe8' : 'var(--kbt-text-2)' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 28, padding: '0 12px', borderRadius: 999,
+              fontSize: '0.75rem', fontWeight: 700,
+              border: '1px solid var(--sap-blue)', background: 'rgba(92,86,144,0.15)', color: '#4d9fe8' }}>
               {t('common.all')} · {users.length}
-            </button>
-            {ROLE_FILTER_ORDER.map(r => {
-              const s = ROLE_STYLE[r]
-              const active = roleFilter === r
-              return (
-                <button key={r} onClick={() => setRoleFilter(active ? 'ALL' : r)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 28, padding: '0 12px', borderRadius: 999,
-                    fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
-                    border: `1px solid ${active ? s.border : 'var(--kbt-border)'}`,
-                    background: active ? s.bg : 'transparent', color: active ? s.color : 'var(--kbt-text-2)' }}>
-                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: s.dot }} />
-                  {ROLE_LABEL[r]} · {roleCounts[r] ?? 0}
-                </button>
-              )
-            })}
-            <span style={{ width: 1, height: 18, background: 'var(--kbt-border)', margin: '0 4px' }} />
-            {(() => {
-              const active = roleFilter === 'OTHER'
-              const otherCount = OTHER_ROLES.reduce((n, r) => n + (roleCounts[r] ?? 0), 0)
-              return (
-                <button onClick={() => setRoleFilter(active ? 'ALL' : 'OTHER')}
-                  title={OTHER_ROLES.map(r => ROLE_LABEL[r]).join(' · ')}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 28, padding: '0 12px', borderRadius: 999,
-                    fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
-                    border: `1px solid ${active ? 'rgba(110,135,160,0.5)' : 'var(--kbt-border)'}`,
-                    background: active ? 'rgba(53,74,95,0.4)' : 'transparent', color: active ? '#8aa1b8' : 'var(--kbt-text-2)' }}>
-                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#6e87a0' }} />
-                  {t('users.roleOther')} · {otherCount}
-                </button>
-              )
-            })()}
+            </span>
           </div>
         </div>
 
@@ -388,7 +344,7 @@ export default function UserManagementPage() {
         ) : filtered.length === 0 ? (
           <div style={{ padding: 24 }}><EmptyState icon={UserCog} title={t('users.empty')} description={t('users.emptyDesc')} /></div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <div style={{ overflowX: 'auto', willChange: 'scroll-position' }}>
             <table className="kbt-table amw-user-master-table" style={{ minWidth: 2600 }}>
               <thead>
                 <tr>
@@ -396,7 +352,7 @@ export default function UserManagementPage() {
                     <th key={header}>{header}</th>
                   ))}
                   <th>{t('acc.role')}</th>
-                  <th style={{ textAlign: 'right', position: 'sticky', right: 0, background: 'var(--kbt-surface)', zIndex: 2, boxShadow: '-2px 0 6px rgba(0,0,0,0.18)' }}>{t('users.actions')}</th>
+                  <th style={{ textAlign: 'right', position: 'sticky', right: 0, background: 'var(--kbt-surface)', zIndex: 2, borderLeft: '1px solid var(--kbt-border)' }}>{t('users.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -426,7 +382,7 @@ export default function UserManagementPage() {
                       )
                     })}
                     <td><RoleBadge role={u.role} /></td>
-                    <td style={{ position: 'sticky', right: 0, background: 'var(--kbt-surface)', boxShadow: '-2px 0 6px rgba(0,0,0,0.18)' }}>
+                    <td style={{ position: 'sticky', right: 0, background: 'var(--kbt-surface)', borderLeft: '1px solid var(--kbt-border)' }}>
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                         <button className="kbt-btn-ghost" style={{ height: 30, padding: '0 10px', gap: 5 }} onClick={() => openEdit(u)}>
                           <Pencil size={13} /> {t('common.edit')}
@@ -498,16 +454,16 @@ export default function UserManagementPage() {
                 <input className="kbt-input" value={draft.jobTitle} onChange={e => setDraft(d => d && ({ ...d, jobTitle: e.target.value }))} />
               </label>
               <label>
-                Employee Number
+                {t('cp.employeeNumber')}
                 <input className="kbt-input" value={draft.employeeNo}
                   onChange={e => setDraft(d => d && ({ ...d, employeeNo: e.target.value }))}
                   placeholder="e.g. 6415" />
               </label>
               <label>
-                Date of Birth
+                {t('cp.dateOfBirth')}
                 <input className="kbt-input" type="date" value={draft.dateOfBirth}
                   onChange={e => setDraft(d => d && ({ ...d, dateOfBirth: e.target.value }))} />
-                <span style={{ fontSize: '0.6875rem', color: 'var(--kbt-text-3)', marginTop: 2 }}>Used for password recovery</span>
+                <span style={{ fontSize: '0.6875rem', color: 'var(--kbt-text-3)', marginTop: 2 }}>{t('users.dobHint')}</span>
               </label>
               <label>
                 {isEditing ? t('acc.newPassword') : t('users.password')}
