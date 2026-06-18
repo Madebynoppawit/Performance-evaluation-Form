@@ -7,16 +7,6 @@ import { companyEmailSchema } from '../utils/companyEmail'
 import { recordAuditEventBestEffort } from '../services/auditEventService'
 import { passwordSchema } from '../validation/passwordPolicy'
 
-const forgotSchema = z.object({
-  employeeNo:  z.string().trim().min(1, 'Employee number is required'),
-  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
-})
-
-const resetSchema = z.object({
-  token:    z.string().min(1),
-  password: passwordSchema,
-})
-
 // Login identifier is an employee number or an email (back-compat: still
 // accepts an `email` field from older clients).
 const loginSchema = z.object({
@@ -96,38 +86,6 @@ const updateMeSchema = z.object({
   jobTitle: z.string().trim().max(120).nullable().optional(),
   password: passwordSchema.optional(),
 }).strict()
-
-export async function forgotPassword(req: Request, res: Response, next: NextFunction) {
-  try {
-    const { employeeNo, dateOfBirth } = forgotSchema.parse(req.body)
-    const token = await authService.requestPasswordReset(employeeNo, dateOfBirth)
-    // Return the token directly so the frontend can show the reset form immediately
-    // without requiring the user to check their email.
-    res.json({ ok: true, token: token ?? null })
-  } catch (err) {
-    next(err)
-  }
-}
-
-export async function resetPassword(req: Request, res: Response, next: NextFunction) {
-  try {
-    const { token, password } = resetSchema.parse(req.body)
-    await authService.resetPassword(token, password)
-    recordAuditEventBestEffort({
-      eventType: 'auth_password_changed',
-      requestId: req.requestId,
-      method: req.method,
-      path: req.originalUrl,
-      statusCode: 200,
-      ip: req.ip,
-      userAgent: req.get('user-agent') ?? null,
-      metadata: { via: 'forgot_password' },
-    })
-    res.json({ ok: true })
-  } catch (err) {
-    res.status(400).json({ message: 'Reset link has expired or is invalid. Please try again.' })
-  }
-}
 
 export async function updateMe(req: AuthRequest, res: Response, next: NextFunction) {
   try {

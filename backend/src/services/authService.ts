@@ -1,8 +1,6 @@
 import { prisma } from '../lib/prisma'
 import { comparePassword, hashPassword } from '../utils/hash'
-import { signToken, signResetToken, verifyResetToken } from '../utils/jwt'
-import { env } from '../config/env'
-import { sendPasswordReset } from './emailService'
+import { signToken } from '../utils/jwt'
 
 export async function login(identifier: string, password: string) {
   // Accept either an employee number or an email (admins/dev accounts have no
@@ -86,37 +84,7 @@ export async function updateProfile(
   return safeUser
 }
 
-/** Verify employee number + date of birth; if match → return a short-lived
-    reset token (15 min). Uses a generic error to avoid user enumeration. */
-export async function requestPasswordReset(employeeNo: string, dateOfBirth: string): Promise<string | null> {
-  const user = await prisma.user.findFirst({
-    where: { employeeNo: employeeNo.trim() },
-    select: { id: true, name: true, email: true, dateOfBirth: true },
-  })
-  if (!user || !user.dateOfBirth) return null
-
-  // Dates from CSV import are stored as local midnight (UTC+7), so we compare
-  // the stored date in Thai time (+7h) against the YYYY-MM-DD input string.
-  const shifted = new Date(user.dateOfBirth.getTime() + 7 * 60 * 60 * 1000)
-  const storedStr = shifted.toISOString().slice(0, 10)
-  if (storedStr !== dateOfBirth) return null
-
-  const token = signResetToken(user.id)
-  // Best-effort email (no await — don't block if SMTP isn't configured)
-  sendPasswordReset({
-    to: user.email,
-    name: user.name,
-    resetUrl: `${env.CLIENT_URL}/forgot-password?token=${encodeURIComponent(token)}`,
-  }).catch(() => undefined)
-  return token
-}
-
-/** Consume a reset token and set a new password. */
-export async function resetPassword(token: string, newPassword: string): Promise<void> {
-  const { userId } = verifyResetToken(token)
-  const hash = await hashPassword(newPassword)
-  await prisma.user.update({
-    where: { id: userId },
-    data: { password: hash, mustChangePassword: false },
-  })
-}
+// Self-service password reset removed: there is no email delivery, so a reset
+// token could not be handed to the user securely. Resets are admin-initiated
+// (resetUserPassword in userService) and the user is then forced to change the
+// password on first login (blockIfPasswordChangeRequired).

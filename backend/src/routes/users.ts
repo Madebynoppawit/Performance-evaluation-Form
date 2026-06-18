@@ -1,11 +1,11 @@
 import { Router, text } from 'express'
-import { authenticate, requireRole } from '../middleware/auth'
+import { authenticate, blockIfPasswordChangeRequired, requireRole } from '../middleware/auth'
 import { Role } from '@prisma/client'
 import { list, getOne, create, update, remove, importEmployees, importHistory, resetPassword, directory } from '../controllers/userController'
 
 const router = Router()
 
-router.use(authenticate)
+router.use(authenticate, blockIfPasswordChangeRequired)
 
 // Lightweight employee directory — any authenticated user can fetch this
 // (needed by supervisors/managers when creating evaluations).
