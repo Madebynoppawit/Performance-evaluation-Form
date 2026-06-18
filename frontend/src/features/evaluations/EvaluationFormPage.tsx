@@ -635,7 +635,7 @@ export default function EvaluationFormPage() {
           {section === 'goals' && <SectionCard title={`${numOf('goals')} · ${t('ef.sec.goals')}`}><GoalSettingSection goals={goals} readOnly={isReadOnly} onChange={setGoals} /></SectionCard>}
           {section === 'competency' && <SectionCard title={`${numOf('competency')} · ${t('ef.title.competency')} (${ev.competencyWeight}%)`}><CompetencySection position={pos} scores={compScores} readOnly={isReadOnly} onChange={setCompScores} /></SectionCard>}
           {section === 'attendance' && <SectionCard title={`${numOf('attendance')} · ${t('ef.sec.attendance')} (${ev.attendanceWeight}%)`}><AttendanceSection data={attendance} readOnly={isReadOnly} onChange={setAttendance} /></SectionCard>}
-          {section === 'training' && <SectionCard title={`${numOf('training')} · ${t('ef.sec.training')} (${liveTrainingScore(training) != null ? 10 : 0}%)`}><TrainingSection data={training} position={pos} readOnly={isReadOnly} onChange={setTraining} /></SectionCard>}
+          {section === 'training' && <SectionCard title={`${numOf('training')} · ${t('ef.sec.training')} (${liveTrainingScore(training) != null ? ev.trainingWeight : 0}%)`}><TrainingSection data={training} position={pos} readOnly={isReadOnly} onChange={setTraining} /></SectionCard>}
           {section === 'comment' && <SectionCard title={`${numOf('comment')} · ${t('ef.sec.comment')}`}><CommentSection data={comment} readOnly={isReadOnly} onChange={setComment} /></SectionCard>}
 
           {section === 'summary' && isOse && (() => {
@@ -658,7 +658,7 @@ export default function EvaluationFormPage() {
             const trainRaw = liveTrainingScore(training)
 
             // Weighting (Evaluation carries competencyWeight; goal absorbs the remainder).
-            const effectiveTrainingW = trainRaw != null ? 10 : 0
+            const effectiveTrainingW = trainRaw != null ? ev.trainingWeight : 0
             const competencyW = ev.competencyWeight
             const attendanceW = ev.attendanceWeight
             const effectiveGoalW = 100 - competencyW - attendanceW - effectiveTrainingW
@@ -918,7 +918,7 @@ export default function EvaluationFormPage() {
             const attRaw   = liveAttendanceScore(attendance)
             const trainRaw = liveTrainingScore(training)
 
-            const effectiveTrainingW = trainRaw != null ? 10 : 0
+            const effectiveTrainingW = trainRaw != null ? ev.trainingWeight : 0
             const effectiveGoalW = 100 - ev.competencyWeight - ev.attendanceWeight - effectiveTrainingW
             const allPresent = goalRaw != null && compRaw != null && attRaw != null
             const liveTotal = allPresent

@@ -139,6 +139,16 @@ export async function createEvaluation(data: {
     reviewerName = rev?.name ?? null
   }
 
+  // Inherit scoring weights from the cycle's template (Goal weight is the remainder).
+  const cycle = await prisma.cycle.findUnique({
+    where: { id: data.cycleId },
+    select: { template: { select: { competencyWeight: true, attendanceWeight: true, trainingWeight: true } } },
+  })
+  const competencyWeight = cycle?.template?.competencyWeight ?? 20
+  const attendanceWeight = cycle?.template?.attendanceWeight ?? 10
+  const trainingWeight = cycle?.template?.trainingWeight ?? 10
+  const goalWeight = Math.max(0, 100 - competencyWeight - attendanceWeight - trainingWeight)
+
   const created = await prisma.evaluation.create({
     data: {
       cycleId: data.cycleId,
@@ -149,6 +159,10 @@ export async function createEvaluation(data: {
       formType: formTypeForPosition(evaluatee.position),
       reviewerId: data.reviewerId ?? null,
       reviewerName,
+      goalWeight,
+      competencyWeight,
+      attendanceWeight,
+      trainingWeight,
     },
     include: EVALUATION_INCLUDE,
   })

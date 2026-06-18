@@ -14,15 +14,21 @@ export async function getTemplateById(id: string) {
   })
 }
 
+export interface TemplateWeights {
+  competencyWeight?: number
+  attendanceWeight?: number
+  trainingWeight?: number
+}
+
 export async function createTemplate(data: {
   name: string
   description?: string
   type: string
-}) {
+} & TemplateWeights) {
   return prisma.template.create({ data: data as Parameters<typeof prisma.template.create>[0]['data'] })
 }
 
-export async function updateTemplate(id: string, data: { name?: string; description?: string }) {
+export async function updateTemplate(id: string, data: { name?: string; description?: string } & TemplateWeights) {
   return prisma.template.update({ where: { id }, data })
 }
 

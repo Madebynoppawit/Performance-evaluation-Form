@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
@@ -5,6 +6,7 @@ import {
   Activity,
   ChevronRight,
   FileText,
+  Gauge,
   Layers3,
   Plus,
   Save,
@@ -27,6 +29,16 @@ export default function TemplateBuilderPage() {
   })
 
   const { register, handleSubmit } = useForm<{ name: string; description: string }>()
+
+  // Scoring weights — Goal weight is the remainder (100 − competency − attendance − training).
+  const [weights, setWeights] = useState({ competencyWeight: 20, attendanceWeight: 10, trainingWeight: 10 })
+  useEffect(() => {
+    if (template) setWeights({
+      competencyWeight: template.competencyWeight,
+      attendanceWeight: template.attendanceWeight,
+      trainingWeight: template.trainingWeight,
+    })
+  }, [template?.id])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateMutation = useMutation({
     mutationFn: (data: Partial<Template>) => api.patch(`/templates/${id}`, data),
@@ -63,6 +75,10 @@ export default function TemplateBuilderPage() {
   )
   const readiness = Math.min(100, Math.round(sectionCount * 20 + questionCount * 5 + (totalWeight > 0 ? 15 : 0)))
   const coverage = questionCount ? Math.round((requiredQuestions / questionCount) * 100) : 0
+
+  const catSum = weights.competencyWeight + weights.attendanceWeight + weights.trainingWeight
+  const goalWeight = 100 - catSum
+  const weightsValid = catSum >= 0 && catSum <= 100
 
   return (
     <div className="amw-studio">
@@ -126,6 +142,52 @@ export default function TemplateBuilderPage() {
                 </button>
               </div>
             </form>
+          </section>
+
+          <section className="amw-blueprint-card">
+            <div className="amw-card-head">
+              <div>
+                <span className="amw-eyebrow">Scoring Layer</span>
+                <h2>Scoring Weights</h2>
+              </div>
+              <Gauge size={20} />
+            </div>
+            <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.82rem', marginBottom: 14 }}>
+              Weights inherited by new evaluations created under this template. Goal weight is the remainder.
+            </p>
+            <div className="amw-field-grid">
+              <label>
+                <span>Competency (%)</span>
+                <input type="number" min={0} max={100} className="kbt-input" value={weights.competencyWeight}
+                  onChange={e => setWeights(w => ({ ...w, competencyWeight: Number(e.target.value) || 0 }))} />
+              </label>
+              <label>
+                <span>Attendance (%)</span>
+                <input type="number" min={0} max={100} className="kbt-input" value={weights.attendanceWeight}
+                  onChange={e => setWeights(w => ({ ...w, attendanceWeight: Number(e.target.value) || 0 }))} />
+              </label>
+              <label>
+                <span>Training (%)</span>
+                <input type="number" min={0} max={100} className="kbt-input" value={weights.trainingWeight}
+                  onChange={e => setWeights(w => ({ ...w, trainingWeight: Number(e.target.value) || 0 }))} />
+              </label>
+              <label>
+                <span>Goal — remainder (%)</span>
+                <input className="kbt-input" disabled value={`${goalWeight}%`} />
+              </label>
+            </div>
+            {!weightsValid && (
+              <p className="kbt-msg-error" style={{ marginTop: 8 }}>
+                Competency + Attendance + Training must not exceed 100% (Goal takes the remainder).
+              </p>
+            )}
+            <div className="amw-form-actions">
+              <button type="button" disabled={!weightsValid || updateMutation.isPending}
+                onClick={() => updateMutation.mutate(weights)} className="kbt-btn-primary">
+                <Save size={14} />
+                {updateMutation.isPending ? 'Saving...' : 'Save Weights'}
+              </button>
+            </div>
           </section>
 
           <section className="amw-blueprint-card">

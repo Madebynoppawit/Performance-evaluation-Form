@@ -182,10 +182,9 @@ export async function recalculateTotalScore(evaluationId: string) {
   const attendanceScore = evaluation.attendanceRecord?.attendanceAvgScore ?? null
   const trainingScore = evaluation.trainingRecord?.score ?? null
 
-  // Training gets 10% weight when a training score exists; goal absorbs the rest.
-  // Formula: Goal(60or70%) + Competency(20%) + Attendance(10%) + Training(0or10%) = 100%
-  const TRAINING_WEIGHT = 10
-  const effectiveTrainingWeight = trainingScore != null ? TRAINING_WEIGHT : 0
+  // Training takes its configured weight when a training score exists; goal absorbs the rest.
+  // Formula: Goal + Competency + Attendance + Training = 100% (weights inherited from the template)
+  const effectiveTrainingWeight = trainingScore != null ? evaluation.trainingWeight : 0
   const effectiveGoalWeight = 100 - evaluation.competencyWeight - evaluation.attendanceWeight - effectiveTrainingWeight
 
   // A bucket is only required when it actually carries weight.

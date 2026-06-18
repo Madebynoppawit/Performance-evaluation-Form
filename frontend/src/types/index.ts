@@ -53,6 +53,9 @@ export interface Template {
   description?: string
   type: EvaluationType
   sections: Section[]
+  competencyWeight: number
+  attendanceWeight: number
+  trainingWeight: number
   createdAt: string
   updatedAt: string
 }
@@ -167,6 +170,7 @@ export interface Evaluation {
 
   goalWeight: number
   competencyWeight: number
+  trainingWeight: number
   attendanceWeight: number
 
   goalScore?: number | null
