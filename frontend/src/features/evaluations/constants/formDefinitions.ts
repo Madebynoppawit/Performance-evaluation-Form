@@ -48,8 +48,10 @@ export interface GradeDef {
   key: PerformanceGradeKey
   en: string
   th: string
+  fr: string
   definitionEn: string
   definitionTh: string
+  definitionFr: string
 }
 
 export type PerformanceGradeKey = 'EXCELLENT' | 'ABOVE_STANDARD' | 'MEETS_STANDARD' | 'ALMOST_STANDARD' | 'BELOW_STANDARD'
@@ -82,29 +84,34 @@ const RATING_SCALE: RatingDef[] = [
 
 const GRADE_SCALE: GradeDef[] = [
   {
-    value: 5, key: 'EXCELLENT', en: 'Excellent', th: 'ดีเลิศ',
+    value: 5, key: 'EXCELLENT', en: 'Excellent', th: 'ดีเลิศ', fr: 'Excellent',
     definitionEn: 'Extraordinary performance in terms of quality, quantity and punctuality.',
     definitionTh: 'ปฏิบัติหน้าที่ได้ดีเลิศเกินความคาดหมาย ทั้งด้านคุณภาพ ปริมาณ และเวลาที่กำหนดอย่างสม่ำเสมอ',
+    definitionFr: 'Performance extraordinaire en termes de qualité, de quantité et de ponctualité.',
   },
   {
-    value: 4, key: 'ABOVE_STANDARD', en: 'Above Average', th: 'ดีเกินกว่ามาตรฐานที่กำหนด',
+    value: 4, key: 'ABOVE_STANDARD', en: 'Above Average', th: 'ดีเกินกว่ามาตรฐานที่กำหนด', fr: 'Au-dessus de la moyenne',
     definitionEn: 'Above standard in terms of quality, quantity and punctuality.',
     definitionTh: 'ปฏิบัติหน้าที่ได้รับผลเกินกว่ามาตรฐานที่ต้องการสำหรับตำแหน่งอย่างสม่ำเสมอ ทั้งด้านคุณภาพ ปริมาณ และ/หรือเวลาที่กำหนด',
+    definitionFr: 'Au-dessus du standard en termes de qualité, de quantité et de ponctualité.',
   },
   {
-    value: 3, key: 'MEETS_STANDARD', en: 'Meet Required Standard', th: 'พอดีกับมาตรฐาน',
+    value: 3, key: 'MEETS_STANDARD', en: 'Meet Required Standard', th: 'พอดีกับมาตรฐาน', fr: 'Conforme au standard requis',
     definitionEn: 'Able to meet the required standard or sometimes higher, in terms of quality, quantity and punctuality; objectives attained.',
     definitionTh: 'สามารถปฏิบัติหน้าที่พอดีกับมาตรฐานที่ต้องการสำหรับตำแหน่งอย่างสม่ำเสมอ และบางครั้งเกินกว่าเกณฑ์ที่ต้องการ รวมทั้งบรรลุเป้าหมายและวัตถุประสงค์ที่กำหนด',
+    definitionFr: "Capable d'atteindre le standard requis, parfois plus, en termes de qualité, de quantité et de ponctualité ; objectifs atteints.",
   },
   {
-    value: 2, key: 'ALMOST_STANDARD', en: 'Almost Up to Standard', th: 'เกือบได้ตามมาตรฐาน',
+    value: 2, key: 'ALMOST_STANDARD', en: 'Almost Up to Standard', th: 'เกือบได้ตามมาตรฐาน', fr: 'Presque au standard',
     definitionEn: 'Objectives attained from time to time, but improvement is needed; more supervision and further assessment required.',
     definitionTh: 'ปฏิบัติงานได้ตามเป้าหมายและวัตถุประสงค์เป็นบางครั้ง แต่จะต้องปรับปรุงในด้านคุณภาพ ปริมาณ และเวลา อาจต้องได้รับการควบคุมดูแลมากขึ้นจากหัวหน้างาน',
+    definitionFr: "Objectifs atteints de temps à autre, mais une amélioration est nécessaire ; davantage de supervision et d'évaluation requises.",
   },
   {
-    value: 1, key: 'BELOW_STANDARD', en: 'Below Standard', th: 'ไม่ได้มาตรฐานที่กำหนด',
+    value: 1, key: 'BELOW_STANDARD', en: 'Below Standard', th: 'ไม่ได้มาตรฐานที่กำหนด', fr: 'En dessous du standard',
     definitionEn: 'Failed to meet the required standard. Lacks attention and/or skills for the job; to be included in consultation and skill-improvement programs.',
     definitionTh: 'ความสามารถไม่เป็นไปตามมาตรฐานที่กำหนด ขาดความตั้งใจที่จะทำงาน และ/หรือทักษะในงานที่มอบหมาย จำเป็นต้องอยู่ในแผนการให้คำปรึกษาแนะนำหรือเพิ่มทักษะ',
+    definitionFr: "N'a pas atteint le standard requis. Manque d'attention et/ou de compétences pour le poste ; à inclure dans des programmes de conseil et d'amélioration des compétences.",
   },
 ]
 

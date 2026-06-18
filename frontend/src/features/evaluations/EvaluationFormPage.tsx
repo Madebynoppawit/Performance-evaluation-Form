@@ -675,7 +675,7 @@ export default function EvaluationFormPage() {
             const bandLabel = (s: number | null) => {
               if (s == null) return '—'
               const g = formDef.gradeScale.find(g => g.value === Math.round(s)) ?? formDef.gradeScale[formDef.gradeScale.length - 1]
-              return locale === 'th' ? g.th : g.en
+              return locale === 'th' ? g.th : locale === 'fr' ? g.fr : g.en
             }
             const rowRating = (s: number | null) => s == null ? '—' : `${s.toFixed(2)} - ${bandLabel(s)}`
             const pct = (w: number) => `${w.toFixed(1)}%`
@@ -928,7 +928,7 @@ export default function EvaluationFormPage() {
             const ratingLabel = (s: number | null) => {
               if (s == null) return '—'
               const r = RATING_SCALE.find(r => r.score === Math.round(s))
-              return r ? `${s.toFixed(2)} - ${locale === 'th' ? r.labelTh : r.labelEn}` : s.toFixed(2)
+              return r ? `${s.toFixed(2)} - ${locale === 'th' ? r.labelTh : locale === 'fr' ? r.labelFr : r.labelEn}` : s.toFixed(2)
             }
             const RatingDots = ({ score }: { score: number | null }) => (
               <div style={{ display: 'flex', gap: 3 }}>
@@ -976,7 +976,7 @@ export default function EvaluationFormPage() {
                       </div>
                       <RatingDots score={liveTotal} />
                       <div style={{ marginTop: 8, fontSize: '0.875rem', fontWeight: 700, color: 'var(--kbt-text)' }}>
-                        {liveTotal != null ? scoreBand(liveTotal, locale === 'th') : <span style={{ color: 'var(--kbt-text-3)', fontStyle: 'italic' }}>{t('ef.pendingCalc')}</span>}
+                        {liveTotal != null ? scoreBand(liveTotal, locale) : <span style={{ color: 'var(--kbt-text-3)', fontStyle: 'italic' }}>{t('ef.pendingCalc')}</span>}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
@@ -1060,7 +1060,7 @@ export default function EvaluationFormPage() {
                               {c.name}
                             </td>
                             <td style={{ padding: '7px 12px', textAlign: 'center', fontSize: '0.8125rem', color: score != null ? 'var(--kbt-text-2)' : 'var(--kbt-text-3)' }}>
-                              {score != null ? `${score.toFixed(1)} - ${(locale === 'th' ? RATING_SCALE.find(r => r.score === score)?.labelTh : RATING_SCALE.find(r => r.score === score)?.labelEn) ?? ''}` : '—'}
+                              {score != null ? `${score.toFixed(1)} - ${(locale === 'th' ? RATING_SCALE.find(r => r.score === score)?.labelTh : locale === 'fr' ? RATING_SCALE.find(r => r.score === score)?.labelFr : RATING_SCALE.find(r => r.score === score)?.labelEn) ?? ''}` : '—'}
                             </td>
                             <td style={{ padding: '7px 12px', textAlign: 'right', fontSize: '0.8125rem', color: 'var(--kbt-text-3)' }}>—</td>
                           </tr>
@@ -1140,11 +1140,11 @@ export default function EvaluationFormPage() {
                           </div>
                           <RatingDots score={liveTotal} />
                           <div style={{ marginTop: 8, fontSize: '0.9rem', fontWeight: 700, color: gc ? gc.accent : 'var(--kbt-text-3)' }}>
-                            {calibRating ? (locale === 'th' ? calibRating.labelTh : calibRating.labelEn) : <span style={{ fontStyle: 'italic', color: 'var(--kbt-text-3)' }}>{t('ef.pendingCalc')}</span>}
+                            {calibRating ? (locale === 'th' ? calibRating.labelTh : locale === 'fr' ? calibRating.labelFr : calibRating.labelEn) : <span style={{ fontStyle: 'italic', color: 'var(--kbt-text-3)' }}>{t('ef.pendingCalc')}</span>}
                           </div>
                           {calibRating && (
                             <div style={{ marginTop: 4, fontSize: '0.75rem', color: 'var(--kbt-text-3)' }}>
-                              {locale === 'th' ? calibRating.definitionTh : calibRating.definitionEn}
+                              {locale === 'th' ? calibRating.definitionTh : locale === 'fr' ? calibRating.definitionFr : calibRating.definitionEn}
                             </div>
                           )}
                         </div>
@@ -1222,9 +1222,10 @@ function SectionCard({ title, children }: { title: string; children: ReactNode }
   )
 }
 
-function scoreBand(score: number, th = false) {
+function scoreBand(score: number, locale: 'en' | 'th' | 'fr' = 'en') {
   const r = RATING_SCALE.find(x => x.score === Math.round(score)) ?? RATING_SCALE[RATING_SCALE.length - 1]
-  return `${r.score} - ${th ? r.labelTh : r.labelEn}`
+  const label = locale === 'th' ? r.labelTh : locale === 'fr' ? r.labelFr : r.labelEn
+  return `${r.score} - ${label}`
 }
 
 // ── Live score helpers (mirror backend service formulas) ─────────────────────

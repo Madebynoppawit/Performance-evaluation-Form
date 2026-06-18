@@ -47,8 +47,8 @@ export default function OseEvaluationSection({ def, scores, readOnly, onChange }
       {overallGrade && overallAvg != null && (
         <div className="amw-ose-grade">
           <div>
-            <span>{th ? 'เกรดรวม' : 'Overall Grade'}</span>
-            <strong>{th ? overallGrade.th : overallGrade.en}</strong>
+            <span>{th ? 'เกรดรวม' : locale === 'fr' ? 'Note globale' : 'Overall Grade'}</span>
+            <strong>{th ? overallGrade.th : locale === 'fr' ? overallGrade.fr : overallGrade.en}</strong>
           </div>
           <span className="kbt-score-value">{overallAvg.toFixed(2)}</span>
         </div>
