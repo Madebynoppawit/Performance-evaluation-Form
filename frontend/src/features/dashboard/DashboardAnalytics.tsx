@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Area, AreaChart, Bar, BarChart, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Activity, BarChart3, TrendingUp } from 'lucide-react'
 import type { Evaluation } from '@/types'
-import { SCORE_TIERS } from '@/lib/score'
+import { SCORE_TIERS, toGpa } from '@/lib/score'
 import { chartColor, chartMargin, chartStroke, chartTick, statusTone } from '@/lib/chartTheme'
 
 interface Props {
@@ -38,7 +38,7 @@ export default function DashboardAnalytics({ evaluations }: Props) {
   const trend = useMemo(
     () => scored.slice(-12).map((e, i) => ({
       name: e.evaluatee?.name?.split(' ')[0]?.slice(0, 6) ?? `#${i + 1}`,
-      score: Number(e.totalScore!.toFixed(2)),
+      score: Number(toGpa(e.totalScore!).toFixed(2)),
     })),
     [scored]
   )
@@ -75,7 +75,7 @@ export default function DashboardAnalytics({ evaluations }: Props) {
             <TrendingUp size={15} color={chartColor.primary} /> Score Trend
           </span>
           <span className="amw-card-meta">
-            avg <span className="kbt-score-value">{avg ? avg.toFixed(2) : '—'}</span>
+            avg <span className="kbt-score-value">{avg ? toGpa(avg).toFixed(2) : '—'}</span>
           </span>
         </div>
         <div className="amw-chart-frame">
@@ -89,9 +89,9 @@ export default function DashboardAnalytics({ evaluations }: Props) {
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="name" tick={chartTick.sm} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                <YAxis domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} tick={chartTick.sm} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 4]} ticks={[0, 1, 2, 3, 4]} tick={chartTick.sm} axisLine={false} tickLine={false} />
                 <Tooltip content={<ChartTooltip />} cursor={{ stroke: chartColor.primaryCursor, strokeWidth: 1 }} />
-                <ReferenceLine y={avg} stroke={chartColor.benchmark} strokeDasharray={chartStroke.dash} />
+                <ReferenceLine y={toGpa(avg)} stroke={chartColor.benchmark} strokeDasharray={chartStroke.dash} />
                 <Area type="monotone" dataKey="score" stroke={chartColor.primary} strokeWidth={2.4} fill="url(#trendFill)" dot={{ r: 2.5, fill: chartColor.primary }} activeDot={{ r: 4 }} />
               </AreaChart>
             </ResponsiveContainer>

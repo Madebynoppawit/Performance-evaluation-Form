@@ -8,6 +8,7 @@ import { useLabels } from '@/i18n/useLabels'
 import { usePreferences } from '@/hooks/usePreferences'
 import api from '@/lib/api'
 import type { Evaluation } from '@/types'
+import { toGpa } from '@/lib/score'
 import DashboardAnalytics from './DashboardAnalytics'
 import EmptyState from '@/components/EmptyState'
 
@@ -201,7 +202,7 @@ export default function DashboardPage() {
     {
       label: t('dash.metric.avg'),
       numericValue: null,
-      displayValue: stats?.averageScore != null ? stats.averageScore.toFixed(2) : '-',
+      displayValue: stats?.averageScore != null ? toGpa(stats.averageScore).toFixed(2) : '-',
       icon: <TrendingUp size={16} />,
       accent: 'gold',
       sub: 'Overall average',
@@ -264,7 +265,7 @@ export default function DashboardPage() {
                 <div>
                   <TrendingUp size={14} />
                   <span>{t('dash.averageScore')}</span>
-                  <strong>{stats?.averageScore != null ? stats.averageScore.toFixed(2) : '-'}</strong>
+                  <strong>{stats?.averageScore != null ? toGpa(stats.averageScore).toFixed(2) : '-'}</strong>
                 </div>
               </div>
             </div>
@@ -390,7 +391,7 @@ export default function DashboardPage() {
                     <td style={{ color: 'var(--kbt-text-2)', fontSize: '0.8125rem' }}>{ev.cycle?.name}</td>
                     <td style={{ color: 'var(--kbt-text-3)', fontSize: '0.75rem' }}>{typeLabel(ev.type)}</td>
                     <td><span className={STATUS_CLS[ev.status] ?? 'kbt-badge-neutral'}>{statusLabel(ev.status)}</span></td>
-                    <td style={{ textAlign: 'right' }}>{ev.totalScore != null ? <span className="kbt-score-value">{ev.totalScore.toFixed(2)}</span> : <span style={{ color: 'var(--kbt-text-3)' }}>-</span>}</td>
+                    <td style={{ textAlign: 'right' }}>{ev.totalScore != null ? <span className="kbt-score-value">{toGpa(ev.totalScore).toFixed(2)}</span> : <span style={{ color: 'var(--kbt-text-3)' }}>-</span>}</td>
                   </tr>
                 ))}
               </tbody>

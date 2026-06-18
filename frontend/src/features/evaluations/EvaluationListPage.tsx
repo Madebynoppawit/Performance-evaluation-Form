@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react'
 import api from '@/lib/api'
 import type { Cycle, Evaluation, Position, User } from '@/types'
 import { formatDate } from '@/lib/utils'
+import { toGpa } from '@/lib/score'
 import { SkeletonMetricCard, SkeletonTableRows } from '@/components/Skeleton'
 import EmptyState from '@/components/EmptyState'
 import EvaluationExportMenu from './components/EvaluationExportMenu'
@@ -132,7 +133,7 @@ export default function EvaluationListPage() {
   const stats = {
     total: data?.length ?? 0,
     completed: data?.filter((e) => ['SUBMITTED', 'REVIEWED', 'CLOSED'].includes(e.status)).length ?? 0,
-    avgScore: scored.length ? (scored.reduce((sum, e) => sum + e.totalScore!, 0) / scored.length).toFixed(2) : '-',
+    avgScore: scored.length ? toGpa(scored.reduce((sum, e) => sum + e.totalScore!, 0) / scored.length).toFixed(2) : '-',
   }
   const commandQueue = useMemo(() => {
     const list = data ?? []
@@ -262,7 +263,7 @@ export default function EvaluationListPage() {
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     {ev.totalScore != null ? (
-                      <span className="kbt-score-value">{ev.totalScore.toFixed(2)}</span>
+                      <span className="kbt-score-value">{toGpa(ev.totalScore).toFixed(2)}</span>
                     ) : (
                       <span style={{ color: 'var(--kbt-text-3)' }}>-</span>
                     )}

@@ -987,7 +987,7 @@ export default function EvaluationFormPage() {
                         Calculated Rating
                       </div>
                       <span className="kbt-score-value" style={{ fontSize: '2.8rem', lineHeight: 1 }}>
-                        {liveTotal != null ? liveTotal.toFixed(2) : '—'}
+                        {liveTotal != null ? (liveTotal - 1).toFixed(2) : '—'}
                       </span>
                     </div>
                   </div>
@@ -1171,7 +1171,7 @@ export default function EvaluationFormPage() {
                             <div style={{ textAlign: 'left' }}>
                               <div style={{ fontSize: '0.65rem', color: 'var(--kbt-text-3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total</div>
                               <span className="kbt-score-value" style={{ fontSize: '1.75rem', color: gc ? gc.accent : 'var(--kbt-text-3)' }}>
-                                {liveTotal != null ? liveTotal.toFixed(2) : '—'}
+                                {liveTotal != null ? (liveTotal - 1).toFixed(2) : '—'}
                               </span>
                             </div>
                           </div>

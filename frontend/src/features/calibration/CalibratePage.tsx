@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { toGpa } from '@/lib/score'
 import {
   AlertTriangle,
   BarChart3,
@@ -201,10 +202,10 @@ export default function CalibratePage() {
             </div>
             <div className="kbt-card-body">
               <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={departmentRows.slice(0, 8)} margin={chartMargin.report}>
+                <BarChart data={departmentRows.slice(0, 8).map(d => ({ ...d, averageScore: toGpa(d.averageScore) }))} margin={chartMargin.report}>
                   <CartesianGrid strokeDasharray={chartStroke.gridDash} stroke={chartColor.grid} />
                   <XAxis dataKey="department" tick={chartTick.md} axisLine={false} tickLine={false} />
-                  <YAxis domain={[0, 5]} tick={chartTick.md} axisLine={false} tickLine={false} />
+                  <YAxis domain={[0, 4]} tick={chartTick.md} axisLine={false} tickLine={false} />
                   <Tooltip content={({ active, payload }) => active && payload?.length ? (
                     <div className="amw-chart-tooltip">
                       <p>{payload[0].payload.department}</p>
@@ -212,7 +213,7 @@ export default function CalibratePage() {
                       <p>Spread {payload[0].payload.spread.toFixed(2)} / {payload[0].payload.count} records</p>
                     </div>
                   ) : null} />
-                  <ReferenceLine y={stats.avg ?? 0} stroke={chartColor.reference} strokeDasharray={chartStroke.dash} />
+                  <ReferenceLine y={stats.avg ? toGpa(stats.avg) : 0} stroke={chartColor.reference} strokeDasharray={chartStroke.dash} />
                   <Bar dataKey="averageScore" radius={[5, 5, 0, 0]} fill={chartColor.primary} />
                 </BarChart>
               </ResponsiveContainer>
