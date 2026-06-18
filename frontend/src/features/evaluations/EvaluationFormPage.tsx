@@ -928,7 +928,7 @@ export default function EvaluationFormPage() {
             const ratingLabel = (s: number | null) => {
               if (s == null) return '—'
               const r = RATING_SCALE.find(r => r.score === Math.round(s))
-              return r ? `${s.toFixed(2)} - ${r.labelEn}` : s.toFixed(2)
+              return r ? `${s.toFixed(2)} - ${locale === 'th' ? r.labelTh : r.labelEn}` : s.toFixed(2)
             }
             const RatingDots = ({ score }: { score: number | null }) => (
               <div style={{ display: 'flex', gap: 3 }}>
@@ -972,16 +972,16 @@ export default function EvaluationFormPage() {
                   }}>
                     <div>
                       <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--kbt-text-3)', marginBottom: 8 }}>
-                        Overall Form Rating
+                        {t('ef.sum.overallRating')}
                       </div>
                       <RatingDots score={liveTotal} />
                       <div style={{ marginTop: 8, fontSize: '0.875rem', fontWeight: 700, color: 'var(--kbt-text)' }}>
-                        {liveTotal != null ? scoreBand(liveTotal) : <span style={{ color: 'var(--kbt-text-3)', fontStyle: 'italic' }}>{t('ef.pendingCalc')}</span>}
+                        {liveTotal != null ? scoreBand(liveTotal, locale === 'th') : <span style={{ color: 'var(--kbt-text-3)', fontStyle: 'italic' }}>{t('ef.pendingCalc')}</span>}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--kbt-text-3)', marginBottom: 8 }}>
-                        Calculated Rating
+                        {t('ef.sum.calculatedRating')}
                       </div>
                       <span className="kbt-score-value" style={{ fontSize: '2.8rem', lineHeight: 1 }}>
                         {liveTotal != null ? (liveTotal - 1).toFixed(2) : '—'}
@@ -993,9 +993,9 @@ export default function EvaluationFormPage() {
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr>
-                        <th style={{ ...thStyle, textAlign: 'left' }}>Name</th>
-                        <th style={{ ...thStyle, textAlign: 'center', width: 220 }}>Rating</th>
-                        <th style={{ ...thStyle, textAlign: 'right', width: 140 }}>Weight</th>
+                        <th style={{ ...thStyle, textAlign: 'left' }}>{t('ef.sum.name')}</th>
+                        <th style={{ ...thStyle, textAlign: 'center', width: 220 }}>{t('ef.sum.rating')}</th>
+                        <th style={{ ...thStyle, textAlign: 'right', width: 140 }}>{t('ef.sum.weight')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1015,7 +1015,7 @@ export default function EvaluationFormPage() {
                         </td>
                         <td style={{ padding: '10px 12px', textAlign: 'right' }}>
                           <span style={{ fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'monospace', color: 'var(--m-light-blue)' }}>
-                            {effectiveGoalW}% of total
+                            {effectiveGoalW}% {t('ef.sum.ofTotal')}
                           </span>
                         </td>
                       </tr>
@@ -1048,7 +1048,7 @@ export default function EvaluationFormPage() {
                         </td>
                         <td style={{ padding: '10px 12px', textAlign: 'right' }}>
                           <span style={{ fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'monospace', color: 'var(--m-light-blue)' }}>
-                            {ev.competencyWeight}% of total
+                            {ev.competencyWeight}% {t('ef.sum.ofTotal')}
                           </span>
                         </td>
                       </tr>
@@ -1060,7 +1060,7 @@ export default function EvaluationFormPage() {
                               {c.name}
                             </td>
                             <td style={{ padding: '7px 12px', textAlign: 'center', fontSize: '0.8125rem', color: score != null ? 'var(--kbt-text-2)' : 'var(--kbt-text-3)' }}>
-                              {score != null ? `${score.toFixed(1)} - ${RATING_SCALE.find(r => r.score === score)?.labelEn ?? ''}` : '—'}
+                              {score != null ? `${score.toFixed(1)} - ${(locale === 'th' ? RATING_SCALE.find(r => r.score === score)?.labelTh : RATING_SCALE.find(r => r.score === score)?.labelEn) ?? ''}` : '—'}
                             </td>
                             <td style={{ padding: '7px 12px', textAlign: 'right', fontSize: '0.8125rem', color: 'var(--kbt-text-3)' }}>—</td>
                           </tr>
@@ -1082,7 +1082,7 @@ export default function EvaluationFormPage() {
                         </td>
                         <td style={{ padding: '10px 12px', textAlign: 'right' }}>
                           <span style={{ fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'monospace', color: 'var(--m-light-blue)' }}>
-                            {ev.attendanceWeight}% of total
+                            {ev.attendanceWeight}% {t('ef.sum.ofTotal')}
                           </span>
                         </td>
                       </tr>
@@ -1101,12 +1101,12 @@ export default function EvaluationFormPage() {
                               </span>
                             </div>
                           ) : (
-                            <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)', fontStyle: 'italic' }}>not applicable</span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-3)', fontStyle: 'italic' }}>{t('ef.sum.notApplicable')}</span>
                           )}
                         </td>
                         <td style={{ padding: '10px 12px', textAlign: 'right' }}>
                           <span style={{ fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'monospace', color: effectiveTrainingW > 0 ? 'var(--m-light-blue)' : 'var(--kbt-text-3)' }}>
-                            {effectiveTrainingW}% of total
+                            {effectiveTrainingW}% {t('ef.sum.ofTotal')}
                           </span>
                         </td>
                       </tr>
@@ -1136,15 +1136,15 @@ export default function EvaluationFormPage() {
                         {/* Left: label */}
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: gc ? gc.accent : 'var(--kbt-text-3)', marginBottom: 6 }}>
-                            Calibration Result
+                            {t('ef.sum.calibrationResult')}
                           </div>
                           <RatingDots score={liveTotal} />
                           <div style={{ marginTop: 8, fontSize: '0.9rem', fontWeight: 700, color: gc ? gc.accent : 'var(--kbt-text-3)' }}>
-                            {calibRating ? calibRating.labelEn : <span style={{ fontStyle: 'italic', color: 'var(--kbt-text-3)' }}>{t('ef.pendingCalc')}</span>}
+                            {calibRating ? (locale === 'th' ? calibRating.labelTh : calibRating.labelEn) : <span style={{ fontStyle: 'italic', color: 'var(--kbt-text-3)' }}>{t('ef.pendingCalc')}</span>}
                           </div>
                           {calibRating && (
                             <div style={{ marginTop: 4, fontSize: '0.75rem', color: 'var(--kbt-text-3)' }}>
-                              {calibRating.definitionEn}
+                              {locale === 'th' ? calibRating.definitionTh : calibRating.definitionEn}
                             </div>
                           )}
                         </div>
@@ -1152,7 +1152,7 @@ export default function EvaluationFormPage() {
                         {/* Right: Grade number + total score */}
                         <div style={{ textAlign: 'center', flexShrink: 0 }}>
                           <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--kbt-text-3)', marginBottom: 6 }}>
-                            Grade
+                            {t('ef.sum.grade')}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, justifyContent: 'center' }}>
                             <span style={{
@@ -1163,7 +1163,7 @@ export default function EvaluationFormPage() {
                               color: gc ? gc.accent : 'var(--kbt-text-3)',
                               border: `2px solid ${gc ? gc.border : 'rgba(255,255,255,0.1)'}`,
                             }}>
-                              {calibRating?.score ?? '—'}
+                              {calibRating ? calibRating.score - 1 : '—'}
                             </span>
                             <div style={{ textAlign: 'left' }}>
                               <div style={{ fontSize: '0.65rem', color: 'var(--kbt-text-3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total</div>
@@ -1222,12 +1222,9 @@ function SectionCard({ title, children }: { title: string; children: ReactNode }
   )
 }
 
-function scoreBand(score: number) {
-  if (score >= 4.5) return '5 - Role Model'
-  if (score >= 3.5) return '4 - Exceeds Expectation'
-  if (score >= 2.5) return '3 - Meets Expectation'
-  if (score >= 1.5) return '2 - Needs Improvement'
-  return '1 - Unsatisfactory'
+function scoreBand(score: number, th = false) {
+  const r = RATING_SCALE.find(x => x.score === Math.round(score)) ?? RATING_SCALE[RATING_SCALE.length - 1]
+  return `${r.score} - ${th ? r.labelTh : r.labelEn}`
 }
 
 // ── Live score helpers (mirror backend service formulas) ─────────────────────
