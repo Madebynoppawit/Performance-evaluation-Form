@@ -16,7 +16,6 @@ import {
   Search,
   Settings,
   Database,
-  SlidersHorizontal,
   Sun,
   UserCog,
   UserRound,
@@ -71,7 +70,6 @@ export default function CommandPalette() {
       { id: 'nav-templates', label: t('nav.templates'), hint: t('nav.templates.sub'), group: 'Navigate', icon: LayoutTemplate, keywords: 'blueprint templates', run: goto('/templates') },
       { id: 'nav-cycles', label: t('nav.cycles'), hint: t('nav.cycles.sub'), group: 'Navigate', icon: RefreshCw, keywords: 'periods schedule cycles', run: goto('/cycles') },
       { id: 'nav-reports', label: t('nav.reports'), hint: t('nav.reports.sub'), group: 'Navigate', icon: BarChart2, keywords: 'analytics charts reports', run: goto('/reports') },
-      { id: 'nav-calibrate', label: t('nav.calibrate'), hint: t('nav.calibrate.sub'), group: 'Navigate', icon: SlidersHorizontal, keywords: 'calibration calibrate normalize ratings distribution', run: goto('/calibrate') },
       ...(isAdmin
         ? [
             { id: 'nav-users', label: t('nav.users'), hint: t('nav.users.sub'), group: 'Navigate' as Group, icon: UserCog, keywords: 'users management accounts access people', run: goto('/users') },

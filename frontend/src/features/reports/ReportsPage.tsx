@@ -43,6 +43,9 @@ interface CustomTooltipProps {
   payload?: TooltipPayload[]
 }
 
+// Scores display GPA-style (0–4 = raw 1–5 score − 1); tiers/labels stay on the raw scale.
+const gpa = (s: number) => s - 1
+
 const scoreLabel = (score: number) => {
   const t = scoreTier(score)
   return { label: t.label, cls: t.cls }
@@ -61,11 +64,11 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 }
 
 function exportReportsCsv(summaries: ReportSummary[]) {
-  const rows: string[][] = [['Cycle', 'Total Evaluations', 'Completed', 'Completion %', 'Average Score', 'Department', 'Dept Average Score']]
+  const rows: string[][] = [['Cycle', 'Total Evaluations', 'Completed', 'Completion %', 'Average Score (GPA)', 'Department', 'Dept Average Score (GPA)']]
   for (const s of summaries) {
     const pct = s.totalEvaluations > 0 ? Math.round((s.completedEvaluations / s.totalEvaluations) * 100) : 0
     if (s.byDepartment.length === 0) {
-      rows.push([s.cycleName, String(s.totalEvaluations), String(s.completedEvaluations), `${pct}%`, s.averageScore.toFixed(2), '', ''])
+      rows.push([s.cycleName, String(s.totalEvaluations), String(s.completedEvaluations), `${pct}%`, gpa(s.averageScore).toFixed(2), '', ''])
     } else {
       s.byDepartment.forEach((d, i) => {
         rows.push([
@@ -73,9 +76,9 @@ function exportReportsCsv(summaries: ReportSummary[]) {
           i === 0 ? String(s.totalEvaluations) : '',
           i === 0 ? String(s.completedEvaluations) : '',
           i === 0 ? `${pct}%` : '',
-          i === 0 ? s.averageScore.toFixed(2) : '',
+          i === 0 ? gpa(s.averageScore).toFixed(2) : '',
           d.department,
-          d.averageScore.toFixed(2),
+          gpa(d.averageScore).toFixed(2),
         ])
       })
     }
@@ -253,7 +256,7 @@ export default function ReportsPage() {
                       <div className="amw-report-badge-row"><span className={cls}>{label}</span></div>
                     </div>
                     <div className="amw-report-score">
-                      <p className="kbt-score-value">{report.averageScore.toFixed(2)}</p>
+                      <p className="kbt-score-value">{gpa(report.averageScore).toFixed(2)}</p>
                       <p>{t('rp.avgScore')}</p>
                     </div>
                   </div>
@@ -290,12 +293,12 @@ export default function ReportsPage() {
                         {t('rp.scoreByDept')}
                       </p>
                       <ResponsiveContainer width="100%" height={180}>
-                        <BarChart data={report.byDepartment} margin={chartMargin.report}>
+                        <BarChart data={report.byDepartment.map(d => ({ ...d, averageScore: gpa(d.averageScore) }))} margin={chartMargin.report}>
                           <CartesianGrid strokeDasharray={chartStroke.gridDash} stroke={chartColor.grid} />
                           <XAxis dataKey="department" tick={chartTick.md} axisLine={false} tickLine={false} />
-                          <YAxis domain={[0, 5]} tick={chartTick.md} axisLine={false} tickLine={false} />
+                          <YAxis domain={[0, 4]} tick={chartTick.md} axisLine={false} tickLine={false} />
                           <Tooltip content={<CustomTooltip />} cursor={{ fill: chartColor.primarySoft }} />
-                          <ReferenceLine y={3} stroke={chartColor.reference} strokeDasharray={chartStroke.dash} />
+                          <ReferenceLine y={2} stroke={chartColor.reference} strokeDasharray={chartStroke.dash} />
                           <defs>
                             <linearGradient id={`barGradient-${report.cycleId}`} x1="0" y1="0" x2="0" y2="1">
                               <stop offset="0%" stopColor={chartColor.gold} stopOpacity={0.95} />

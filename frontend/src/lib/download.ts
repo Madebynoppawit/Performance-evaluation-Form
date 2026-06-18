@@ -110,7 +110,9 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   const allOseCriteria = formDef.categories.flatMap(c => c.criteria)
   const oseScoredValues = allOseCriteria.map(c => scoreById.get(c.id)).filter((s): s is number => s != null)
   const oseAvg = oseScoredValues.length ? oseScoredValues.reduce((a, b) => a + b, 0) / oseScoredValues.length : null
-  const oseGrade = oseAvg != null ? formDef.gradeScale.find(g => g.value === Math.round(oseAvg)) ?? null : null
+  // Final OSE grade follows the backend weighted total (Goal/Evaluation/Attendance/Training); fall back to the criteria average.
+  const oseFinal = ev.totalScore ?? oseAvg
+  const oseGrade = oseFinal != null ? formDef.gradeScale.find(g => g.value === Math.round(oseFinal)) ?? null : null
 
   const calibGrade = weightedTotal != null
     ? CC_RATING_SCALE.find(r => r.score === Math.round(weightedTotal!)) ?? CC_RATING_SCALE[CC_RATING_SCALE.length - 1]
@@ -586,14 +588,18 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   doc.line(M, y + 50, M + CW, y + 50)
   y += 60
 
+  // Period label derived from the cycle end date: Jan–Jun → mid-year, Jul–Dec → year-end.
+  const periodLabel = ev.cycle?.endDate
+    ? `${new Date(ev.cycle.endDate).getMonth() <= 5 ? 'midyear' : 'yearend'}${new Date(ev.cycle.endDate).getFullYear()}`
+    : '—'
+
   // Employee info grid
   const iW: [number, number, number, number] = [CW * 0.18, CW * 0.32, CW * 0.18, CW * 0.32]
   const infoRows: [string, string, string, string][] = [
     ['Employee Name', displayEmployee, 'Department', displayDept],
     ['Position', displayPosition, 'Hire Date', fmtDate(ev.evaluatee?.hireDate)],
     ['Evaluator', displayEvaluator, 'Evaluator Title', ev.evaluatorTitle ?? '—'],
-    ['Period', `${fmtDate(ev.cycle?.startDate)} – ${fmtDate(ev.cycle?.endDate)}`, 'Evaluation Type', ev.type ?? '—'],
-    ['Reason', ev.evaluationReason ?? '—', 'Status', ev.status ?? '—'],
+    ['Period', periodLabel, 'Cycle', ev.cycle?.name ?? '—'],
   ]
 
   needPage(32 + infoRows.length * 20)
@@ -962,8 +968,8 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
 
     // ── Calibration banner ────────────────────────────────────────────────────
     needPage(74)
-    if (oseGrade != null && oseAvg != null) {
-      const oseGpax = toGpax(oseAvg)
+    if (oseGrade != null && oseFinal != null) {
+      const oseGpax = toGpax(oseFinal)
       const osePerfGradeLabel = ev.performanceGrade
         ? ({ EXCELLENT: 'Excellent', ABOVE_STANDARD: 'Above Standard', MEETS_STANDARD: 'Meet Standard', ALMOST_STANDARD: 'Almost Standard', BELOW_STANDARD: 'Below Standard' } as Record<string, string>)[ev.performanceGrade] ?? oseGrade.en
         : oseGrade.en

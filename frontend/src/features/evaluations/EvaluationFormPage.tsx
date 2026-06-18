@@ -8,10 +8,9 @@ import type { AttendanceScore, CompetencyScore, Evaluation, EvaluationComment, G
 import { formatDate } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useT, useLanguage } from '@/i18n/languageContext'
-import { useLabels } from '@/i18n/useLabels'
 import type { TranslationKey } from '@/i18n/translations'
 import { getCompetenciesForPosition, POSITION_LABELS, RATING_SCALE } from './constants/competency'
-import { getFormDefinition, EVALUATION_REASONS } from './constants/formDefinitions'
+import { getFormDefinition } from './constants/formDefinitions'
 import OseEvaluationSection from './components/OseEvaluationSection'
 import GoalSettingSection from './components/GoalSettingSection'
 import CompetencySection from './components/CompetencySection'
@@ -22,14 +21,6 @@ import SalarySummarySection from './components/SalarySummarySection'
 import AcknowledgementSection from './components/AcknowledgementSection'
 import EvaluationExportMenu from './components/EvaluationExportMenu'
 
-const STATUS: Record<string, { cls: string; label: string }> = {
-  DRAFT: { cls: 'kbt-badge-neutral', label: 'Draft' },
-  IN_PROGRESS: { cls: 'kbt-badge-warning', label: 'In Progress' },
-  PENDING_REVIEW: { cls: 'kbt-badge-orange', label: 'Pending Review' },
-  SUBMITTED: { cls: 'kbt-badge-info', label: 'Submitted' },
-  REVIEWED: { cls: 'kbt-badge-success', label: 'Reviewed' },
-  CLOSED: { cls: 'kbt-badge-neutral', label: 'Closed' },
-}
 
 const SEC_KEY: Record<string, TranslationKey> = {
   info: 'ef.sec.info',
@@ -80,7 +71,6 @@ export default function EvaluationFormPage() {
   const { user, isDeveloper, isManager } = useAuth()
   const t = useT()
   const { locale } = useLanguage()
-  const { statusLabel, typeLabel } = useLabels()
 
   const { data: ev, isLoading } = useQuery<Evaluation>({
     queryKey: ['evaluations', id],
@@ -285,10 +275,15 @@ export default function EvaluationFormPage() {
 
   if (!ev) return <div className="kbt-msg-error">{t('ef.notFound')}</div>
 
+  // Period label derived from the cycle end date: Jan–Jun → mid-year, Jul–Dec → year-end.
+  const periodLabel = ev.cycle?.endDate
+    ? `${new Date(ev.cycle.endDate).getMonth() <= 5 ? 'midyear' : 'yearend'}${new Date(ev.cycle.endDate).getFullYear()}`
+    : '-'
+
   const factItems = [
     [t('eval.evaluator'), evaluatorDisplayName],
     [t('table.department'), ev.evaluatee?.department],
-    [t('ef.fld.periodEnd'), ev.cycle?.endDate ? formatDate(ev.cycle.endDate) : '-'],
+    [t('ef.period'), periodLabel],
     [t('ef.fld.goal'), ev.goalScore != null ? ev.goalScore.toFixed(2) : '-'],
     [t('ef.sec.competency'), ev.competencyScore != null ? ev.competencyScore.toFixed(2) : '-'],
     [t('ef.sec.attendance'), ev.attendanceScore != null ? ev.attendanceScore.toFixed(2) : '-'],
@@ -306,11 +301,10 @@ export default function EvaluationFormPage() {
         <div className="amw-hero-copy">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <span className="amw-eyebrow">{t('ef.reviewRecord')}</span>
-            <span className={STATUS[ev.status]?.cls ?? 'kbt-badge-neutral'}>{statusLabel(ev.status)}</span>
           </div>
           <h1 style={{ fontSize: 'clamp(2rem, 3.3vw, 3.5rem)' }}>{dash(displayName)}</h1>
           <p>
-            {ev.cycle?.name} · {typeLabel(ev.type)}
+            {ev.cycle?.name}
             {positionDisplay !== '-' ? ` · ${positionDisplay}` : ''}
           </p>
           <div className="amw-hero-badges">
@@ -322,12 +316,12 @@ export default function EvaluationFormPage() {
           <div className="amw-corporate-seal amw-corporate-seal--compact">
             <Scale size={22} />
             <span>{t('ef.legalFile')}</span>
-            <strong>{statusLabel(ev.status)}</strong>
+            <strong>{periodLabel}</strong>
           </div>
           {ev.totalScore != null && (
             <div style={{ textAlign: 'right' }}>
-              <span style={{ color: 'var(--kbt-text-3)', fontSize: '0.68rem', fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{t('ef.totalScore')}</span>
-              <div className="kbt-score-value" style={{ fontSize: '3rem', lineHeight: 1 }}>{ev.totalScore.toFixed(2)}</div>
+              <span style={{ color: 'var(--kbt-text-3)', fontSize: '0.68rem', fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{t('ef.totalScore')} (GPA)</span>
+              <div className="kbt-score-value" style={{ fontSize: '3rem', lineHeight: 1 }}>{(ev.totalScore - 1).toFixed(2)}</div>
             </div>
           )}
         </div>
@@ -483,7 +477,7 @@ export default function EvaluationFormPage() {
                     [t('acc.position'), positionDisplay],
                     ...(isOse ? [[t('ef.fld.hireDate'), evHireDate ? formatDate(evHireDate) : '-']] as [string, string][] : []),
                     [t('eval.evaluator'), evaluatorDisplayName],
-                    [t('eval.evaluationType'), typeLabel(ev.type)],
+                    [t('ef.period'), periodLabel],
                     [t('table.cycle'), ev.cycle?.name],
                     [t('table.startDate'), ev.cycle?.startDate ? formatDate(ev.cycle.startDate) : '-'],
                     [t('table.endDate'), ev.cycle?.endDate ? formatDate(ev.cycle.endDate) : '-'],
@@ -531,22 +525,8 @@ export default function EvaluationFormPage() {
                         placeholder={ev.evaluator?.position ? POSITION_LABELS[ev.evaluator.position] : ''} />
                     </div>
                     <div>
-                      <label className="kbt-label">{t('ef.fld.reason')}</label>
-                      <div className="amw-reason-row">
-                        {EVALUATION_REASONS.map(r => (
-                          <button key={r.value} type="button" disabled={isReadOnly}
-                            className={`amw-reason-chip${summary.evaluationReason === r.value ? ' active' : ''}`}
-                            onClick={() => setSummary(s => ({ ...s, evaluationReason: r.value }))}>
-                            {locale === 'th' ? r.th : r.en}
-                          </button>
-                        ))}
-                      </div>
-                      {summary.evaluationReason === 'OTHER' && (
-                        <input className="kbt-input" disabled={isReadOnly} style={{ marginTop: 8 }}
-                          value={summary.evaluationReasonOther ?? ''}
-                          onChange={e => setSummary(s => ({ ...s, evaluationReasonOther: e.target.value }))}
-                          placeholder={t('ef.fld.reasonOther')} />
-                      )}
+                      <label className="kbt-label">{t('ef.period')}</label>
+                      <input className="kbt-input" disabled value={periodLabel} />
                     </div>
                   </div>
                 )}
@@ -662,55 +642,267 @@ export default function EvaluationFormPage() {
           {section === 'comment' && <SectionCard title={`${numOf('comment')} · ${t('ef.sec.comment')}`}><CommentSection data={comment} readOnly={isReadOnly} onChange={setComment} /></SectionCard>}
 
           {section === 'summary' && isOse && (() => {
-            // Auto-compute grade from live competency score — no manual selection needed.
-            const oseScore = liveCompetencyScore(compScores)
-            const autoGradeDef = oseScore != null
-              ? formDef.gradeScale.find(g => g.value === Math.round(oseScore)) ?? formDef.gradeScale[formDef.gradeScale.length - 1]
+            // Score map keyed by criterion / competency id.
+            const scoreMap: Record<string, number | null> = Object.fromEntries(compScores.map(s => [s.competencyId, s.score ?? null]))
+
+            // Evaluation = the 6 form-definition categories (main competency bucket).
+            const oseCategories = formDef.categories
+            const evalCriteriaIds = oseCategories.flatMap(c => c.criteria.map(cr => cr.id))
+            const evalScores = evalCriteriaIds.map(id => scoreMap[id]).filter((s): s is number => s != null)
+            const evalRaw = evalScores.length ? evalScores.reduce((a, b) => a + b, 0) / evalScores.length : null
+
+            // Competency = position-based CCs (informational only, 0% weight).
+            const competencyDefs = pos ? getCompetenciesForPosition(pos) : []
+            const ccScores = competencyDefs.map(c => scoreMap[c.id]).filter((s): s is number => s != null)
+            const compRaw = ccScores.length ? ccScores.reduce((a, b) => a + b, 0) / ccScores.length : null
+
+            const goalRaw  = liveGoalScore(goals)
+            const attRaw   = liveAttendanceScore(attendance)
+            const trainRaw = liveTrainingScore(training)
+
+            // Weighting (Evaluation carries competencyWeight; goal absorbs the remainder).
+            const effectiveTrainingW = trainRaw != null ? 10 : 0
+            const competencyW = ev.competencyWeight
+            const attendanceW = ev.attendanceWeight
+            const effectiveGoalW = 100 - competencyW - attendanceW - effectiveTrainingW
+
+            const need = (w: number, v: number | null) => w <= 0 || v != null
+            const allPresent = need(effectiveGoalW, goalRaw) && need(competencyW, evalRaw) && need(attendanceW, attRaw) && need(effectiveTrainingW, trainRaw)
+            const weightedTotal = allPresent
+              ? ((goalRaw ?? 0) * effectiveGoalW + (evalRaw ?? 0) * competencyW + (attRaw ?? 0) * attendanceW + (trainRaw ?? 0) * effectiveTrainingW) / 100
               : null
+            // Final grade is GPA-style (0–4): per-item ratings stay 1–5, the calculated grade = score − 1.
+            const gpa = weightedTotal != null ? weightedTotal - 1 : null
+
+            // Band label from the form's grade scale (reads like HR4U: Excellent / Meet Standard / …).
+            const bandLabel = (s: number | null) => {
+              if (s == null) return '—'
+              const g = formDef.gradeScale.find(g => g.value === Math.round(s)) ?? formDef.gradeScale[formDef.gradeScale.length - 1]
+              return locale === 'th' ? g.th : g.en
+            }
+            const rowRating = (s: number | null) => s == null ? '—' : `${s.toFixed(2)} - ${bandLabel(s)}`
+            const pct = (w: number) => `${w.toFixed(1)}%`
+
+            const RatingDots = ({ score }: { score: number | null }) => (
+              <div style={{ display: 'flex', gap: 4 }}>
+                {[1, 2, 3, 4, 5].map(i => (
+                  <span key={i} style={{
+                    width: 13, height: 13, borderRadius: '50%',
+                    background: score != null && i <= Math.round(score) ? '#f4a21e' : 'rgba(255,255,255,0.1)',
+                    border: `1px solid ${score != null && i <= Math.round(score) ? '#f4a21e' : 'rgba(255,255,255,0.15)'}`,
+                    display: 'inline-block',
+                  }} />
+                ))}
+              </div>
+            )
+
+            const labelStyle: React.CSSProperties = {
+              fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--kbt-text-3)',
+            }
+            const thStyle: React.CSSProperties = {
+              padding: '9px 12px', fontSize: '0.68rem', fontWeight: 700,
+              letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--kbt-text-3)',
+              borderBottom: '1px solid var(--kbt-border)',
+            }
+            const sectionRowStyle: React.CSSProperties = {
+              background: 'rgba(92,86,144,0.09)', borderTop: '1px solid rgba(255,255,255,0.08)', borderBottom: '1px solid rgba(255,255,255,0.08)',
+            }
+            const subRowStyle: React.CSSProperties = { borderBottom: '1px solid rgba(255,255,255,0.03)' }
+            const nameTd: React.CSSProperties = { padding: '7px 12px 7px 30px', fontSize: '0.8125rem', color: 'var(--kbt-text-2)' }
+            const ratingTd: React.CSSProperties = { padding: '7px 12px', fontSize: '0.8125rem' }
+            const weightTd: React.CSSProperties = { padding: '7px 12px', textAlign: 'right', fontSize: '0.8125rem', fontFamily: 'monospace', color: 'var(--kbt-text-2)' }
+
+            // Detail-card styles (HR4U pages 1–10 per-item detail).
+            const detailTitle: React.CSSProperties = { fontSize: '1rem', fontWeight: 800, color: 'var(--kbt-text)', letterSpacing: '0.02em', marginTop: 8 }
+            const detailCard: React.CSSProperties = { padding: 20, borderRadius: 10, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }
+            const detailDesc: React.CSSProperties = { marginTop: 10, fontSize: '0.9rem', color: 'var(--kbt-text-2)', lineHeight: 1.6, whiteSpace: 'pre-line' }
+            const commentBlock: React.CSSProperties = { marginTop: 12 }
+            const commentText: React.CSSProperties = { marginTop: 4, fontSize: '0.9rem', color: 'var(--kbt-text-2)', lineHeight: 1.6, whiteSpace: 'pre-line' }
+            const badgeDone: React.CSSProperties = { fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'rgba(46,200,180,0.12)', color: '#2ec8b4', border: '1px solid rgba(46,200,180,0.3)' }
+            const badgeTodo: React.CSSProperties = { fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.05)', color: 'var(--kbt-text-3)', border: '1px solid rgba(255,255,255,0.1)' }
+
+            /* HR4U section header row: bold name | section avg (plain number) | weight.
+               showLabel=true appends the band label when the section has no sub-rows. */
+            const SecHeader = ({ name, score, weightText, showLabel = false }: { name: string; score: number | null; weightText: string; showLabel?: boolean }) => (
+              <tr style={sectionRowStyle}>
+                <td style={{ padding: '11px 12px' }}><strong style={{ fontSize: '0.875rem', color: 'var(--kbt-text)' }}>{name}</strong></td>
+                <td style={{ padding: '11px 12px', fontSize: '0.8125rem', fontWeight: 700, color: score != null ? 'var(--kbt-text)' : 'var(--kbt-text-3)' }}>
+                  {score == null ? '—' : showLabel ? rowRating(score) : score.toFixed(2)}
+                </td>
+                <td style={{ padding: '11px 12px', textAlign: 'right', fontSize: '0.72rem', fontWeight: 700, color: 'var(--kbt-text-3)' }}>{weightText}</td>
+              </tr>
+            )
+
             return (
               <SectionCard title={`${numOf('summary')} · ${t('ef.osePerfSummary')}`}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-                  {/* Computed score banner */}
+                  {/* Top block — HR4U Part 5 header */}
                   <div style={{
-                    display: 'flex', alignItems: 'center', gap: 20,
-                    padding: 16, borderRadius: 8,
+                    display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20,
+                    padding: 18, borderRadius: 8,
                     background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)',
                   }}>
                     <div>
-                      <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--kbt-text-3)', marginBottom: 6 }}>
-                        Computed Score
+                      <div style={labelStyle}>Overall Form Rating:</div>
+                      <div style={{ marginTop: 10 }}><RatingDots score={weightedTotal} /></div>
+                      <div style={{ marginTop: 10, fontSize: '0.9rem', fontWeight: 800, color: 'var(--kbt-text)' }}>
+                        {gpa != null
+                          ? `${Math.round(gpa)}: ${bandLabel(weightedTotal)}`
+                          : <span style={{ color: 'var(--kbt-text-3)', fontStyle: 'italic', fontWeight: 600 }}>{t('ef.pendingCalc')}</span>}
                       </div>
-                      <span className="kbt-score-value" style={{ fontSize: '2.5rem', lineHeight: 1 }}>
-                        {oseScore != null ? oseScore.toFixed(2) : '—'}
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={labelStyle}>Adjusted Calculated Form Rating:</div>
+                      <div style={{ marginTop: 6, fontSize: '0.95rem', fontWeight: 700, color: 'var(--kbt-text)' }}>
+                        {gpa != null ? `${Math.round(gpa)}.0 - ${bandLabel(weightedTotal)}` : '—'}
+                      </div>
+                      <div style={{ ...labelStyle, marginTop: 14 }}>Calculated Rating (GPA · 0–4):</div>
+                      <span className="kbt-score-value" style={{ fontSize: '2.4rem', lineHeight: 1.15 }}>
+                        {gpa != null ? gpa.toFixed(2) : '—'}
                       </span>
                     </div>
-                    {autoGradeDef && (
-                      <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: 20 }}>
-                        <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--kbt-text-3)', marginBottom: 6 }}>
-                          Auto Grade
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{
-                            width: 36, height: 36, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontFamily: 'monospace', fontWeight: 800, fontSize: '1.1rem',
-                            background: 'rgba(92,86,144,0.2)', color: 'var(--m-light-blue)',
-                            border: '1.5px solid rgba(150,144,196,0.35)',
-                          }}>
-                            {autoGradeDef.value}
-                          </span>
-                          <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--kbt-text)' }}>
-                            {locale === 'th' ? autoGradeDef.th : autoGradeDef.en}
-                          </span>
+                  </div>
+
+                  {/* Summary table — Name | Rating | Weight (HR4U Part 5) */}
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ ...thStyle, textAlign: 'left' }}>Name</th>
+                        <th style={{ ...thStyle, textAlign: 'left', width: 240 }}>Rating</th>
+                        <th style={{ ...thStyle, textAlign: 'right', width: 150 }}>Weight</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+
+                      {/* Goal Setting — Part 2 KPI */}
+                      <SecHeader name={t('ef.sec.goals')} score={goalRaw} weightText={`${pct(effectiveGoalW)} of total score`} />
+                      {goals.map((g, i) => (
+                        <tr key={`g${i}`} style={subRowStyle}>
+                          <td style={nameTd}>{g.goal || `Goal ${i + 1}`}</td>
+                          <td style={{ ...ratingTd, color: g.evaluationScore != null ? 'var(--kbt-text-2)' : 'var(--kbt-text-3)' }}>{rowRating(g.evaluationScore ?? null)}</td>
+                          <td style={weightTd}>{pct(Number(g.weight) || 0)}</td>
+                        </tr>
+                      ))}
+
+                      {/* Evaluation — Part 3 Core Competency */}
+                      <SecHeader name={t('ef.sec.evaluation')} score={evalRaw} weightText={`${pct(competencyW)} of total score`} />
+                      {oseCategories.map(cat => {
+                        const catScores = cat.criteria.map(cr => scoreMap[cr.id]).filter((s): s is number => s != null)
+                        const catAvg = catScores.length ? catScores.reduce((a, b) => a + b, 0) / catScores.length : null
+                        return (
+                          <tr key={cat.id} style={subRowStyle}>
+                            <td style={nameTd}>{cat.num}. {locale === 'th' ? cat.titleTh : cat.titleEn}</td>
+                            <td style={{ ...ratingTd, color: catAvg != null ? 'var(--kbt-text-2)' : 'var(--kbt-text-3)' }}>{rowRating(catAvg)}</td>
+                            <td style={{ ...weightTd, color: 'var(--kbt-text-3)' }}>—</td>
+                          </tr>
+                        )
+                      })}
+
+                      {/* Competency — Part 4 Functional (reference, 0%) */}
+                      <SecHeader name={t('ef.sec.competency')} score={compRaw} weightText="0.0% of total score" />
+                      {competencyDefs.map(c => {
+                        const score = scoreMap[c.id] ?? null
+                        const desc = pos ? c.descriptions[pos] : undefined
+                        return (
+                          <tr key={c.id} style={subRowStyle}>
+                            <td style={nameTd}>
+                              {c.name}
+                              {desc && <p style={{ margin: '3px 0 0', fontSize: '0.72rem', color: 'var(--kbt-text-3)', lineHeight: 1.4 }}>{desc}</p>}
+                            </td>
+                            <td style={{ ...ratingTd, color: score != null ? 'var(--kbt-text-2)' : 'var(--kbt-text-3)', verticalAlign: 'top' }}>{rowRating(score)}</td>
+                            <td style={{ ...weightTd, color: 'var(--kbt-text-3)', verticalAlign: 'top' }}>—</td>
+                          </tr>
+                        )
+                      })}
+
+                      {/* Attendance & Training — single-metric sections */}
+                      <SecHeader name={t('ef.sec.attendance')} score={attRaw} weightText={`${pct(attendanceW)} of total score`} showLabel />
+                      <SecHeader name={t('ef.sec.training')} score={trainRaw} weightText={`${pct(effectiveTrainingW)} of total score`} showLabel />
+
+                    </tbody>
+                  </table>
+
+                  {/* ── Detailed breakdown (HR4U pages 1–10 style) ── */}
+                  {goals.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <div style={detailTitle}>{t('ef.sec.goals')} — Details</div>
+                      {goals.map((g, i) => {
+                        const done = g.evaluationScore != null
+                        const targets: [string, string | undefined][] = [['5', g.targetRating5], ['4', g.targetRating4], ['3', g.targetRating3], ['2', g.targetRating2], ['1', g.targetRating1]]
+                        const hasTargets = targets.some(([, txt]) => txt && txt.trim())
+                        return (
+                          <div key={i} style={detailCard}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'flex-start' }}>
+                              <strong style={{ fontSize: '1rem', color: 'var(--kbt-text)', lineHeight: 1.4 }}>{i + 1}. {g.goal || `Goal ${i + 1}`}</strong>
+                              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
+                                <span style={{ fontSize: '0.78rem', fontFamily: 'monospace', color: 'var(--kbt-text-3)' }}>{pct(Number(g.weight) || 0)} of total score</span>
+                                <span style={done ? badgeDone : badgeTodo}>{done ? 'Completed' : 'Not started'}</span>
+                              </div>
+                            </div>
+                            {g.goalDescription && <p style={detailDesc}>{g.goalDescription}</p>}
+                            {hasTargets && (
+                              <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                <span style={labelStyle}>Targets by rating</span>
+                                {targets.map(([lvl, txt]) => txt && txt.trim() ? (
+                                  <div key={lvl} style={{ display: 'flex', gap: 10, fontSize: '0.875rem', color: 'var(--kbt-text-2)', marginTop: 3, lineHeight: 1.5 }}>
+                                    <span style={{ width: 22, height: 22, borderRadius: 5, background: 'rgba(92,86,144,0.2)', color: 'var(--m-light-blue)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.78rem', flexShrink: 0 }}>{lvl}</span>
+                                    <span>{txt}</span>
+                                  </div>
+                                ) : null)}
+                              </div>
+                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14 }}>
+                              <span style={labelStyle}>Rating</span>
+                              <RatingDots score={g.evaluationScore ?? null} />
+                              <span style={{ fontSize: '0.9rem', fontWeight: 600, color: done ? 'var(--kbt-text-2)' : 'var(--kbt-text-3)' }}>{rowRating(g.evaluationScore ?? null)}</span>
+                            </div>
+                            {g.result && g.result.trim() && (
+                              <div style={{ marginTop: 12, fontSize: '0.9rem' }}>
+                                <span style={labelStyle}>Actual result</span>{' '}
+                                <span style={{ color: 'var(--kbt-text-2)' }}>{g.result}</span>
+                              </div>
+                            )}
+                            {g.employeeComment && g.employeeComment.trim() && (
+                              <div style={commentBlock}><span style={labelStyle}>Employee&apos;s comment</span><p style={commentText}>{g.employeeComment}</p></div>
+                            )}
+                            {g.superiorComment && g.superiorComment.trim() && (
+                              <div style={commentBlock}><span style={labelStyle}>Supervisor&apos;s comment</span><p style={commentText}>{g.superiorComment}</p></div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* Attendance & Training detail */}
+                  {(attRaw != null || trainRaw != null) && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <div style={detailTitle}>{t('ef.sec.attendance')} &amp; {t('ef.sec.training')} — Details</div>
+                      <div style={detailCard}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 24px', fontSize: '0.9rem' }}>
+                          {attendance.leaveActualDays != null && <div><span style={labelStyle}>Leave (days)</span> <span style={{ color: 'var(--kbt-text-2)' }}>{attendance.leaveActualDays}</span></div>}
+                          {attendance.lateActualTimes != null && <div><span style={labelStyle}>Late (times)</span> <span style={{ color: 'var(--kbt-text-2)' }}>{attendance.lateActualTimes}</span></div>}
+                          {attendance.disciplinaryLevel && <div><span style={labelStyle}>Disciplinary</span> <span style={{ color: 'var(--kbt-text-2)' }}>{attendance.disciplinaryLevel}</span></div>}
+                          {training.minimumHours != null && <div><span style={labelStyle}>Training min (hrs)</span> <span style={{ color: 'var(--kbt-text-2)' }}>{training.minimumHours}</span></div>}
+                          {training.actualHours != null && <div><span style={labelStyle}>Training actual (hrs)</span> <span style={{ color: 'var(--kbt-text-2)' }}>{training.actualHours}</span></div>}
+                          {training.behaviorNote && <div style={{ gridColumn: '1 / -1' }}><span style={labelStyle}>Behavior note</span> <span style={{ color: 'var(--kbt-text-2)' }}>{training.behaviorNote}</span></div>}
                         </div>
                       </div>
-                    )}
-                    {oseScore == null && (
-                      <span style={{ fontSize: '0.8125rem', color: 'var(--kbt-text-3)', fontStyle: 'italic' }}>
-                        {t('ef.pendingCalc')}
-                      </span>
-                    )}
-                  </div>
+                    </div>
+                  )}
+
+                  {/* Additional Comment — HR4U Part 6 */}
+                  {(comment.strengths || comment.improvements || comment.requiredSkills) && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <div style={detailTitle}>Additional Comment</div>
+                      <div style={detailCard}>
+                        {comment.strengths && <div><span style={labelStyle}>Strengths</span><p style={commentText}>{comment.strengths}</p></div>}
+                        {comment.improvements && <div style={commentBlock}><span style={labelStyle}>Improvement area</span><p style={commentText}>{comment.improvements}</p></div>}
+                        {comment.requiredSkills && <div style={commentBlock}><span style={labelStyle}>Required skills</span><p style={commentText}>{comment.requiredSkills}</p></div>}
+                      </div>
+                    </div>
+                  )}
 
                   <div style={{ maxWidth: 240 }}>
                     <label className="kbt-label">{t('ef.effectiveDate')}</label>

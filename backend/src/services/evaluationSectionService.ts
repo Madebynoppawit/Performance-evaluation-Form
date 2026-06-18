@@ -26,9 +26,9 @@ const POSITION_COMPETENCIES: Record<Position, string[]> = {
 
 const REQUIRED_TARGET_FIELDS = ['targetRating5', 'targetRating4', 'targetRating3', 'targetRating2', 'targetRating1'] as const
 
-/* Director / Manager / Officer use the flat appraisal form (6 categories × 3
-   criteria, 1–5 rating, no goal/attendance weighting).
-   Supervisor / Production use the weighted scoring model:
+/* Director / Manager / Officer use the appraisal form (6 categories × 3
+   criteria, 1–5 rating). Its "Evaluation" section is the competency bucket.
+   All forms use the weighted scoring model:
    Goal(60-70%) + Competency(20%) + Attendance(10%) + Training(0-10%) = 100%. */
 const APPRAISAL_FORM_TYPES = ['DIRECTOR_LEVEL', 'MANAGER_LEVEL', 'OFFICER_LEVEL']
 
@@ -178,15 +178,6 @@ export async function recalculateTotalScore(evaluationId: string) {
 
   const competencyScore = calculateCompetencyScore(evaluation.competencyScores)
 
-  /* Appraisal forms: a flat appraisal — the total is the average of all rated
-     criteria; goal/attendance weighting does not apply. */
-  if (isAppraisalForm(evaluation.formType)) {
-    return prisma.evaluation.update({
-      where: { id: evaluationId },
-      data: { goalScore: null, attendanceScore: null, competencyScore, totalScore: competencyScore },
-    })
-  }
-
   const goalScore = calculateGoalScore(evaluation.goalEntries)
   const attendanceScore = evaluation.attendanceRecord?.attendanceAvgScore ?? null
   const trainingScore = evaluation.trainingRecord?.score ?? null
@@ -196,6 +187,38 @@ export async function recalculateTotalScore(evaluationId: string) {
   const TRAINING_WEIGHT = 10
   const effectiveTrainingWeight = trainingScore != null ? TRAINING_WEIGHT : 0
   const effectiveGoalWeight = 100 - evaluation.competencyWeight - evaluation.attendanceWeight - effectiveTrainingWeight
+
+  // A bucket is only required when it actually carries weight.
+  const needs = (weight: number, value: number | null) => weight <= 0 || value != null
+
+  /* Appraisal forms: the "Evaluation" section (6 categories, criterion ids
+     1.1–6.3) is the weighted competency bucket; position competencies (CCx) are
+     captured for reference but excluded from the weighted total. Goal /
+     Attendance / Training weighting applies as in the standard model. */
+  if (isAppraisalForm(evaluation.formType)) {
+    const evaluationScore = calculateCompetencyScore(
+      evaluation.competencyScores.filter((s) => APPRAISAL_CRITERIA.includes(s.competencyId))
+    )
+
+    const present = needs(effectiveGoalWeight, goalScore)
+      && needs(evaluation.competencyWeight, evaluationScore)
+      && needs(evaluation.attendanceWeight, attendanceScore)
+      && needs(effectiveTrainingWeight, trainingScore)
+
+    const totalScore = present
+      ? (
+          (goalScore ?? 0) * effectiveGoalWeight +
+          (evaluationScore ?? 0) * evaluation.competencyWeight +
+          (attendanceScore ?? 0) * evaluation.attendanceWeight +
+          (trainingScore ?? 0) * effectiveTrainingWeight
+        ) / 100
+      : null
+
+    return prisma.evaluation.update({
+      where: { id: evaluationId },
+      data: { goalScore, competencyScore: evaluationScore, attendanceScore, totalScore },
+    })
+  }
 
   let totalScore: number | null = null
   if (goalScore != null && competencyScore != null && attendanceScore != null) {

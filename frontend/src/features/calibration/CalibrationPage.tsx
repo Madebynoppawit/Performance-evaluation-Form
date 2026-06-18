@@ -218,7 +218,7 @@ export default function CalibrationPage() {
                         </td>
                         <td>{departmentOf(ev)}</td>
                         <td style={{ textAlign: 'right' }}>
-                          <span className="kbt-score-value">{ev.totalScore.toFixed(2)}</span>
+                          <span className="kbt-score-value">{(ev.totalScore - 1).toFixed(2)}</span>
                         </td>
                         <td>
                           <span style={{

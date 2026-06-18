@@ -48,6 +48,9 @@ function Gauge100({ pct }: { pct: number }) {
   )
 }
 
+// Final grade is shown GPA-style (0–4 = raw 1–5 score − 1); tiers/colors stay on the raw scale.
+const gpa = (s: number) => s - 1
+
 export default function ReportsOverview({ summaries }: Props) {
   const t = useT()
   const { data: evaluations } = useQuery<Evaluation[]>({
@@ -84,7 +87,7 @@ export default function ReportsOverview({ summaries }: Props) {
   const attention = ranked.slice(-5).reverse().filter(e => !top.includes(e))
 
   const kpis = [
-    { label: t('rp.overallAvg'), value: avgScore ? avgScore.toFixed(2) : '—', icon: Gauge, color: 'var(--lambo-gold)', mono: true },
+    { label: t('rp.overallAvg'), value: avgScore ? gpa(avgScore).toFixed(2) : '—', icon: Gauge, color: 'var(--lambo-gold)', mono: true },
     { label: t('rp.totalReviews'), value: String(totalReviews), icon: Users, color: 'var(--sap-blue)' },
     { label: t('rp.completed'), value: String(completed), icon: CheckCircle2, color: 'var(--kbt-success)' },
     { label: t('rp.departments'), value: String(departments.length), icon: Building2, color: 'var(--m-light-blue)' },
@@ -134,10 +137,10 @@ export default function ReportsOverview({ summaries }: Props) {
                 <div className="amw-leader-body">
                   <div className="amw-leader-top">
                     <strong>{d.name}</strong>
-                    <span className="kbt-score-value">{d.avg.toFixed(2)}</span>
+                    <span className="kbt-score-value">{gpa(d.avg).toFixed(2)}</span>
                   </div>
                   <div className="amw-leader-track">
-                    <div className="amw-leader-fill" style={{ width: `${(d.avg / 5) * 100}%`, background: scoreTier(d.avg).color }} />
+                    <div className="amw-leader-fill" style={{ width: `${((d.avg - 1) / 4) * 100}%`, background: scoreTier(d.avg).color }} />
                   </div>
                   <span className="amw-leader-count">{d.count} {t('rp.scored')}</span>
                 </div>
@@ -164,7 +167,7 @@ export default function ReportsOverview({ summaries }: Props) {
                       <strong>{e.evaluatee?.name ?? t('rp.unknown')}</strong>
                       <span>{e.evaluatee?.department ?? '—'}</span>
                     </div>
-                    <span className="kbt-score-value">{e.totalScore!.toFixed(2)}</span>
+                    <span className="kbt-score-value">{gpa(e.totalScore!).toFixed(2)}</span>
                   </div>
                 ))}
               </>
@@ -179,7 +182,7 @@ export default function ReportsOverview({ summaries }: Props) {
                       <strong>{e.evaluatee?.name ?? t('rp.unknown')}</strong>
                       <span>{e.evaluatee?.department ?? '—'}</span>
                     </div>
-                    <span className="kbt-score-value">{e.totalScore!.toFixed(2)}</span>
+                    <span className="kbt-score-value">{gpa(e.totalScore!).toFixed(2)}</span>
                   </div>
                 ))}
               </>

@@ -458,6 +458,7 @@ const en = {
   // Employee info fields
   'ef.fld.employee': 'Employee',
   'ef.fld.periodEnd': 'Period End',
+  'ef.period': 'Period',
   'ef.fld.goal': 'Goal',
   'ef.fld.hireDate': 'Hire Date',
   'ef.fld.evaluatorTitle': 'Evaluator Title',
@@ -1082,6 +1083,7 @@ const th: typeof en = {
   'ef.title.summary': 'สรุปคะแนน',
   'ef.fld.employee': 'พนักงาน',
   'ef.fld.periodEnd': 'สิ้นสุดรอบ',
+  'ef.period': 'รอบประเมิน',
   'ef.fld.goal': 'เป้าหมาย',
   'ef.fld.hireDate': 'วันที่เริ่มงาน',
   'ef.fld.evaluatorTitle': 'ตำแหน่งผู้ประเมิน',
@@ -1696,6 +1698,7 @@ const fr: typeof en = {
   'ef.title.summary': 'Synthèse des scores',
   'ef.fld.employee': 'Employé',
   'ef.fld.periodEnd': 'Fin de période',
+  'ef.period': 'Période',
   'ef.fld.goal': 'Objectif',
   'ef.fld.hireDate': "Date d'embauche",
   'ef.fld.evaluatorTitle': "Titre de l'évaluateur",
