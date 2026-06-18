@@ -141,6 +141,12 @@ model Template {
   sections    Section[]
   cycles      Cycle[]
 
+  // Scoring weights inherited by evaluations created under this template.
+  // Goal weight is the remainder (100 - competency - attendance - training).
+  competencyWeight Float @default(20)
+  attendanceWeight Float @default(10)
+  trainingWeight   Float @default(10)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -197,6 +203,7 @@ model Evaluation {
   goalWeight       Float @default(70)
   competencyWeight Float @default(20)
   attendanceWeight Float @default(10)
+  trainingWeight   Float @default(10)
 
   goalScore       Float?
   competencyScore Float?

@@ -7,13 +7,29 @@ import { EvaluationType } from '@prisma/client'
 const EvalType = z.nativeEnum(EvaluationType)
 const QuestionType = z.enum(['rating', 'text', 'multiple_choice'])
 
+const weightFields = {
+  competencyWeight: z.number().min(0).max(100).optional(),
+  attendanceWeight: z.number().min(0).max(100).optional(),
+  trainingWeight:   z.number().min(0).max(100).optional(),
+}
+// Goal weight is the remainder, so competency + attendance + training must leave room for it.
+const weightSumOk = (d: { competencyWeight?: number; attendanceWeight?: number; trainingWeight?: number }) =>
+  (d.competencyWeight ?? 0) + (d.attendanceWeight ?? 0) + (d.trainingWeight ?? 0) <= 100
+const weightSumMsg = { message: 'Competency + Attendance + Training weight must not exceed 100% (Goal takes the remainder)' }
+
 const createTemplateSchema = z.object({
   name:        z.string().min(1, 'Name is required').max(120),
   type:        EvalType,
   description: z.string().max(500).optional(),
-})
+  ...weightFields,
+}).refine(weightSumOk, weightSumMsg)
 
-const updateTemplateSchema = createTemplateSchema.partial()
+const updateTemplateSchema = z.object({
+  name:        z.string().min(1).max(120).optional(),
+  type:        EvalType.optional(),
+  description: z.string().max(500).optional(),
+  ...weightFields,
+}).refine(weightSumOk, weightSumMsg)
 
 const sectionSchema = z.object({
   title:       z.string().min(1).max(120),
