@@ -284,9 +284,6 @@ export default function EvaluationFormPage() {
     [t('eval.evaluator'), evaluatorDisplayName],
     [t('table.department'), ev.evaluatee?.department],
     [t('ef.period'), periodLabel],
-    [t('ef.fld.goal'), ev.goalScore != null ? ev.goalScore.toFixed(2) : '-'],
-    [t('ef.sec.competency'), ev.competencyScore != null ? ev.competencyScore.toFixed(2) : '-'],
-    [t('ef.sec.attendance'), ev.attendanceScore != null ? ev.attendanceScore.toFixed(2) : '-'],
   ]
 
   return (
@@ -320,7 +317,7 @@ export default function EvaluationFormPage() {
           </div>
           {ev.totalScore != null && (
             <div style={{ textAlign: 'right' }}>
-              <span style={{ color: 'var(--kbt-text-3)', fontSize: '0.68rem', fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{t('ef.totalScore')} (GPA)</span>
+              <span style={{ color: 'var(--kbt-text-3)', fontSize: '0.68rem', fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{t('ef.totalScore')} ({t('ef.sum.gpa')})</span>
               <div className="kbt-score-value" style={{ fontSize: '3rem', lineHeight: 1 }}>{(ev.totalScore - 1).toFixed(2)}</div>
             </div>
           )}
@@ -744,7 +741,7 @@ export default function EvaluationFormPage() {
                     background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)',
                   }}>
                     <div>
-                      <div style={labelStyle}>Overall Form Rating:</div>
+                      <div style={labelStyle}>{t('ef.sum.overallRating')}:</div>
                       <div style={{ marginTop: 10 }}><RatingDots score={weightedTotal} /></div>
                       <div style={{ marginTop: 10, fontSize: '0.9rem', fontWeight: 800, color: 'var(--kbt-text)' }}>
                         {gpa != null
@@ -753,11 +750,11 @@ export default function EvaluationFormPage() {
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={labelStyle}>Adjusted Calculated Form Rating:</div>
+                      <div style={labelStyle}>{t('ef.sum.adjustedRating')}:</div>
                       <div style={{ marginTop: 6, fontSize: '0.95rem', fontWeight: 700, color: 'var(--kbt-text)' }}>
                         {gpa != null ? `${Math.round(gpa)}.0 - ${bandLabel(weightedTotal)}` : '—'}
                       </div>
-                      <div style={{ ...labelStyle, marginTop: 14 }}>Calculated Rating (GPA · 0–4):</div>
+                      <div style={{ ...labelStyle, marginTop: 14 }}>{t('ef.sum.calculatedRating')}:</div>
                       <span className="kbt-score-value" style={{ fontSize: '2.4rem', lineHeight: 1.15 }}>
                         {gpa != null ? gpa.toFixed(2) : '—'}
                       </span>
@@ -768,15 +765,15 @@ export default function EvaluationFormPage() {
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr>
-                        <th style={{ ...thStyle, textAlign: 'left' }}>Name</th>
-                        <th style={{ ...thStyle, textAlign: 'left', width: 240 }}>Rating</th>
-                        <th style={{ ...thStyle, textAlign: 'right', width: 150 }}>Weight</th>
+                        <th style={{ ...thStyle, textAlign: 'left' }}>{t('ef.sum.name')}</th>
+                        <th style={{ ...thStyle, textAlign: 'left', width: 240 }}>{t('ef.sum.rating')}</th>
+                        <th style={{ ...thStyle, textAlign: 'right', width: 150 }}>{t('ef.sum.weight')}</th>
                       </tr>
                     </thead>
                     <tbody>
 
                       {/* Goal Setting — Part 2 KPI */}
-                      <SecHeader name={t('ef.sec.goals')} score={goalRaw} weightText={`${pct(effectiveGoalW)} of total score`} />
+                      <SecHeader name={t('ef.sec.goals')} score={goalRaw} weightText={`${pct(effectiveGoalW)} ${t('ef.sum.ofTotal')}`} />
                       {goals.map((g, i) => (
                         <tr key={`g${i}`} style={subRowStyle}>
                           <td style={nameTd}>{g.goal || `Goal ${i + 1}`}</td>
@@ -786,7 +783,7 @@ export default function EvaluationFormPage() {
                       ))}
 
                       {/* Evaluation — Part 3 Core Competency */}
-                      <SecHeader name={t('ef.sec.evaluation')} score={evalRaw} weightText={`${pct(competencyW)} of total score`} />
+                      <SecHeader name={t('ef.sec.evaluation')} score={evalRaw} weightText={`${pct(competencyW)} ${t('ef.sum.ofTotal')}`} />
                       {oseCategories.map(cat => {
                         const catScores = cat.criteria.map(cr => scoreMap[cr.id]).filter((s): s is number => s != null)
                         const catAvg = catScores.length ? catScores.reduce((a, b) => a + b, 0) / catScores.length : null
@@ -800,7 +797,7 @@ export default function EvaluationFormPage() {
                       })}
 
                       {/* Competency — Part 4 Functional (reference, 0%) */}
-                      <SecHeader name={t('ef.sec.competency')} score={compRaw} weightText="0.0% of total score" />
+                      <SecHeader name={t('ef.sec.competency')} score={compRaw} weightText={`0.0% ${t('ef.sum.ofTotal')}`} />
                       {competencyDefs.map(c => {
                         const score = scoreMap[c.id] ?? null
                         const desc = pos ? c.descriptions[pos] : undefined
@@ -817,8 +814,8 @@ export default function EvaluationFormPage() {
                       })}
 
                       {/* Attendance & Training — single-metric sections */}
-                      <SecHeader name={t('ef.sec.attendance')} score={attRaw} weightText={`${pct(attendanceW)} of total score`} showLabel />
-                      <SecHeader name={t('ef.sec.training')} score={trainRaw} weightText={`${pct(effectiveTrainingW)} of total score`} showLabel />
+                      <SecHeader name={t('ef.sec.attendance')} score={attRaw} weightText={`${pct(attendanceW)} ${t('ef.sum.ofTotal')}`} showLabel />
+                      <SecHeader name={t('ef.sec.training')} score={trainRaw} weightText={`${pct(effectiveTrainingW)} ${t('ef.sum.ofTotal')}`} showLabel />
 
                     </tbody>
                   </table>
@@ -826,7 +823,7 @@ export default function EvaluationFormPage() {
                   {/* ── Detailed breakdown (HR4U pages 1–10 style) ── */}
                   {goals.length > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                      <div style={detailTitle}>{t('ef.sec.goals')} — Details</div>
+                      <div style={detailTitle}>{t('ef.sec.goals')} — {t('ef.sum.details')}</div>
                       {goals.map((g, i) => {
                         const done = g.evaluationScore != null
                         const targets: [string, string | undefined][] = [['5', g.targetRating5], ['4', g.targetRating4], ['3', g.targetRating3], ['2', g.targetRating2], ['1', g.targetRating1]]
@@ -836,14 +833,14 @@ export default function EvaluationFormPage() {
                             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'flex-start' }}>
                               <strong style={{ fontSize: '1rem', color: 'var(--kbt-text)', lineHeight: 1.4 }}>{i + 1}. {g.goal || `Goal ${i + 1}`}</strong>
                               <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
-                                <span style={{ fontSize: '0.78rem', fontFamily: 'monospace', color: 'var(--kbt-text-3)' }}>{pct(Number(g.weight) || 0)} of total score</span>
-                                <span style={done ? badgeDone : badgeTodo}>{done ? 'Completed' : 'Not started'}</span>
+                                <span style={{ fontSize: '0.78rem', fontFamily: 'monospace', color: 'var(--kbt-text-3)' }}>{pct(Number(g.weight) || 0)} {t('ef.sum.ofTotal')}</span>
+                                <span style={done ? badgeDone : badgeTodo}>{done ? t('ef.sum.completed') : t('ef.sum.notStarted')}</span>
                               </div>
                             </div>
                             {g.goalDescription && <p style={detailDesc}>{g.goalDescription}</p>}
                             {hasTargets && (
                               <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                <span style={labelStyle}>Targets by rating</span>
+                                <span style={labelStyle}>{t('ef.sum.targetsByRating')}</span>
                                 {targets.map(([lvl, txt]) => txt && txt.trim() ? (
                                   <div key={lvl} style={{ display: 'flex', gap: 10, fontSize: '0.875rem', color: 'var(--kbt-text-2)', marginTop: 3, lineHeight: 1.5 }}>
                                     <span style={{ width: 22, height: 22, borderRadius: 5, background: 'rgba(92,86,144,0.2)', color: 'var(--m-light-blue)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.78rem', flexShrink: 0 }}>{lvl}</span>
@@ -853,21 +850,21 @@ export default function EvaluationFormPage() {
                               </div>
                             )}
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14 }}>
-                              <span style={labelStyle}>Rating</span>
+                              <span style={labelStyle}>{t('ef.sum.rating')}</span>
                               <RatingDots score={g.evaluationScore ?? null} />
                               <span style={{ fontSize: '0.9rem', fontWeight: 600, color: done ? 'var(--kbt-text-2)' : 'var(--kbt-text-3)' }}>{rowRating(g.evaluationScore ?? null)}</span>
                             </div>
                             {g.result && g.result.trim() && (
                               <div style={{ marginTop: 12, fontSize: '0.9rem' }}>
-                                <span style={labelStyle}>Actual result</span>{' '}
+                                <span style={labelStyle}>{t('ef.sum.actualResult')}</span>{' '}
                                 <span style={{ color: 'var(--kbt-text-2)' }}>{g.result}</span>
                               </div>
                             )}
                             {g.employeeComment && g.employeeComment.trim() && (
-                              <div style={commentBlock}><span style={labelStyle}>Employee&apos;s comment</span><p style={commentText}>{g.employeeComment}</p></div>
+                              <div style={commentBlock}><span style={labelStyle}>{t('ef.sum.employeeComment')}</span><p style={commentText}>{g.employeeComment}</p></div>
                             )}
                             {g.superiorComment && g.superiorComment.trim() && (
-                              <div style={commentBlock}><span style={labelStyle}>Supervisor&apos;s comment</span><p style={commentText}>{g.superiorComment}</p></div>
+                              <div style={commentBlock}><span style={labelStyle}>{t('ef.sum.supervisorComment')}</span><p style={commentText}>{g.superiorComment}</p></div>
                             )}
                           </div>
                         )
@@ -878,15 +875,15 @@ export default function EvaluationFormPage() {
                   {/* Attendance & Training detail */}
                   {(attRaw != null || trainRaw != null) && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                      <div style={detailTitle}>{t('ef.sec.attendance')} &amp; {t('ef.sec.training')} — Details</div>
+                      <div style={detailTitle}>{t('ef.sec.attendance')} &amp; {t('ef.sec.training')} — {t('ef.sum.details')}</div>
                       <div style={detailCard}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px 24px', fontSize: '0.9rem' }}>
-                          {attendance.leaveActualDays != null && <div><span style={labelStyle}>Leave (days)</span> <span style={{ color: 'var(--kbt-text-2)' }}>{attendance.leaveActualDays}</span></div>}
-                          {attendance.lateActualTimes != null && <div><span style={labelStyle}>Late (times)</span> <span style={{ color: 'var(--kbt-text-2)' }}>{attendance.lateActualTimes}</span></div>}
-                          {attendance.disciplinaryLevel && <div><span style={labelStyle}>Disciplinary</span> <span style={{ color: 'var(--kbt-text-2)' }}>{attendance.disciplinaryLevel}</span></div>}
-                          {training.minimumHours != null && <div><span style={labelStyle}>Training min (hrs)</span> <span style={{ color: 'var(--kbt-text-2)' }}>{training.minimumHours}</span></div>}
-                          {training.actualHours != null && <div><span style={labelStyle}>Training actual (hrs)</span> <span style={{ color: 'var(--kbt-text-2)' }}>{training.actualHours}</span></div>}
-                          {training.behaviorNote && <div style={{ gridColumn: '1 / -1' }}><span style={labelStyle}>Behavior note</span> <span style={{ color: 'var(--kbt-text-2)' }}>{training.behaviorNote}</span></div>}
+                          {attendance.leaveActualDays != null && <div><span style={labelStyle}>{t('ef.sum.leaveDays')}</span> <span style={{ color: 'var(--kbt-text-2)' }}>{attendance.leaveActualDays}</span></div>}
+                          {attendance.lateActualTimes != null && <div><span style={labelStyle}>{t('ef.sum.lateTimes')}</span> <span style={{ color: 'var(--kbt-text-2)' }}>{attendance.lateActualTimes}</span></div>}
+                          {attendance.disciplinaryLevel && <div><span style={labelStyle}>{t('ef.sum.disciplinary')}</span> <span style={{ color: 'var(--kbt-text-2)' }}>{attendance.disciplinaryLevel}</span></div>}
+                          {training.minimumHours != null && <div><span style={labelStyle}>{t('ef.sum.trainingMin')}</span> <span style={{ color: 'var(--kbt-text-2)' }}>{training.minimumHours}</span></div>}
+                          {training.actualHours != null && <div><span style={labelStyle}>{t('ef.sum.trainingActual')}</span> <span style={{ color: 'var(--kbt-text-2)' }}>{training.actualHours}</span></div>}
+                          {training.behaviorNote && <div style={{ gridColumn: '1 / -1' }}><span style={labelStyle}>{t('ef.sum.behaviorNote')}</span> <span style={{ color: 'var(--kbt-text-2)' }}>{training.behaviorNote}</span></div>}
                         </div>
                       </div>
                     </div>
@@ -895,11 +892,11 @@ export default function EvaluationFormPage() {
                   {/* Additional Comment — HR4U Part 6 */}
                   {(comment.strengths || comment.improvements || comment.requiredSkills) && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                      <div style={detailTitle}>Additional Comment</div>
+                      <div style={detailTitle}>{t('ef.sum.additionalComment')}</div>
                       <div style={detailCard}>
-                        {comment.strengths && <div><span style={labelStyle}>Strengths</span><p style={commentText}>{comment.strengths}</p></div>}
-                        {comment.improvements && <div style={commentBlock}><span style={labelStyle}>Improvement area</span><p style={commentText}>{comment.improvements}</p></div>}
-                        {comment.requiredSkills && <div style={commentBlock}><span style={labelStyle}>Required skills</span><p style={commentText}>{comment.requiredSkills}</p></div>}
+                        {comment.strengths && <div><span style={labelStyle}>{t('ef.sum.strengths')}</span><p style={commentText}>{comment.strengths}</p></div>}
+                        {comment.improvements && <div style={commentBlock}><span style={labelStyle}>{t('ef.sum.improvementArea')}</span><p style={commentText}>{comment.improvements}</p></div>}
+                        {comment.requiredSkills && <div style={commentBlock}><span style={labelStyle}>{t('ef.sum.requiredSkills')}</span><p style={commentText}>{comment.requiredSkills}</p></div>}
                       </div>
                     </div>
                   )}
