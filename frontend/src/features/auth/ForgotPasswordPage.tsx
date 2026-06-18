@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Calendar, Hash, KeyRound, Loader2, Lock, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Calendar, CheckCircle2, Hash, KeyRound, Loader2, Lock, ShieldCheck } from 'lucide-react'
 import api from '@/lib/api'
 import ThemeToggle from '@/components/ThemeToggle'
 
@@ -30,18 +30,18 @@ export default function ForgotPasswordPage() {
   const navigate = useNavigate()
   const t = useT()
   const urlToken = new URLSearchParams(window.location.search).get('token')
-  const [resetToken, setResetToken] = useState<string | null>(urlToken)
+  // The reset token only ever arrives via the emailed link (?token=), never from
+  // the verify response — handing it to the requester would allow account takeover.
+  const resetToken = urlToken
+  const [sent, setSent] = useState(false)
   const verifyForm = useForm<VerifyData>({ resolver: zodResolver(verifySchema) })
   const passForm = useForm<NewPassData>({ resolver: zodResolver(newPassSchema) })
 
   async function onVerify(data: VerifyData) {
     try {
-      const res = await api.post<{ ok: boolean; token: string | null }>('/auth/forgot-password', data)
-      if (res.data.token) {
-        setResetToken(res.data.token)
-      } else {
-        verifyForm.setError('root', { message: 'Employee number or date of birth is incorrect.' })
-      }
+      // Generic success regardless of match (anti-enumeration); the link is emailed.
+      await api.post('/auth/forgot-password', data)
+      setSent(true)
     } catch {
       verifyForm.setError('root', { message: 'Unable to process the request. Please try again.' })
     }
@@ -67,9 +67,9 @@ export default function ForgotPasswordPage() {
           }}>
             <KeyRound size={22} />
           </div>
-          <h2 style={{ marginTop: 18, fontSize: '1.5rem', fontWeight: 900 }}>{resetToken ? t('cp.setNewTitle') : t('cp.forgotTitle')}</h2>
+          <h2 style={{ marginTop: 18, fontSize: '1.5rem', fontWeight: 900 }}>{resetToken ? t('cp.setNewTitle') : sent ? t('cp.checkEmail') : t('cp.forgotTitle')}</h2>
           <p style={{ marginTop: 7, color: 'var(--kbt-text-3)', lineHeight: 1.55 }}>
-            {resetToken ? t('cp.setNewDesc') : t('cp.forgotDesc')}
+            {resetToken ? t('cp.setNewDesc') : sent ? t('cp.checkEmailDesc') : t('cp.forgotDesc')}
           </p>
         </div>
 
@@ -93,6 +93,10 @@ export default function ForgotPasswordPage() {
                 {t('cp.setPassword')} <ArrowRight size={16} />
               </button>
             </form>
+          ) : sent ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px' }}>
+              <CheckCircle2 size={44} color="var(--m-light-blue)" />
+            </div>
           ) : (
             <form onSubmit={verifyForm.handleSubmit(onVerify)} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {verifyForm.formState.errors.root && <div className="kbt-msg-error">{verifyForm.formState.errors.root.message}</div>}

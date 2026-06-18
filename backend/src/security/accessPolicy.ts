@@ -24,6 +24,7 @@ export type Actor = {
   userId: string
   role: Role
   position: Position | null
+  mustChangePassword?: boolean
 }
 
 export type EvaluationAccess = {

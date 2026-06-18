@@ -33,13 +33,13 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
     const token = verifyToken(header.slice(7))
     const actor = await prisma.user.findUnique({
       where: { id: token.userId },
-      select: { id: true, role: true, position: true },
+      select: { id: true, role: true, position: true, mustChangePassword: true },
     })
     if (!actor) {
       res.status(401).json({ message: 'Invalid or expired token', requestId: req.requestId })
       return
     }
-    req.user = { userId: actor.id, role: actor.role, position: actor.position }
+    req.user = { userId: actor.id, role: actor.role, position: actor.position, mustChangePassword: actor.mustChangePassword }
     next()
   } catch {
     res.status(401).json({ message: 'Invalid or expired token', requestId: req.requestId })
@@ -62,6 +62,22 @@ export async function authorizeSupervisory(req: AuthRequest, res: Response, next
     message: 'Only supervisors, managers or directors can perform this action',
     requestId: req.requestId,
   })
+}
+
+/** Block data access while the account is still on its initial/default password.
+    The only thing such a user may do is change their password (PATCH /auth/me),
+    which is on the un-gated /auth router. This makes the `mustChangePassword`
+    flag a real server-side control rather than an advisory the client can ignore. */
+export function blockIfPasswordChangeRequired(req: AuthRequest, res: Response, next: NextFunction) {
+  if (req.user?.mustChangePassword) {
+    res.status(403).json({
+      code: 'PASSWORD_CHANGE_REQUIRED',
+      message: 'You must change your password before continuing.',
+      requestId: req.requestId,
+    })
+    return
+  }
+  next()
 }
 
 export function requireRole(...roles: Role[]) {

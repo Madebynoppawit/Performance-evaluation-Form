@@ -11,12 +11,12 @@ import {
   saveSummary,
   saveAcknowledgement,
 } from '../controllers/evaluationSectionController'
-import { authenticate, authorizeEvaluation, authorizeSupervisory, requireRole } from '../middleware/auth'
+import { authenticate, authorizeEvaluation, authorizeSupervisory, blockIfPasswordChangeRequired, requireRole } from '../middleware/auth'
 import { Role } from '@prisma/client'
 
 const router = Router()
 
-router.use(authenticate)
+router.use(authenticate, blockIfPasswordChangeRequired)
 
 router.get('/', list)
 router.post('/', authorizeSupervisory, create)

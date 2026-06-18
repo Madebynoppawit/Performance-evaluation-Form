@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import { stats } from '../controllers/dashboardController'
-import { authenticate } from '../middleware/auth'
+import { authenticate, blockIfPasswordChangeRequired } from '../middleware/auth'
 
 const router = Router()
 
-router.use(authenticate)
+router.use(authenticate, blockIfPasswordChangeRequired)
 router.get('/stats', stats)
 
 export default router

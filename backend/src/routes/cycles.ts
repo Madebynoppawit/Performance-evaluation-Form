@@ -1,11 +1,11 @@
 import { Router } from 'express'
 import { list, getOne, create, updateStatus, remove } from '../controllers/cycleController'
-import { authenticate, requireRole } from '../middleware/auth'
+import { authenticate, blockIfPasswordChangeRequired, requireRole } from '../middleware/auth'
 import { MANAGER_GATES } from '../security/accessPolicy'
 
 const router = Router()
 
-router.use(authenticate)
+router.use(authenticate, blockIfPasswordChangeRequired)
 router.get('/', list)
 router.get('/:id', getOne)
 router.post('/', requireRole(...MANAGER_GATES), create)
