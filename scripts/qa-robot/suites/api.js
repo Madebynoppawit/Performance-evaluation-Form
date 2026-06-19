@@ -12,8 +12,13 @@ const cfg = require('../config')
 
 const wait = (page, ms) => page.waitForTimeout(ms)
 
-// Run a fetch inside the page context (avoids Node-level CORS issues)
-function apiFetch(page, path, opts = {}) {
+// Run a fetch inside the app origin. The runner may skip setup when it injects
+// an authenticated storage state, so each request ensures a non-null origin.
+async function apiFetch(page, path, opts = {}) {
+  if (!page.url().startsWith(cfg.baseUrl)) {
+    await page.goto(cfg.baseUrl + '/login', { waitUntil: 'load' })
+    await wait(page, 500)
+  }
   return page.evaluate(
     ({ apiUrl, path, opts }) => fetch(apiUrl + path, {
       headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },

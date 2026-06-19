@@ -5,7 +5,7 @@
 module.exports = {
   // Target app
   baseUrl: process.env.QA_URL || 'http://localhost:5173',
-  apiUrl:  process.env.QA_API  || 'http://localhost:3001',
+  apiUrl:  process.env.QA_API  || 'http://localhost:3001/api',
 
   // Test accounts — must match prisma/seed.cjs
   accounts: {
