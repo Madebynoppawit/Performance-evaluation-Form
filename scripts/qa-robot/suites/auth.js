@@ -172,36 +172,48 @@ module.exports = {
     },
 
     {
-      name: 'Forgot password explains admin initiated reset policy',
+      name: 'Forgot password form has employeeNo, date, and new password inputs',
       async fn(page) {
         await go(page, '/forgot-password')
         await wait(page, 1000)
+        if (await cnt(page, 'input[name="employeeNo"]') === 0) throw new Error('No employee number input on forgot-password page')
+        if (await cnt(page, 'input[type="date"]') === 0) throw new Error('No date of birth input on forgot-password page')
+        if (await cnt(page, 'input[type="password"]') < 2) throw new Error('Forgot-password page should collect and confirm the new password')
+      },
+    },
+
+    {
+      name: 'Forgot password: empty submit shows field-level validation',
+      async fn(page) {
+        await go(page, '/forgot-password')
+        await wait(page, 1000)
+        const submitBtn = page.locator('button[type="submit"]').first()
+        if (await submitBtn.count() === 0) throw new Error('No submit button on forgot-password page')
+        await submitBtn.click()
+        await wait(page, 700)
+        const hasErrors = await page.evaluate(() =>
+          document.body.innerText.match(/required|password|must|match/i) !== null ||
+          document.querySelectorAll('p.kbt-msg-error, [class*="msg-error"]').length > 0
+        )
+        if (!hasErrors) throw new Error('Empty forgot-password form submit shows no validation errors')
+      },
+    },
+
+    {
+      name: 'Forgot password: invalid identity does not crash the page',
+      async fn(page) {
+        await go(page, '/forgot-password')
+        await wait(page, 1000)
+        await page.fill('input[name="employeeNo"]', 'EMP-QATEST-NOPE')
+        await page.fill('input[type="date"]', '1990-01-01')
+        await page.locator('input[type="password"]').nth(0).fill('ResetTest1')
+        await page.locator('input[type="password"]').nth(1).fill('ResetTest1')
+        await page.locator('button[type="submit"]').first().click()
+        await wait(page, 2000)
         const bodyText = await text(page)
-        if (!bodyText.match(/administrator|admin|temporary password|new one/i))
-          throw new Error('Forgot-password page does not explain admin initiated password reset policy')
-      },
-    },
-
-    {
-      name: 'Forgot password has no self-service reset form',
-      async fn(page) {
-        await go(page, '/forgot-password')
-        await wait(page, 1000)
-        const formControls = await cnt(page, 'input, button[type="submit"]')
-        if (formControls > 0) throw new Error('Forgot-password page exposes self-service form controls unexpectedly')
-      },
-    },
-
-    {
-      name: 'Forgot password back link returns to login',
-      async fn(page) {
-        await go(page, '/forgot-password')
-        await wait(page, 1000)
-        const backLink = page.locator('a[href="/login"]').first()
-        if (await backLink.count() === 0) throw new Error('Back to sign in link not found')
-        await backLink.click()
-        await wait(page, 800)
-        if (!page.url().includes('/login')) throw new Error(`Back link did not return to /login, URL: ${page.url()}`)
+        if (bodyText.length < 10) throw new Error('Page went blank after forgot-password submission')
+        if (page.url().includes('/login')) throw new Error('Invalid reset unexpectedly redirected to /login')
+        if (!bodyText.match(/verify|employee|birth|could not/i)) throw new Error('Invalid reset did not show a verification error')
       },
     },
   ],

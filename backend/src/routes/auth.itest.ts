@@ -8,6 +8,7 @@ import assert from 'node:assert/strict'
 import request from 'supertest'
 import { prisma } from '../lib/prisma.js'
 import { createApp } from '../app.js'
+import { hashPassword } from '../utils/hash.js'
 
 const app = createApp()
 const createdEmails: string[] = []
@@ -105,14 +106,52 @@ describe('GET /api/auth/me', () => {
 })
 
 describe('POST /api/auth/forgot-password', () => {
-  test('does not expose account existence or a reset token', async () => {
+  test('returns 400 when identity factors do not match', async () => {
     const res = await request(app)
       .post('/api/auth/forgot-password')
-      .send({ employeeNo: 'NOT-A-REAL-EMPLOYEE', dateOfBirth: '1990-01-01' })
+      .send({
+        employeeNo: 'NOT-A-REAL-EMPLOYEE',
+        dateOfBirth: '1990-01-01',
+        password: 'ResetTest1',
+        confirm: 'ResetTest1',
+      })
 
-    assert.equal(res.status, 200)
-    assert.deepEqual(res.body, { ok: true })
+    assert.equal(res.status, 400)
     assert.equal((res.body as Record<string, unknown>).resetToken, undefined)
+  })
+
+  test('resets password when employee number and date of birth match', async () => {
+    const stamp = Date.now()
+    const email = `itest.reset.${stamp}@amw-ems.com`
+    const employeeNo = `RESET-${stamp}`
+    createdEmails.push(email)
+    await prisma.user.create({
+      data: {
+        email,
+        employeeNo,
+        name: 'Reset Test User',
+        password: await hashPassword('OldPass1'),
+        dateOfBirth: new Date('1990-01-01T00:00:00.000Z'),
+        mustChangePassword: true,
+      },
+    })
+
+    const reset = await request(app)
+      .post('/api/auth/forgot-password')
+      .send({
+        employeeNo,
+        dateOfBirth: '1990-01-01',
+        password: 'NewPass123',
+        confirm: 'NewPass123',
+      })
+    assert.equal(reset.status, 200)
+    assert.deepEqual(reset.body, { ok: true })
+
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ identifier: employeeNo, password: 'NewPass123' })
+    assert.equal(login.status, 200)
+    assert.equal(login.body.user.mustChangePassword, false)
   })
 })
 

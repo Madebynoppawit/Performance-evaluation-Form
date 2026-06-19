@@ -15,7 +15,7 @@ function createRequestId() {
 
 // Login / register need no token and must never be blocked or redirected by
 // a stale session — the login form handles their errors itself.
-const isAuthEndpoint = (url?: string) => !!url && /\/auth\/(login|register)\b/.test(url)
+const isAuthEndpoint = (url?: string) => !!url && /\/auth\/(login|register|forgot-password)\b/.test(url)
 
 api.interceptors.request.use((config) => {
   const auth = useAuthStore.getState()

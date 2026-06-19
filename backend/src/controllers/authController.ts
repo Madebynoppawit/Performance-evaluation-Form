@@ -22,6 +22,16 @@ const registerSchema = z.object({
   department: z.string().optional(),
 })
 
+const forgotPasswordSchema = z.object({
+  employeeNo: z.string().trim().min(1, 'Employee number is required'),
+  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date of birth is required'),
+  password: passwordSchema,
+  confirm: z.string().min(1, 'Confirm password is required'),
+}).strict().refine((d) => d.password === d.confirm, {
+  message: 'Passwords do not match',
+  path: ['confirm'],
+})
+
 export async function login(req: Request, res: Response, next: NextFunction) {
   try {
     const body = loginSchema.parse(req.body)
@@ -66,6 +76,28 @@ export async function register(req: Request, res: Response, next: NextFunction) 
     const body = registerSchema.parse(req.body)
     const result = await authService.register(body)
     res.status(201).json(result)
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function forgotPassword(req: Request, res: Response, next: NextFunction) {
+  try {
+    const body = forgotPasswordSchema.parse(req.body)
+    const result = await authService.resetPasswordWithIdentity(body)
+    recordAuditEventBestEffort({
+      eventType: 'auth_password_self_reset',
+      actor: { userId: result.userId, role: result.role },
+      requestId: req.requestId,
+      method: req.method,
+      path: req.originalUrl,
+      statusCode: 200,
+      targetType: 'user',
+      targetId: result.userId,
+      ip: req.ip,
+      userAgent: req.get('user-agent') ?? null,
+    })
+    res.json({ ok: true })
   } catch (err) {
     next(err)
   }

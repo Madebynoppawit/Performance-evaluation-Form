@@ -84,7 +84,29 @@ export async function updateProfile(
   return safeUser
 }
 
-// Self-service password reset removed: there is no email delivery, so a reset
-// token could not be handed to the user securely. Resets are admin-initiated
-// (resetUserPassword in userService) and the user is then forced to change the
-// password on first login (blockIfPasswordChangeRequired).
+export async function resetPasswordWithIdentity(data: {
+  employeeNo: string
+  dateOfBirth: string
+  password: string
+}) {
+  const employeeNo = data.employeeNo.trim()
+  const user = await prisma.user.findUnique({ where: { employeeNo } })
+  const submittedDob = data.dateOfBirth.slice(0, 10)
+  const storedDob = user?.dateOfBirth ? user.dateOfBirth.toISOString().slice(0, 10) : null
+
+  if (!user || !storedDob || storedDob !== submittedDob) {
+    const err = new Error('Could not verify employee number and date of birth') as Error & { status: number }
+    err.status = 400
+    throw err
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      password: await hashPassword(data.password),
+      mustChangePassword: false,
+    },
+  })
+
+  return { userId: user.id, role: user.role }
+}
