@@ -18,6 +18,11 @@ import api from '@/lib/api'
 import { getTypeLabel } from '@/lib/utils'
 import type { Template } from '@/types'
 
+const toWeight = (value: unknown, fallback = 0) => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
 export default function TemplateBuilderPage() {
   const { id } = useParams<{ id: string }>()
   const qc = useQueryClient()
@@ -28,17 +33,23 @@ export default function TemplateBuilderPage() {
     enabled: !!id,
   })
 
-  const { register, handleSubmit } = useForm<{ name: string; description: string }>()
+  const { register, handleSubmit, reset } = useForm<{ name: string; description: string }>()
 
   // Scoring weights — Goal weight is the remainder (100 − competency − attendance − training).
   const [weights, setWeights] = useState({ competencyWeight: 20, attendanceWeight: 10, trainingWeight: 10 })
   useEffect(() => {
-    if (template) setWeights({
-      competencyWeight: template.competencyWeight,
-      attendanceWeight: template.attendanceWeight,
-      trainingWeight: template.trainingWeight,
+    if (!template) return
+
+    reset({
+      name: template.name,
+      description: template.description ?? '',
     })
-  }, [template?.id])  // eslint-disable-line react-hooks/exhaustive-deps
+    setWeights({
+      competencyWeight: toWeight(template.competencyWeight, 20),
+      attendanceWeight: toWeight(template.attendanceWeight, 10),
+      trainingWeight: toWeight(template.trainingWeight, 10),
+    })
+  }, [reset, template])
 
   const updateMutation = useMutation({
     mutationFn: (data: Partial<Template>) => api.patch(`/templates/${id}`, data),
@@ -128,11 +139,11 @@ export default function TemplateBuilderPage() {
               <div className="amw-field-grid">
                 <label>
                   <span>Template Name</span>
-                  <input {...register('name')} defaultValue={template.name} className="kbt-input" />
+                  <input {...register('name')} className="kbt-input" />
                 </label>
                 <label>
                   <span>Description</span>
-                  <input {...register('description')} defaultValue={template.description ?? ''} className="kbt-input" />
+                  <input {...register('description')} className="kbt-input" />
                 </label>
               </div>
               <div className="amw-form-actions">

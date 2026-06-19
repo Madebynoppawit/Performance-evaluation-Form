@@ -5959,12 +5959,13 @@ body {
   }
 
   .amw-export-popover {
-    position: fixed;
-    left: 12px;
-    right: 12px;
+    position: absolute;
+    left: auto;
+    right: 0;
     top: auto;
-    bottom: 16px;
-    width: auto;
+    bottom: calc(100% + 8px);
+    z-index: 20000;
+    width: min(264px, calc(100vw - 32px));
   }
 
   .amw-eval-command {

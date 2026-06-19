@@ -673,8 +673,8 @@ export default function DataManagementPage() {
     return (
       <div style={{ padding: '48px 24px', textAlign: 'center' }}>
         <Shield size={32} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-        <p style={{ color: 'var(--kbt-text-2)', fontWeight: 700 }}>Admin access required</p>
-        <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.82rem' }}>Only administrators can access Data Management.</p>
+        <p style={{ color: 'var(--kbt-text-2)', fontWeight: 700 }}>Admins only</p>
+        <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.82rem' }}>You do not have permission to access Data Management.</p>
       </div>
     )
   }
