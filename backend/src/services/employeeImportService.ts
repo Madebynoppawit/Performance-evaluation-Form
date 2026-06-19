@@ -114,6 +114,13 @@ export function mapPositionLevel(level: string): Position | null {
 
 function parseDate(value: string): Date | null {
   if (!value) return null
+  const text = value.trim()
+  const slash = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/)
+  if (slash) {
+    const year = Number(slash[3]) > 2400 ? Number(slash[3]) - 543 : Number(slash[3])
+    const d = new Date(Date.UTC(year, Number(slash[2]) - 1, Number(slash[1])))
+    return Number.isNaN(d.getTime()) ? null : d
+  }
   const d = new Date(value)
   return Number.isNaN(d.getTime()) ? null : d
 }

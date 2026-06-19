@@ -153,6 +153,34 @@ describe('POST /api/auth/forgot-password', () => {
     assert.equal(login.status, 200)
     assert.equal(login.body.user.mustChangePassword, false)
   })
+
+  test('accepts imported Birthday sourceData when normalized dateOfBirth is missing', async () => {
+    const stamp = Date.now()
+    const email = `itest.reset.raw.${stamp}@amw-ems.com`
+    const employeeNo = `RAW-${stamp}`
+    createdEmails.push(email)
+    await prisma.user.create({
+      data: {
+        email,
+        employeeNo,
+        name: 'Raw Birthday Reset User',
+        password: await hashPassword('OldPass1'),
+        sourceData: { No: employeeNo, Birthday: '27/05/2003' },
+        mustChangePassword: true,
+      },
+    })
+
+    const reset = await request(app)
+      .post('/api/auth/forgot-password')
+      .send({
+        employeeNo,
+        dateOfBirth: '2003-05-27',
+        password: 'NewPass123',
+        confirm: 'NewPass123',
+      })
+    assert.equal(reset.status, 200)
+    assert.deepEqual(reset.body, { ok: true })
+  })
 })
 
 // ── POST /api/auth/register ───────────────────────────────────────────────────

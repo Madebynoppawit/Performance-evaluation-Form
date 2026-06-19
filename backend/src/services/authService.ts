@@ -2,6 +2,32 @@ import { prisma } from '../lib/prisma'
 import { comparePassword, hashPassword } from '../utils/hash'
 import { signToken } from '../utils/jwt'
 
+function dateKey(value: Date | string | null | undefined) {
+  if (!value) return null
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value.toISOString().slice(0, 10)
+
+  const text = value.trim()
+  const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+  if (iso) return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`
+
+  const slash = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/)
+  if (slash) {
+    const year = Number(slash[3]) > 2400 ? Number(slash[3]) - 543 : Number(slash[3])
+    return `${year}-${slash[2].padStart(2, '0')}-${slash[1].padStart(2, '0')}`
+  }
+
+  const parsed = new Date(text)
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString().slice(0, 10)
+}
+
+function sourceValue(sourceData: unknown, ...keys: string[]) {
+  if (!sourceData || typeof sourceData !== 'object' || Array.isArray(sourceData)) return null
+  const row = sourceData as Record<string, unknown>
+  const hit = Object.keys(row).find((key) => keys.some((wanted) => key.toLowerCase().trim() === wanted.toLowerCase()))
+  const value = hit ? row[hit] : null
+  return typeof value === 'string' ? value : null
+}
+
 export async function login(identifier: string, password: string) {
   // Accept either an employee number or an email (admins/dev accounts have no
   // employee number), so neither group is locked out.
@@ -89,10 +115,12 @@ export async function resetPasswordWithIdentity(data: {
   dateOfBirth: string
   password: string
 }) {
-  const employeeNo = data.employeeNo.trim()
+  const employeeNo = data.employeeNo.trim().replace(/[,\s]/g, '')
   const user = await prisma.user.findUnique({ where: { employeeNo } })
-  const submittedDob = data.dateOfBirth.slice(0, 10)
-  const storedDob = user?.dateOfBirth ? user.dateOfBirth.toISOString().slice(0, 10) : null
+  const submittedDob = dateKey(data.dateOfBirth)
+  const storedDob =
+    dateKey(user?.dateOfBirth) ??
+    dateKey(sourceValue(user?.sourceData, 'Date of Birth', 'DOB', 'Birth Date', 'Birthday'))
 
   if (!user || !storedDob || storedDob !== submittedDob) {
     const err = new Error('Could not verify employee number and date of birth') as Error & { status: number }
