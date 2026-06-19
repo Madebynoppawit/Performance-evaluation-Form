@@ -1,39 +1,50 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Award, CheckCircle2, LockKeyhole, Search, SlidersHorizontal, Star, TrendingUp } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
 import type { Evaluation } from '@/types'
 import EmptyState from '@/components/EmptyState'
 import { SkeletonMetricCard, SkeletonTableRows } from '@/components/Skeleton'
+import { useToast } from '@/components/useToast'
 import { toGpa } from '@/lib/score'
 import { formatDate } from '@/lib/utils'
 import { useT } from '@/i18n/languageContext'
+import type { TranslationKey } from '@/i18n/translations'
 
 type Band = 'top' | 'strong' | 'solid' | 'watch' | 'risk'
 type StatusFilter = 'ALL' | 'OPEN' | 'CLOSED'
+type Grade = NonNullable<Evaluation['performanceGrade']>
 
-const BAND_OPTIONS: Array<{ value: 'ALL' | Band; label: string }> = [
-  { value: 'ALL', label: 'All bands' },
-  { value: 'top', label: 'Exceptional' },
-  { value: 'strong', label: 'Strong' },
-  { value: 'solid', label: 'Solid' },
-  { value: 'watch', label: 'Watch' },
-  { value: 'risk', label: 'Risk' },
+const BAND_KEYS: Record<Band, TranslationKey> = {
+  top: 'cal.bandTop',
+  strong: 'cal.bandStrong',
+  solid: 'cal.bandSolid',
+  watch: 'cal.bandWatch',
+  risk: 'cal.bandRisk',
+}
+
+const BAND_OPTIONS: Array<{ value: 'ALL' | Band; labelKey: TranslationKey }> = [
+  { value: 'ALL', labelKey: 'cal.allBands' },
+  { value: 'top', labelKey: 'cal.bandTop' },
+  { value: 'strong', labelKey: 'cal.bandStrong' },
+  { value: 'solid', labelKey: 'cal.bandSolid' },
+  { value: 'watch', labelKey: 'cal.bandWatch' },
+  { value: 'risk', labelKey: 'cal.bandRisk' },
 ]
 
-const STATUS_OPTIONS: Array<{ value: StatusFilter; label: string }> = [
-  { value: 'ALL', label: 'All statuses' },
-  { value: 'OPEN', label: 'Open' },
-  { value: 'CLOSED', label: 'Closed' },
+const STATUS_OPTIONS: Array<{ value: StatusFilter; labelKey: TranslationKey }> = [
+  { value: 'ALL', labelKey: 'cal.allStatuses' },
+  { value: 'OPEN', labelKey: 'cal.statusOpen' },
+  { value: 'CLOSED', labelKey: 'cal.statusClosed' },
 ]
 
-const GRADE_LABELS: Record<NonNullable<Evaluation['performanceGrade']>, string> = {
-  EXCELLENT: 'Excellent',
-  ABOVE_STANDARD: 'Above Standard',
-  MEETS_STANDARD: 'Meets Standard',
-  ALMOST_STANDARD: 'Almost Standard',
-  BELOW_STANDARD: 'Below Standard',
+const GRADE_KEYS: Record<Grade, TranslationKey> = {
+  EXCELLENT: 'cal.gradeExcellent',
+  ABOVE_STANDARD: 'cal.gradeAboveStandard',
+  MEETS_STANDARD: 'cal.gradeMeetsStandard',
+  ALMOST_STANDARD: 'cal.gradeAlmostStandard',
+  BELOW_STANDARD: 'cal.gradeBelowStandard',
 }
 
 function scoreBand(score: number): Band {
@@ -44,11 +55,7 @@ function scoreBand(score: number): Band {
   return 'risk'
 }
 
-function bandLabel(band: Band) {
-  return BAND_OPTIONS.find((option) => option.value === band)?.label ?? band
-}
-
-function defaultGrade(score: number): NonNullable<Evaluation['performanceGrade']> {
+function defaultGrade(score: number): Grade {
   if (score >= 3.7) return 'EXCELLENT'
   if (score >= 3.2) return 'ABOVE_STANDARD'
   if (score >= 2.6) return 'MEETS_STANDARD'
@@ -58,6 +65,8 @@ function defaultGrade(score: number): NonNullable<Evaluation['performanceGrade']
 
 export default function CalibrationPage() {
   const t = useT()
+  const qc = useQueryClient()
+  const { success, error } = useToast()
   const [search, setSearch] = useState('')
   const [band, setBand] = useState<'ALL' | Band>('ALL')
   const [status, setStatus] = useState<StatusFilter>('ALL')
@@ -65,6 +74,16 @@ export default function CalibrationPage() {
   const { data = [], isLoading, isError, refetch } = useQuery<Evaluation[]>({
     queryKey: ['evaluations'],
     queryFn: () => api.get('/evaluations').then((r) => r.data),
+  })
+
+  const saveGradeMutation = useMutation({
+    mutationFn: ({ id, grade }: { id: string; grade: Grade }) =>
+      api.patch(`/evaluations/${id}/summary`, { performanceGrade: grade }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['evaluations'] })
+      success(t('cal.gradeSaved'))
+    },
+    onError: () => error(t('cal.gradeSaveFailed')),
   })
 
   const scored = useMemo(
@@ -162,10 +181,10 @@ export default function CalibrationPage() {
             />
           </div>
           <select className="kbt-input" value={band} onChange={(event) => setBand(event.target.value as 'ALL' | Band)} style={{ width: 150, height: 32 }}>
-            {BAND_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            {BAND_OPTIONS.map((option) => <option key={option.value} value={option.value}>{t(option.labelKey)}</option>)}
           </select>
           <select className="kbt-input" value={status} onChange={(event) => setStatus(event.target.value as StatusFilter)} style={{ width: 150, height: 32 }}>
-            {STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            {STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{t(option.labelKey)}</option>)}
           </select>
         </div>
 
@@ -182,46 +201,57 @@ export default function CalibrationPage() {
           <table className="kbt-table">
             <thead>
               <tr>
-                <th>Employee</th>
-                <th>Department</th>
-                <th>Score</th>
-                <th>Band</th>
-                <th>Final Grade</th>
-                <th>Status</th>
-                <th>Action</th>
+                <th>{t('cal.colEmployee')}</th>
+                <th>{t('cal.colDepartment')}</th>
+                <th>{t('cal.colScore')}</th>
+                <th>{t('cal.band')}</th>
+                <th>{t('cal.finalGrade')}</th>
+                <th>{t('cal.colStatus')}</th>
+                <th>{t('cal.colAction')}</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((evaluation) => (
-                <tr key={evaluation.id}>
-                  <td>
-                    <strong>{evaluation.evaluatee?.name ?? evaluation.evaluateeName ?? evaluation.evaluateeId}</strong>
-                    <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.75rem', marginTop: 2 }}>{evaluation.cycle?.name ?? formatDate(evaluation.updatedAt)}</p>
-                  </td>
-                  <td>{evaluation.evaluatee?.department ?? '-'}</td>
-                  <td><span className="kbt-score-value">{evaluation.gpa.toFixed(2)}</span></td>
-                  <td><span className="kbt-badge-info">{bandLabel(evaluation.band)}</span></td>
-                  <td>
-                    <select className="kbt-input" value={evaluation.grade} aria-label={`Final grade for ${evaluation.evaluatee?.name ?? evaluation.id}`} style={{ minWidth: 150, height: 30 }}>
-                      {Object.entries(GRADE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                    </select>
-                  </td>
-                  <td>
-                    <span className={['REVIEWED', 'CLOSED'].includes(evaluation.status) ? 'kbt-badge-success' : 'kbt-badge-warning'}>
-                      {['REVIEWED', 'CLOSED'].includes(evaluation.status) ? 'Locked' : 'Open'}
-                    </span>
-                  </td>
-                  <td>
-                    <Link to={`/evaluations/${evaluation.id}`} className="kbt-btn-ghost" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem' }}>
-                      Open
-                    </Link>
-                  </td>
-                </tr>
-              ))}
+              {filtered.map((evaluation) => {
+                const isLocked = ['REVIEWED', 'CLOSED'].includes(evaluation.status)
+                const savingThis = saveGradeMutation.isPending && saveGradeMutation.variables?.id === evaluation.id
+                return (
+                  <tr key={evaluation.id}>
+                    <td>
+                      <strong>{evaluation.evaluatee?.name ?? evaluation.evaluateeName ?? evaluation.evaluateeId}</strong>
+                      <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.75rem', marginTop: 2 }}>{evaluation.cycle?.name ?? formatDate(evaluation.updatedAt)}</p>
+                    </td>
+                    <td>{evaluation.evaluatee?.department ?? '-'}</td>
+                    <td><span className="kbt-score-value">{evaluation.gpa.toFixed(2)}</span></td>
+                    <td><span className="kbt-badge-info">{t(BAND_KEYS[evaluation.band])}</span></td>
+                    <td>
+                      <select
+                        className="kbt-input"
+                        value={evaluation.grade}
+                        disabled={isLocked || savingThis}
+                        aria-label={`${t('cal.finalGrade')} — ${evaluation.evaluatee?.name ?? evaluation.id}`}
+                        onChange={(event) => saveGradeMutation.mutate({ id: evaluation.id, grade: event.target.value as Grade })}
+                        style={{ minWidth: 150, height: 30, opacity: isLocked ? 0.6 : 1 }}
+                      >
+                        {Object.entries(GRADE_KEYS).map(([value, key]) => <option key={value} value={value}>{t(key)}</option>)}
+                      </select>
+                    </td>
+                    <td>
+                      <span className={isLocked ? 'kbt-badge-success' : 'kbt-badge-warning'}>
+                        {isLocked ? t('cal.rowLocked') : t('cal.rowOpen')}
+                      </span>
+                    </td>
+                    <td>
+                      <Link to={`/evaluations/${evaluation.id}`} className="kbt-btn-ghost" style={{ height: 28, padding: '0 10px', fontSize: '0.75rem' }}>
+                        {t('cal.openEval')}
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })}
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={7}>
-                    <EmptyState icon={CheckCircle2} title="No matching calibration rows" description="Adjust search, band, or status filters." />
+                    <EmptyState icon={CheckCircle2} title={t('cal.noMatch')} description={t('cal.noMatchDesc')} />
                   </td>
                 </tr>
               )}
