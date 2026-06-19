@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import axios from 'axios'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CalendarDays, KeyRound, Loader2, Lock, ShieldCheck, UserRound } from 'lucide-react'
 import api from '@/lib/api'
@@ -30,7 +31,14 @@ export default function ForgotPasswordPage() {
     try {
       await api.post('/auth/forgot-password', data)
       navigate('/login', { replace: true, state: { passwordReset: true } })
-    } catch {
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 429) {
+        const message = typeof error.response.data?.message === 'string'
+          ? error.response.data.message
+          : 'Too many password reset attempts. Please wait a few minutes and try again.'
+        setError('root', { message })
+        return
+      }
       setError('root', { message: 'Could not verify your employee number and date of birth.' })
     }
   }
