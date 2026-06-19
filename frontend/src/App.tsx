@@ -19,6 +19,7 @@ const TemplateListPage    = lazy(() => import('@/features/templates/TemplateList
 const TemplateBuilderPage = lazy(() => import('@/features/templates/TemplateBuilderPage'))
 const CycleListPage       = lazy(() => import('@/features/cycles/CycleListPage'))
 const ReportsPage         = lazy(() => import('@/features/reports/ReportsPage'))
+const CalibrationPage     = lazy(() => import('@/features/calibration/CalibrationPage'))
 const UserManagementPage  = lazy(() => import('@/features/users/UserManagementPage'))
 const DataManagementPage  = lazy(() => import('@/features/data/DataManagementPage'))
 const AccountPage         = lazy(() => import('@/features/account/AccountPage'))
@@ -88,6 +89,8 @@ export default function App() {
             <Route path="templates/:id" element={<TemplateBuilderPage />} />
             <Route path="cycles" element={<CycleListPage />} />
             <Route path="reports" element={<ReportsPage />} />
+            <Route path="calibration" element={<CalibrationPage />} />
+            <Route path="calibrate" element={<CalibrationPage />} />
             <Route path="users" element={<UserManagementPage />} />
             <Route path="data" element={<DataManagementPage />} />
             <Route path="account" element={<AccountPage />} />

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { BarChart2, BookOpen, ClipboardList, Database, FileJson2, LayoutDashboard, LayoutTemplate, RefreshCw, Settings, UserCog, UserRound } from 'lucide-react'
+import { BarChart2, BookOpen, ClipboardList, Database, FileJson2, LayoutDashboard, LayoutTemplate, RefreshCw, Settings, SlidersHorizontal, UserCog, UserRound } from 'lucide-react'
 import { APP_VERSION } from '@/config/release'
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/i18n/languageContext'
@@ -12,6 +12,7 @@ const workspaceNav = [
   { to: '/templates', labelKey: 'nav.templates', subKey: 'nav.templates.sub', icon: LayoutTemplate },
   { to: '/cycles', labelKey: 'nav.cycles', subKey: 'nav.cycles.sub', icon: RefreshCw },
   { to: '/reports', labelKey: 'nav.reports', subKey: 'nav.reports.sub', icon: BarChart2 },
+  { to: '/calibration', labelKey: 'nav.calibration', subKey: 'nav.calibration.sub', icon: SlidersHorizontal },
 ] as const
 
 const userNav = [
