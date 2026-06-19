@@ -8,7 +8,10 @@ function dateKey(value: Date | string | null | undefined) {
 
   const text = value.trim()
   const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
-  if (iso) return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`
+  if (iso) {
+    const year = Number(iso[1]) > 2400 ? Number(iso[1]) - 543 : Number(iso[1])
+    return `${year}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`
+  }
 
   const slash = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/)
   if (slash) {
