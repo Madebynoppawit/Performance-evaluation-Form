@@ -1846,25 +1846,52 @@ body,
     margin-top: 30px;
   }
   .amw-status-tile {
-    padding: 13px;
-    border-radius: 12px;
-    border: 1px solid var(--kbt-border);
-    background: var(--control-bg);
+    position: relative;
+    padding: 15px 14px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(92, 86, 144, 0.18);
+    background: linear-gradient(160deg, rgba(92, 86, 144, 0.09), rgba(92, 86, 144, 0.02));
+    overflow: hidden;
+    transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.3, 1), border-color 0.28s ease, box-shadow 0.28s ease;
+  }
+  .amw-status-tile::after {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, currentColor, transparent);
+    opacity: 0;
+    transition: opacity 0.28s ease;
+  }
+  .amw-status-tile:hover {
+    transform: translateY(-3px);
+    border-color: rgba(150, 144, 196, 0.42);
+    box-shadow: 0 14px 34px -18px rgba(0, 0, 0, 0.65);
+  }
+  .amw-status-tile:hover::after { opacity: 0.5; }
+  .amw-status-tile-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    margin-bottom: 12px;
   }
   .amw-status-tile strong {
     display: block;
     color: var(--kbt-text);
     font-family: 'JetBrains Mono', monospace;
-    font-size: 1.2rem;
+    font-size: 1.32rem;
     line-height: 1;
   }
-  .amw-status-tile span {
+  .amw-status-tile-label {
     display: block;
     margin-top: 7px;
     color: var(--kbt-text-3);
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     font-weight: 800;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
   }
   .amw-login-form-card {
@@ -2123,7 +2150,11 @@ body,
     text-transform: uppercase;
   }
   .amw-demo-login-header code {
-    color: var(--kbt-text-2);
+    padding: 3px 9px;
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--m-light-blue) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--m-light-blue) 26%, transparent);
+    color: color-mix(in srgb, var(--m-light-blue) 92%, white);
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.6875rem;
     letter-spacing: 0;
@@ -2135,21 +2166,34 @@ body,
     gap: 8px;
   }
   .amw-demo-account {
+    position: relative;
     min-height: 66px;
-    padding: 10px;
+    padding: 11px;
     border: 1px solid var(--kbt-border);
-    border-radius: 9px;
-    background: var(--control-bg);
+    border-radius: 11px;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--m-light-blue) 5%, transparent), transparent);
     color: var(--kbt-text);
     text-align: left;
     cursor: pointer;
-    transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+    overflow: hidden;
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  }
+  .amw-demo-account::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--m-light-blue), transparent);
+    opacity: 0;
+    transition: opacity 0.18s ease;
   }
   .amw-demo-account:hover {
-    transform: translateY(-1px);
-    border-color: color-mix(in srgb, var(--m-light-blue) 45%, var(--kbt-border));
-    background: color-mix(in srgb, var(--control-bg) 82%, var(--m-light-blue));
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--m-light-blue) 50%, var(--kbt-border));
+    background: color-mix(in srgb, var(--control-bg) 80%, var(--m-light-blue));
+    box-shadow: 0 12px 26px -16px rgba(0, 0, 0, 0.6);
   }
+  .amw-demo-account:hover::before { opacity: 0.7; }
   .amw-demo-account strong {
     display: block;
     color: var(--m-light-blue);
@@ -4313,7 +4357,8 @@ body,
     .amw-login {
       grid-template-columns: 1fr;
       gap: 12px;
-      padding: 14px;
+      /* Clear the fixed theme toggle (top:18) so it doesn't overlap the panel. */
+      padding: 66px 14px 14px;
     }
     .amw-login-brand,
     .amw-login-panel {

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, KeyRound, Pencil, Plus, Search, ShieldAlert, Trash2, Upload, UserCog, X } from 'lucide-react'
+import { CheckCircle2, Download, KeyRound, Pencil, Plus, Search, ShieldAlert, Trash2, Upload, UserCog, X } from 'lucide-react'
 import api from '@/lib/api'
 import type { Position, Role } from '@/types'
 import { useAuth } from '@/hooks/useAuth'
@@ -35,6 +35,19 @@ interface ImportSummary {
   errors: { row: number; reason: string; employeeNo?: string; email?: string }[]
   added: { employeeNo: string; name: string }[]
   missing: { employeeNo: string; name: string }[]
+  credentials: { loginId: string; name: string; tempPassword: string }[]
+}
+
+function downloadCredentialsCsv(credentials: { loginId: string; name: string; tempPassword: string }[]) {
+  const rows = [['Login (employee no / email)', 'Name', 'Temporary password'], ...credentials.map(c => [c.loginId, c.name, c.tempPassword])]
+  const csv = rows.map(r => r.map(v => `"${v.replace(/"/g, '""')}"`).join(',')).join('\n')
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `amw-temp-credentials-${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 const ROLE_OPTIONS: Role[] = [
@@ -615,6 +628,15 @@ export default function UserManagementPage() {
                           <span style={{ color: 'var(--kbt-text-2)' }}>{e.reason}{e.email ? ` (${e.email})` : ''}</span>
                         </div>
                       ))}
+                    </div>
+                  )}
+
+                  {importResult.credentials && importResult.credentials.length > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--kbt-border)', background: 'rgba(150,144,196,0.08)' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--kbt-text-2)', lineHeight: 1.5 }}>{t('users.credentialsHint')}</span>
+                      <button type="button" onClick={() => downloadCredentialsCsv(importResult.credentials)} className="kbt-btn-primary" style={{ flexShrink: 0, gap: 6 }}>
+                        <Download size={14} /> {t('users.downloadCredentials')}
+                      </button>
                     </div>
                   )}
 
