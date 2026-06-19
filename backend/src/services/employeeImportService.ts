@@ -1,7 +1,7 @@
 import { Position, Role, Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { hashPassword } from '../utils/hash'
-import { env } from '../config/env'
+import { generateTempPassword } from '../utils/tempPassword'
 
 /** Supervisory positions get the MANAGER access role on import; everyone else
     is a plain EMPLOYEE. (Admin/Developer are never assigned by import.) */
@@ -40,6 +40,15 @@ export interface ImportSummary {
   added: ImportPerson[]
   /** In the database but absent from this file — likely resigned/left. */
   missing: ImportPerson[]
+  /** One-time temporary login credentials for the users created this run, for
+      the admin to distribute. Each is unique (no shared default password). */
+  credentials: ImportCredential[]
+}
+
+export interface ImportCredential {
+  loginId: string
+  name: string
+  tempPassword: string
 }
 
 /** Parse CSV/TSV text into row objects keyed by the (trimmed) header names. */
@@ -117,12 +126,10 @@ export async function importEmployees(
   const rows = parseDelimited(text)
   const errors: ImportRowError[] = []
   const added: ImportPerson[] = []
+  const credentials: ImportCredential[] = []
   const fileEmployeeNos: string[] = []
   let created = 0
   let updated = 0
-  // Everyone imported gets the same initial password and must change it on
-  // first login. Hash once per run.
-  const defaultPasswordHash = await hashPassword(env.EMPLOYEE_DEFAULT_PASSWORD)
 
   for (let i = 0; i < rows.length; i += 1) {
     const raw = rows[i]
@@ -163,18 +170,20 @@ export async function importEmployees(
           await prisma.user.update({ where: { employeeNo }, data: preserve ? updateData : { ...updateData, role } })
           updated += 1
         } else {
+          const tempPassword = generateTempPassword()
           await prisma.user.create({
             data: {
               ...data,
               email: email || `emp.${employeeNo}@import.local`,
               employeeNo,
               role,
-              password: defaultPasswordHash,
+              password: await hashPassword(tempPassword),
               mustChangePassword: true,
             },
           })
           created += 1
           added.push({ employeeNo, name })
+          credentials.push({ loginId: employeeNo, name, tempPassword })
         }
       } else {
         const existing = await prisma.user.findUnique({ where: { email }, select: { id: true, role: true } })
@@ -183,10 +192,12 @@ export async function importEmployees(
           await prisma.user.update({ where: { email }, data: preserve ? updateData : { ...updateData, role } })
           updated += 1
         } else {
+          const tempPassword = generateTempPassword()
           await prisma.user.create({
-            data: { ...data, email, role, password: defaultPasswordHash, mustChangePassword: true },
+            data: { ...data, email, role, password: await hashPassword(tempPassword), mustChangePassword: true },
           })
           created += 1
+          credentials.push({ loginId: email, name, tempPassword })
         }
       }
     } catch (err) {
@@ -222,7 +233,7 @@ export async function importEmployees(
     : []
   const missing: ImportPerson[] = missingRows.map(m => ({ employeeNo: m.employeeNo ?? '', name: m.name }))
 
-  return { importId: log.id, totalRows: rows.length, created, updated, failed: errors.length, errors, added, missing }
+  return { importId: log.id, totalRows: rows.length, created, updated, failed: errors.length, errors, added, missing, credentials }
 }
 
 export function getImportHistory() {

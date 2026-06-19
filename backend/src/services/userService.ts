@@ -1,7 +1,7 @@
 import { prisma } from '../lib/prisma'
 import { Role, Position } from '@prisma/client'
 import { hashPassword } from '../utils/hash'
-import { env } from '../config/env'
+import { generateTempPassword } from '../utils/tempPassword'
 
 /** Minimal user directory — id, name, role, position, department only.
  *  Accessible by any authenticated role (used for evaluation create dropdowns). */
@@ -96,14 +96,17 @@ export class LastAdminError extends Error {
   constructor() { super('LAST_ADMIN') }
 }
 
-/** Admin action: reset a user back to the shared default password and force a
-    change on their next login. Returns the default password for display. */
+/** Admin action: reset a user to a fresh, unique temporary password and force a
+    change on their next login. Returns the plaintext once so the admin can hand
+    it to the user. No shared default — knowing one temp password reveals nothing
+    about other accounts. */
 export async function resetPassword(id: string) {
+  const tempPassword = generateTempPassword()
   await prisma.user.update({
     where: { id },
-    data: { password: await hashPassword(env.EMPLOYEE_DEFAULT_PASSWORD), mustChangePassword: true },
+    data: { password: await hashPassword(tempPassword), mustChangePassword: true },
   })
-  return { defaultPassword: env.EMPLOYEE_DEFAULT_PASSWORD }
+  return { defaultPassword: tempPassword }
 }
 
 export async function deleteUser(id: string) {
