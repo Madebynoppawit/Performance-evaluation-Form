@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, CheckCircle2, Hash, HelpCircle, Loader2, Lock, ShieldCheck } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Hash, HelpCircle, Loader2, Lock, RefreshCw, ShieldCheck } from 'lucide-react'
 import api from '@/lib/api'
 import ThemeToggle from '@/components/ThemeToggle'
 import { useAuthStore } from './authStore'
@@ -80,15 +80,17 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="amw-status-grid">
+          <div className="amw-status-grid" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
             {[
-              { value: '360', label: 'Review ready', color: 'var(--sap-blue)' },
-              { value: '5.00', label: 'Score scale', color: 'var(--amw-red)' },
-              { value: 'RBAC', label: 'Access guard', color: 'var(--m-light-blue)' },
+              { icon: RefreshCw, value: '360°', label: 'Review ready', color: 'var(--sap-blue)' },
+              { icon: ShieldCheck, value: 'RBAC', label: 'Access guard', color: 'var(--m-light-blue)' },
             ].map((item, i) => (
-              <div key={item.label} className={`amw-status-tile kbt-animate-up kbt-stagger-${i + 1}`} style={{ borderColor: 'rgba(92,86,144,0.18)', background: 'rgba(92,86,144,0.05)' }}>
+              <div key={item.label} className={`amw-status-tile kbt-animate-up kbt-stagger-${i + 1}`}>
+                <span className="amw-status-tile-icon" style={{ color: item.color, background: `color-mix(in srgb, ${item.color} 14%, transparent)` }}>
+                  <item.icon size={15} />
+                </span>
                 <strong style={{ color: item.color }}>{item.value}</strong>
-                <span>{item.label}</span>
+                <span className="amw-status-tile-label">{item.label}</span>
               </div>
             ))}
           </div>
