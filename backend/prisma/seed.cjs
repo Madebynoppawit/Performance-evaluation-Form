@@ -18,6 +18,8 @@ async function main() {
       password: hash,
       role: Role.DEVELOPER,
       department: 'Platform',
+      employeeNo: 'DEV-001',
+      dateOfBirth: new Date('1990-01-01'),
       mustChangePassword: false,
     },
     create: {
@@ -26,6 +28,8 @@ async function main() {
       password: hash,
       role: Role.DEVELOPER,
       department: 'Platform',
+      employeeNo: 'DEV-001',
+      dateOfBirth: new Date('1990-01-01'),
     },
   })
 
@@ -37,6 +41,8 @@ async function main() {
       role: Role.ADMIN,
       department: 'Executive',
       position: 'MANAGING_DIRECTOR',
+      employeeNo: 'ADM-001',
+      dateOfBirth: new Date('1990-01-01'),
       mustChangePassword: false,
     },
     create: {
@@ -46,6 +52,8 @@ async function main() {
       role: Role.ADMIN,
       department: 'Executive',
       position: 'MANAGING_DIRECTOR',
+      employeeNo: 'ADM-001',
+      dateOfBirth: new Date('1990-01-01'),
     },
   })
 
@@ -57,6 +65,8 @@ async function main() {
       role: Role.MANAGER,
       position: 'MANAGER',
       department: 'Engineering',
+      employeeNo: 'MGR-001',
+      dateOfBirth: new Date('1990-01-01'),
       mustChangePassword: false,
     },
     create: {
@@ -67,6 +77,7 @@ async function main() {
       position: 'MANAGER',
       department: 'Engineering',
       employeeNo: 'MGR-001',
+      dateOfBirth: new Date('1990-01-01'),
     },
   })
 
@@ -78,6 +89,8 @@ async function main() {
       role: Role.MANAGER,
       position: 'SUPERVISOR',
       department: 'Production',
+      employeeNo: 'SUP-001',
+      dateOfBirth: new Date('1990-01-01'),
       managerId: manager.id,
       mustChangePassword: false,
     },
@@ -89,6 +102,7 @@ async function main() {
       position: 'SUPERVISOR',
       department: 'Production',
       employeeNo: 'SUP-001',
+      dateOfBirth: new Date('1990-01-01'),
       managerId: manager.id,
     },
   })
@@ -101,6 +115,8 @@ async function main() {
       role: Role.EMPLOYEE,
       position: 'OFFICER',
       department: 'Operations',
+      employeeNo: 'OFF-001',
+      dateOfBirth: new Date('1990-01-01'),
       managerId: manager.id,
       mustChangePassword: false,
     },
@@ -112,6 +128,7 @@ async function main() {
       position: 'OFFICER',
       department: 'Operations',
       employeeNo: 'OFF-001',
+      dateOfBirth: new Date('1990-01-01'),
       managerId: manager.id,
     },
   })
