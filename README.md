@@ -7,7 +7,7 @@
 Enterprise performance review platform for goal setting, competency scoring, attendance, salary review, acknowledgements, reporting, and governed exports.
 
 [![CI](https://github.com/Madebynoppawit/Performance-evaluation-Form/actions/workflows/ci.yml/badge.svg)](https://github.com/Madebynoppawit/Performance-evaluation-Form/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-0.2.0--rc.1-0a6ed1?style=flat-square)](https://github.com/Madebynoppawit/Performance-evaluation-Form/releases)
+[![Version](https://img.shields.io/badge/version-1.4.4-0a6ed1?style=flat-square)](https://github.com/Madebynoppawit/Performance-evaluation-Form/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Express](https://img.shields.io/badge/Express-4-111827?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
@@ -20,7 +20,9 @@ Enterprise performance review platform for goal setting, competency scoring, att
 
 ## Current Release
 
-`v0.2.0-rc.1` is the requirement-aligned release candidate for internal trial usage.
+`v1.4.4` — configurable scoring weights, GPA-style final grades, an admin/HR calibration
+workspace, identity-based password reset, and per-user temporary passwords. See the
+[Changelog](CHANGELOG.md) for the full history.
 
 | Flavor | Purpose | Default |
 |---|---|---:|
@@ -50,6 +52,7 @@ AMW Performance Evaluation System turns the company's appraisal forms into a gov
 | Templates | Reusable review structure — buildable by Supervisor / Manager / Director and admins |
 | Cycles | Review period setup and lifecycle management |
 | Reports | Summary analytics, department breakdowns, audit-aware exports |
+| Calibration | Admin/HR workspace to review scores and lock final GPA-style grades before cycle closure |
 | Users | Developer/Admin user management; every user can self-edit their own profile |
 | Access Control | `DEVELOPER` super-role, `ADMIN`, and position-based create permissions |
 | Localization | Whole-app Thai / English / French switching |
@@ -69,20 +72,65 @@ Regenerate these assets with `npm run screenshots:readme` while the frontend and
 
 ## Architecture
 
-```text
-Browser
-  React 18 + TypeScript + Vite
-  TanStack Query + Zustand + React Hook Form
-        |                         (prod: served by nginx, which proxies /api)
-        | REST /api/*
-        v
-Express API
-  JWT Auth + RBAC (Developer/Admin/position-based) + Zod validation
-  Audit log + rate limit + request IDs
-        |
-        | Prisma ORM
-        v
-PostgreSQL  (evaluation workflow: cycles, scores, sign-offs, audit)
+```mermaid
+flowchart TB
+    subgraph Client["🖥️  Browser — React 18 · TypeScript · Vite"]
+        UI["TanStack Query · Zustand · React Hook Form"]
+        I18N["i18n — Thai / English / French"]
+    end
+
+    subgraph Edge["🌐  nginx (production)"]
+        SPA["Static SPA + /api reverse proxy"]
+    end
+
+    subgraph Server["⚙️  Express API — Node.js"]
+        MW["Middleware: JWT Auth · RBAC · Zod · Rate limit · Audit log · Request IDs"]
+        RT["Routes: auth · evaluations · templates · cycles · reports · users"]
+        MW --> RT
+    end
+
+    DB[("🐘  PostgreSQL<br/>cycles · scores · sign-offs · audit")]
+
+    Client -- "REST /api/*" --> Edge --> Server
+    Server -- "Prisma ORM" --> DB
+    Server -. "Swagger / OpenAPI" .-> Client
+```
+
+### Evaluation Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT: create (Supervisor+ / Admin)
+    DRAFT --> IN_PROGRESS: fill sections (goals, competency, attendance, training, comment)
+    IN_PROGRESS --> SUBMITTED: submit (Evaluator)
+    SUBMITTED --> REVIEWED: review (Reviewer / MD)
+    REVIEWED --> CLOSED: acknowledge + calibrate grade (Admin / HR)
+    CLOSED --> [*]
+```
+
+### Access Control (RBAC)
+
+```mermaid
+flowchart LR
+    DEV["DEVELOPER<br/>(super-role)"] ==> ALL["Everything"]
+    ADMIN["ADMIN"] --> UM["User management"]
+    ADMIN --> CAL["Calibrate final grades"]
+    ADMIN --> DEL["Delete evaluations"]
+    SUP["Supervisor · Manager<br/>Director · MD"] --> CRE["Create evaluations"]
+    SUP --> TPL["Build templates"]
+    SUP --> EDT["Edit own evaluations"]
+    EMP["Employee · Staff"] --> SELF["Self profile + view own"]
+```
+
+### Scoring Model (GPA-style)
+
+```mermaid
+flowchart LR
+    G["Goal Setting<br/>60–70%"] --> T(("Weighted<br/>Total 1–5"))
+    C["Competency / Evaluation<br/>20%"] --> T
+    A["Attendance<br/>10%"] --> T
+    R["Training<br/>0–10%"] --> T
+    T --> GPA["Final Grade<br/>= score − 1<br/>GPA 0–4"]
 ```
 
 ## Tech Stack
@@ -280,7 +328,7 @@ npm run test:integration
 Run `npm run test:integration:setup` again after adding or changing Prisma
 migrations or seed data.
 
-Latest local verification for `v0.2.0-rc.1`: passed.
+Latest local verification for `v1.4.4`: passed (backend 35/35, QA Robot 136/136, functional write-flow audit 28/28).
 
 ## API Snapshot
 
@@ -296,6 +344,7 @@ Latest local verification for `v0.2.0-rc.1`: passed.
 | GET | `/api/evaluations` | Bearer | List evaluations scoped by role |
 | POST | `/api/evaluations` | Supervisory+ | Create evaluation (Supervisor / Manager / Director / Admin) |
 | DELETE | `/api/evaluations/:id` | Admin | Delete evaluation |
+| PATCH | `/api/evaluations/:id/grade` | Admin/HR (calibrate) | Set final calibrated grade |
 | POST | `/api/templates` | Supervisory+ | Build a template |
 | GET | `/api/reports/summary` | Manager/Admin | Summary reporting |
 | GET | `/api/users` | Admin/Developer | User management (create/edit/delete) |
