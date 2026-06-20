@@ -3,8 +3,8 @@ import type { ReactNode } from 'react'
 import ThemeToggle from '@/components/ThemeToggle'
 import Toggle from '@/components/Toggle'
 import { usePreferences, type Preferences } from '@/hooks/usePreferences'
-import { useT } from '@/i18n/languageContext'
-import type { TranslationKey } from '@/i18n/translations'
+import { useT, useLanguage } from '@/i18n/languageContext'
+import type { Locale, TranslationKey } from '@/i18n/translations'
 
 const WORKSPACE_OPTS = [
   { value: 'dashboard', labelKey: 'opt.workspace.dashboard' },
@@ -26,6 +26,7 @@ const DEADLINE_OPTS = [
 
 export default function SettingsPage() {
   const { prefs, update } = usePreferences()
+  const { locale, setLocale } = useLanguage()
   const t = useT()
 
   function Row({ icon, label, hint, control }: { icon: ReactNode; label: string; hint: string; control: ReactNode }) {
@@ -88,7 +89,15 @@ export default function SettingsPage() {
             <Row icon={<Monitor size={16} />} label={t('set.defaultWorkspace')} hint={t('set.defaultWorkspaceHint')}
               control={<Select field="defaultWorkspace" options={WORKSPACE_OPTS} />} />
             <Row icon={<Languages size={16} />} label={t('set.language')} hint={t('set.languageHint')}
-              control={<Select field="language" options={LANGUAGE_OPTS} />} />
+              control={
+                <select
+                  className="kbt-select amw-settings-select"
+                  value={locale}
+                  onChange={e => setLocale(e.target.value as Locale)}
+                >
+                  {LANGUAGE_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              } />
             <Row icon={<UserCog size={16} />} label={t('set.roleView')} hint={t('set.roleViewHint')}
               control={<span className="amw-settings-static">{t('set.roleViewStatic')}</span>} />
           </div>

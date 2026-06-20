@@ -5,7 +5,14 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, CheckCircle2, Hash, HelpCircle, Loader2, Lock, RefreshCw, ShieldCheck } from 'lucide-react'
 import api from '@/lib/api'
 import ThemeToggle from '@/components/ThemeToggle'
+import { usePreferences } from '@/hooks/usePreferences'
 import { useAuthStore } from './authStore'
+
+const WORKSPACE_PATH: Record<string, string> = {
+  dashboard: '/',
+  evaluations: '/evaluations',
+  reports: '/reports',
+}
 
 const schema = z.object({
   identifier: z.string().trim().min(1, 'Enter your employee number or email'),
@@ -24,6 +31,7 @@ const DEMO_ACCOUNTS = [
 export default function LoginPage() {
   const navigate = useNavigate()
   const setAuth = useAuthStore((s) => s.setAuth)
+  const { prefs } = usePreferences()
   const locationState = (window.history.state?.usr ?? {}) as { passwordReset?: boolean }
 
   const { register, handleSubmit, setError, setValue, formState: { errors, isSubmitting } } =
@@ -33,7 +41,7 @@ export default function LoginPage() {
     try {
       const res = await api.post('/auth/login', data)
       setAuth(res.data.user, res.data.token)
-      navigate('/')
+      navigate(WORKSPACE_PATH[prefs.defaultWorkspace] ?? '/')
     } catch {
       setError('root', { message: 'Incorrect employee number, email, or password' })
     }

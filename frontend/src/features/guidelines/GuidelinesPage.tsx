@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import {
   Command,
   Compass,
@@ -8,6 +7,7 @@ import {
   Workflow,
   type LucideIcon,
 } from 'lucide-react'
+import { useLanguage } from '@/i18n/languageContext'
 
 type Locale = 'th' | 'en' | 'fr'
 
@@ -256,21 +256,9 @@ const GUIDE: Record<Locale, Content> = {
   },
 }
 
-const STORAGE_KEY = 'guide-locale'
-
-function getInitialLocale(): Locale {
-  if (typeof window === 'undefined') return 'th'
-  const stored = window.localStorage.getItem(STORAGE_KEY)
-  return stored === 'th' || stored === 'en' || stored === 'fr' ? stored : 'th'
-}
-
 export default function GuidelinesPage() {
-  const [locale, setLocale] = useState<Locale>(getInitialLocale)
-
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, locale)
-  }, [locale])
-
+  // Follows the app-wide language so the guide stays in sync with the rest of the UI.
+  const { locale, setLocale } = useLanguage()
   const content = GUIDE[locale]
 
   return (
