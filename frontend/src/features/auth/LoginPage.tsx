@@ -18,6 +18,7 @@ const DEMO_ACCOUNTS = [
   { label: 'Admin', hint: 'Manage users, reports, cycles', identifier: 'admin@amw-ems.com' },
   { label: 'Manager', hint: 'Review team evaluations', identifier: 'manager.eng@amw-ems.com' },
   { label: 'Employee', hint: 'Complete own review', identifier: 'officer1@amw-ems.com' },
+  { label: 'Developer', hint: 'Full system access', identifier: 'developer@amw-ems.com' },
 ] as const
 
 export default function LoginPage() {
