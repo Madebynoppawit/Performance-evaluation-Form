@@ -15,8 +15,9 @@ Authorization: Bearer <token>
 
 ### POST /auth/login
 ```json
-{ "email": "admin@amw-ems.com", "password": "password123" }
+{ "identifier": "you@company.com", "password": "your-password" }
 ```
+`identifier` accepts an employee number or a company email.
 Response: `{ user, token }`
 
 ### POST /auth/register

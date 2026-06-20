@@ -229,13 +229,10 @@ docker compose -f docker-compose.demo.yml up -d --build
 
 Open `http://localhost:8080`.
 
-Demo credentials:
-
-- `developer@amw-ems.com` / `P@ssw0rd!`
-- `admin@amw-ems.com` / `P@ssw0rd!`
-- `manager.eng@amw-ems.com` / `P@ssw0rd!`
-- `supervisor1@amw-ems.com` / `P@ssw0rd!`
-- `officer1@amw-ems.com` / `P@ssw0rd!`
+The demo seed creates five accounts (Developer, Administrator, Manager, Supervisor,
+Officer). Their login IDs and the shared demo password are defined in
+[`backend/prisma/seed.cjs`](backend/prisma/seed.cjs) and are intentionally **not**
+published here — set your own before any shared rollout.
 
 Optional overrides live in `.env.demo.example`. For a shared demo, copy it to
 `.env.demo`, change the demo passwords/secrets, and run:
@@ -286,19 +283,13 @@ Use `AI_PROVIDER=azure-openai` when the preview deployment is wired to Azure Ope
 
 ## Demo Accounts
 
-Development/demo seed data includes (production seeding still requires the
-explicit demo override `ALLOW_PROD_SEED=true`):
+Development/demo seed data provisions one account per access level — Developer
+(super-admin), Administrator, Manager, Supervisor, and Officer (production
+seeding still requires the explicit override `ALLOW_PROD_SEED=true`).
 
-| Role / Position | Email | Password |
-|---|---|---|
-| Developer (super-admin) | `developer@amw-ems.com` | `P@ssw0rd!` |
-| Administrator | `admin@amw-ems.com` | `P@ssw0rd!` |
-| Manager | `manager.eng@amw-ems.com` | `P@ssw0rd!` |
-| Supervisor | `supervisor1@amw-ems.com` | `P@ssw0rd!` |
-| Officer | `officer1@amw-ems.com` | `P@ssw0rd!` |
-
-Demo-only credentials. Change credentials and keep public registration disabled
-before any shared rollout.
+Login IDs and passwords are **not** published in this repository. They live in
+[`backend/prisma/seed.cjs`](backend/prisma/seed.cjs); change them, and keep public
+registration disabled, before any shared rollout.
 
 ## Quality Gate
 
