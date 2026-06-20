@@ -1,10 +1,8 @@
 import { type ChangeEvent, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Bell,
   Building2,
   Camera,
   CheckCircle2,
-  Clock4,
   Fingerprint,
   KeyRound,
   Mail,
@@ -410,56 +408,6 @@ export default function AccountPage() {
         </section>
       </div>
 
-      <div className="amw-account-grid">
-        <section className="kbt-card amw-account-panel">
-          <div className="amw-account-panel-head">
-            <div>
-              <span>{t('nav.settings.sub')}</span>
-              <strong>{t('acc.notifChannels')}</strong>
-            </div>
-          </div>
-          <div className="amw-preference-list">
-            {[
-              { label: t('acc.notifEvalReminders'), detail: t('acc.notifEvalRemindersDesc'), active: true },
-              { label: t('acc.notifReportAvail'), detail: t('acc.notifReportAvailDesc'), active: true },
-              { label: t('acc.notifLegalAck'), detail: t('acc.notifLegalAckDesc'), active: true },
-            ].map(item => (
-              <div key={item.label} className="amw-preference-item">
-                <Bell size={16} />
-                <div>
-                  <strong>{item.label}</strong>
-                  <span>{item.detail}</span>
-                </div>
-                <em>{item.active ? t('acc.on') : 'Off'}</em>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="kbt-card amw-account-panel">
-          <div className="amw-account-panel-head">
-            <div>
-              <span>{t('acc.activity')}</span>
-              <strong>{t('acc.recentEvents')}</strong>
-            </div>
-          </div>
-          <div className="amw-timeline">
-            {[
-              { title: t('acc.eventVerified'), time: t('acc.eventNow') },
-              { title: t('acc.eventSynced'), time: t('acc.eventToday') },
-              { title: t('acc.eventReviewed'), time: t('acc.eventThisCycle') },
-            ].map(item => (
-              <div key={item.title} className="amw-timeline-item">
-                <Clock4 size={15} />
-                <div>
-                  <strong>{item.title}</strong>
-                  <span>{item.time}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
     </div>
   )
 }

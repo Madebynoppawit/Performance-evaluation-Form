@@ -2,22 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 
 export interface Preferences {
   defaultWorkspace: 'dashboard' | 'evaluations' | 'reports'
-  language: 'en' | 'th' | 'fr'
-  evaluationReminders: boolean
-  reportUpdates: boolean
   deadlineWarnings: 'priority' | 'all' | 'off'
-  sessionProtection: boolean
-  personalDataMode: boolean
 }
 
 const DEFAULTS: Preferences = {
   defaultWorkspace: 'dashboard',
-  language: 'en',
-  evaluationReminders: true,
-  reportUpdates: true,
   deadlineWarnings: 'priority',
-  sessionProtection: true,
-  personalDataMode: true,
 }
 
 const KEY = 'amw-preferences'

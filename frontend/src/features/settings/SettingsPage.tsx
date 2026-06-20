@@ -1,7 +1,6 @@
-import { Bell, Eye, Languages, LockKeyhole, Monitor, ShieldCheck, UserCog } from 'lucide-react'
+import { AlarmClock, Languages, Monitor, UserCog } from 'lucide-react'
 import type { ReactNode } from 'react'
 import ThemeToggle from '@/components/ThemeToggle'
-import Toggle from '@/components/Toggle'
 import { usePreferences, type Preferences } from '@/hooks/usePreferences'
 import { useT, useLanguage } from '@/i18n/languageContext'
 import type { Locale, TranslationKey } from '@/i18n/translations'
@@ -98,38 +97,10 @@ export default function SettingsPage() {
                   {LANGUAGE_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               } />
+            <Row icon={<AlarmClock size={16} />} label={t('set.deadlineWarnings')} hint={t('set.deadlineWarningsHint')}
+              control={<Select field="deadlineWarnings" options={DEADLINE_OPTS} />} />
             <Row icon={<UserCog size={16} />} label={t('set.roleView')} hint={t('set.roleViewHint')}
               control={<span className="amw-settings-static">{t('set.roleViewStatic')}</span>} />
-          </div>
-        </section>
-
-        <section className="kbt-card amw-settings-panel">
-          <div className="amw-settings-panel-head">
-            <span>{t('set.alerts')}</span>
-            <strong>{t('set.notifications')}</strong>
-          </div>
-          <div className="amw-settings-list">
-            <Row icon={<Bell size={16} />} label={t('set.evalReminders')} hint={t('set.evalRemindersHint')}
-              control={<Toggle label={t('set.evalReminders')} checked={prefs.evaluationReminders} onChange={v => update('evaluationReminders', v)} />} />
-            <Row icon={<ShieldCheck size={16} />} label={t('set.reportUpdates')} hint={t('set.reportUpdatesHint')}
-              control={<Toggle label={t('set.reportUpdates')} checked={prefs.reportUpdates} onChange={v => update('reportUpdates', v)} />} />
-            <Row icon={<Eye size={16} />} label={t('set.deadlineWarnings')} hint={t('set.deadlineWarningsHint')}
-              control={<Select field="deadlineWarnings" options={DEADLINE_OPTS} />} />
-          </div>
-        </section>
-
-        <section className="kbt-card amw-settings-panel">
-          <div className="amw-settings-panel-head">
-            <span>{t('set.account')}</span>
-            <strong>{t('set.privacyAccess')}</strong>
-          </div>
-          <div className="amw-settings-list">
-            <Row icon={<LockKeyhole size={16} />} label={t('set.sessionProtection')} hint={t('set.sessionProtectionHint')}
-              control={<Toggle label={t('set.sessionProtection')} checked={prefs.sessionProtection} onChange={v => update('sessionProtection', v)} />} />
-            <Row icon={<ShieldCheck size={16} />} label={t('set.auditVisibility')} hint={t('set.auditVisibilityHint')}
-              control={<span className="amw-settings-static">{t('set.auditVisibilityStatic')}</span>} />
-            <Row icon={<Eye size={16} />} label={t('set.personalData')} hint={t('set.personalDataHint')}
-              control={<Toggle label={t('set.personalData')} checked={prefs.personalDataMode} onChange={v => update('personalDataMode', v)} />} />
           </div>
         </section>
       </div>
