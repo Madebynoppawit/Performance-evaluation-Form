@@ -9,10 +9,10 @@ module.exports = {
 
   // Test accounts — must match prisma/seed.cjs
   accounts: {
-    admin:     { identifier: 'admin@amw-ems.com',       password: 'P@ssw0rd!' },
-    manager:   { identifier: 'manager.eng@amw-ems.com', password: 'P@ssw0rd!' },
-    employee:  { identifier: 'officer1@amw-ems.com',    password: 'P@ssw0rd!' },
-    developer: { identifier: 'developer@amw-ems.com',   password: 'P@ssw0rd!' },
+    admin:     { identifier: 'admin@amw-ems.com',       password: 'AmwDemo2026!' },
+    manager:   { identifier: 'manager.eng@amw-ems.com', password: 'AmwDemo2026!' },
+    employee:  { identifier: 'officer1@amw-ems.com',    password: 'AmwDemo2026!' },
+    developer: { identifier: 'developer@amw-ems.com',   password: 'AmwDemo2026!' },
   },
 
   // Scheduler

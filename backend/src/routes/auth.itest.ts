@@ -39,14 +39,14 @@ describe('POST /api/auth/login', () => {
   test('returns 401 for unknown identifier', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ identifier: 'nobody@amw-ems.com', password: 'P@ssw0rd!' })
+      .send({ identifier: 'nobody@amw-ems.com', password: 'AmwDemo2026!' })
     assert.equal(res.status, 401)
   })
 
   test('returns 200 with token and safe user on valid email login', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ identifier: 'admin@amw-ems.com', password: 'P@ssw0rd!' })
+      .send({ identifier: 'admin@amw-ems.com', password: 'AmwDemo2026!' })
     assert.equal(res.status, 200)
     assert.ok(res.body.token, 'JWT token should be present')
     assert.equal(res.body.user.email, 'admin@amw-ems.com')
@@ -56,7 +56,7 @@ describe('POST /api/auth/login', () => {
   test('returns 200 when logging in with employee number', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ identifier: 'MGR-001', password: 'P@ssw0rd!' })
+      .send({ identifier: 'MGR-001', password: 'AmwDemo2026!' })
     assert.equal(res.status, 200)
     assert.ok(res.body.token)
   })
@@ -64,7 +64,7 @@ describe('POST /api/auth/login', () => {
   test('accepts legacy `email` field (back-compat)', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'admin@amw-ems.com', password: 'P@ssw0rd!' })
+      .send({ email: 'admin@amw-ems.com', password: 'AmwDemo2026!' })
     assert.equal(res.status, 200)
     assert.ok(res.body.token)
   })
@@ -78,7 +78,7 @@ describe('GET /api/auth/me', () => {
   before(async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ identifier: 'admin@amw-ems.com', password: 'P@ssw0rd!' })
+      .send({ identifier: 'admin@amw-ems.com', password: 'AmwDemo2026!' })
     token = res.body.token as string
   })
 
@@ -256,7 +256,7 @@ describe('GET /api/evaluations', () => {
   before(async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ identifier: 'admin@amw-ems.com', password: 'P@ssw0rd!' })
+      .send({ identifier: 'admin@amw-ems.com', password: 'AmwDemo2026!' })
     adminToken = res.body.token as string
   })
 

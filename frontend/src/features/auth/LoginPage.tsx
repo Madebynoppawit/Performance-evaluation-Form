@@ -13,7 +13,7 @@ const schema = z.object({
 })
 type FormData = z.infer<typeof schema>
 
-const DEMO_PASSWORD = 'P@ssw0rd!'
+const DEMO_PASSWORD = 'AmwDemo2026!'
 const DEMO_ACCOUNTS = [
   { label: 'Admin', hint: 'Manage users, reports, cycles', identifier: 'admin@amw-ems.com' },
   { label: 'Manager', hint: 'Review team evaluations', identifier: 'manager.eng@amw-ems.com' },

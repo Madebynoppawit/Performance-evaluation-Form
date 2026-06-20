@@ -9,7 +9,7 @@ async function main() {
     process.exit(1)
   }
 
-  const hash = await bcrypt.hash('P@ssw0rd!', 10)
+  const hash = await bcrypt.hash('AmwDemo2026!', 10)
 
   const developer = await prisma.user.upsert({
     where: { email: 'developer@amw-ems.com' },
@@ -388,7 +388,7 @@ async function main() {
     { Role: supervisor.role, Email: supervisor.email },
     { Role: officer.role, Email: officer.email },
   ])
-  console.log('Password: P@ssw0rd! - demo/staging only.')
+  console.log('Password: AmwDemo2026! - demo/staging only.')
 }
 
 main()

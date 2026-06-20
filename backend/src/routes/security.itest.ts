@@ -41,7 +41,7 @@ before(async () => {
   seededEvalId = seededEval?.id ?? ''
 
   async function loginFor(email: string) {
-    const res = await request(app).post('/api/auth/login').send({ identifier: email, password: 'P@ssw0rd!' })
+    const res = await request(app).post('/api/auth/login').send({ identifier: email, password: 'AmwDemo2026!' })
     return res.body.token as string
   }
   ;[officerToken, supervisorToken] = await Promise.all([
@@ -290,7 +290,7 @@ describe('Sensitive data exposure', () => {
   test('password hash is never returned from login', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ identifier: 'officer1@amw-ems.com', password: 'P@ssw0rd!' })
+      .send({ identifier: 'officer1@amw-ems.com', password: 'AmwDemo2026!' })
     assert.equal(res.status, 200)
     const body = JSON.stringify(res.body)
     assert.ok(!body.includes('$2'), 'bcrypt hash must not appear in response')
@@ -310,7 +310,7 @@ describe('Sensitive data exposure', () => {
   test('password hash is never returned from user list (admin)', async () => {
     const adminRes = await request(app)
       .post('/api/auth/login')
-      .send({ identifier: 'admin@amw-ems.com', password: 'P@ssw0rd!' })
+      .send({ identifier: 'admin@amw-ems.com', password: 'AmwDemo2026!' })
     const adminToken = adminRes.body.token
 
     const res = await request(app)

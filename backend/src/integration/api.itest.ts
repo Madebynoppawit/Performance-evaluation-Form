@@ -9,7 +9,7 @@ import { prisma } from '../lib/prisma'
    Run with: npm run test:integration */
 
 const app = createApp()
-const PASSWORD = 'P@ssw0rd!'
+const PASSWORD = 'AmwDemo2026!'
 
 async function loginAs(email: string) {
   const res = await request(app).post('/api/auth/login').send({ email, password: PASSWORD })

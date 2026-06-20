@@ -17,7 +17,7 @@ const app = createApp()
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-async function login(identifier: string, password = 'P@ssw0rd!') {
+async function login(identifier: string, password = 'AmwDemo2026!') {
   const res = await request(app)
     .post('/api/auth/login')
     .send({ identifier, password })

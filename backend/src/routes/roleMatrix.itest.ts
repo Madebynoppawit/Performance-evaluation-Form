@@ -22,7 +22,7 @@ let officerId: string
 
 before(async () => {
   async function login(identifier: string) {
-    const res = await request(app).post('/api/auth/login').send({ identifier, password: 'P@ssw0rd!' })
+    const res = await request(app).post('/api/auth/login').send({ identifier, password: 'AmwDemo2026!' })
     assert.equal(res.status, 200)
     return res.body.token as string
   }
