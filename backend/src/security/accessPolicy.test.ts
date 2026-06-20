@@ -33,6 +33,14 @@ describe('evaluation access policy', () => {
     assert.equal(canAccessEvaluation(actor('admin', Role.ADMIN), evaluation, 'edit'), false)
   })
 
+  it('allows admin to calibrate (set final grade) but not edit content', () => {
+    assert.equal(canAccessEvaluation(actor('admin', Role.ADMIN), evaluation, 'calibrate'), true)
+    assert.equal(canAccessEvaluation(actor('admin', Role.ADMIN), evaluation, 'edit'), false)
+    assert.equal(canAccessEvaluation(actor('developer', Role.DEVELOPER), evaluation, 'calibrate'), true)
+    assert.equal(canAccessEvaluation(actor('manager-1', Role.MANAGER), evaluation, 'calibrate'), false)
+    assert.equal(canAccessEvaluation(actor('employee-1', Role.EMPLOYEE), evaluation, 'calibrate'), false)
+  })
+
   it('allows only the assigned reviewer to review', () => {
     assert.equal(canAccessEvaluation(actor('reviewer-1', Role.MANAGER), evaluation, 'review'), true)
     assert.equal(canAccessEvaluation(actor('manager-1', Role.MANAGER), evaluation, 'review'), false)

@@ -39,6 +39,7 @@ export type EvaluationPermission =
   | 'review'
   | 'salary'
   | 'acknowledgement'
+  | 'calibrate'
 
 export function isPrivilegedRole(role: Role) {
   return PRIVILEGED_ROLES.has(role)
@@ -61,6 +62,13 @@ export function canAccessEvaluation(
       || evaluation.evaluateeId === actor.userId
       || evaluation.evaluatorId === actor.userId
       || evaluation.reviewerId === actor.userId
+  }
+
+  if (permission === 'calibrate') {
+    // Final-grade calibration is an HR/admin governance action: admins may set
+    // the calibrated grade across the org even though they cannot edit
+    // evaluation content (scores, answers, salary).
+    return actor.role === Role.ADMIN
   }
 
   if (actor.role === Role.ADMIN) return false

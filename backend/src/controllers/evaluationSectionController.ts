@@ -92,6 +92,12 @@ const summarySchema = z.object({
   effectiveDate: z.string().trim().min(1).nullable().optional(),
 })
 
+const gradeSchema = z.object({
+  performanceGrade: z.enum([
+    'EXCELLENT', 'ABOVE_STANDARD', 'MEETS_STANDARD', 'ALMOST_STANDARD', 'BELOW_STANDARD',
+  ]),
+})
+
 export async function getFullEvaluation(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     res.json(await sectionService.getFullEvaluation(req.params.id))
@@ -175,6 +181,15 @@ export async function saveSummary(req: AuthRequest, res: Response, next: NextFun
   try {
     const body = summarySchema.parse(req.body)
     res.json(await sectionService.upsertEvaluationSummary(req.params.id, body))
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function saveGrade(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const body = gradeSchema.parse(req.body)
+    res.json(await sectionService.setPerformanceGrade(req.params.id, body.performanceGrade))
   } catch (err) {
     next(err)
   }

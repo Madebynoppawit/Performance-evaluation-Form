@@ -9,6 +9,7 @@ import {
   saveComment,
   saveSalary,
   saveSummary,
+  saveGrade,
   saveAcknowledgement,
 } from '../controllers/evaluationSectionController'
 import { authenticate, authorizeEvaluation, authorizeSupervisory, blockIfPasswordChangeRequired, requireRole } from '../middleware/auth'
@@ -33,6 +34,7 @@ router.patch('/:id/training', authorizeEvaluation('edit'), saveTraining)
 router.patch('/:id/comment', authorizeEvaluation('edit'), saveComment)
 router.patch('/:id/salary', authorizeEvaluation('salary'), saveSalary)
 router.patch('/:id/summary', authorizeEvaluation('edit'), saveSummary)
+router.patch('/:id/grade', authorizeEvaluation('calibrate'), saveGrade)
 router.patch('/:id/acknowledgement', authorizeEvaluation('acknowledgement'), saveAcknowledgement)
 
 export default router

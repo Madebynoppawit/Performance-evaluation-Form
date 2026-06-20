@@ -264,6 +264,18 @@ export async function upsertEvaluationSummary(
   })
 }
 
+/** Calibration-only update: set the final performance grade without touching
+ * evaluation content. Used by the admin/HR calibration workspace. */
+export async function setPerformanceGrade(
+  evaluationId: string,
+  performanceGrade: 'EXCELLENT' | 'ABOVE_STANDARD' | 'MEETS_STANDARD' | 'ALMOST_STANDARD' | 'BELOW_STANDARD',
+) {
+  return prisma.evaluation.update({
+    where: { id: evaluationId },
+    data: { performanceGrade },
+  })
+}
+
 export async function assertEvaluationReadyForSubmit(evaluationId: string) {
   const evaluation = await prisma.evaluation.findUniqueOrThrow({
     where: { id: evaluationId },

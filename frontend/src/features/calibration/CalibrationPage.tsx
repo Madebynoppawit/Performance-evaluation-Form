@@ -78,7 +78,7 @@ export default function CalibrationPage() {
 
   const saveGradeMutation = useMutation({
     mutationFn: ({ id, grade }: { id: string; grade: Grade }) =>
-      api.patch(`/evaluations/${id}/summary`, { performanceGrade: grade }),
+      api.patch(`/evaluations/${id}/grade`, { performanceGrade: grade }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['evaluations'] })
       success(t('cal.gradeSaved'))
