@@ -4,6 +4,9 @@
 
 Self-hosted fonts, broader automated test coverage, and a leaner settings surface.
 
+### Fixed
+- Cycles: `PATCH /cycles/:id/status` and `DELETE /cycles/:id` were open to all supervisory roles, so any manager could close (locking evaluations org-wide) or delete a cycle. Restricted both to admin/developer; creation stays open to supervisory roles. (Surfaced by the integration RBAC suite.)
+
 ### Performance / Privacy
 - Self-host Inter, Noto Sans Thai, and JetBrains Mono (latin/latin-ext/thai woff2 subsets) and drop the Google Fonts CDN `@import`/links — works offline and behind restrictive networks, removes a third-party call on every load, and trims first paint.
 
