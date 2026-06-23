@@ -54,6 +54,7 @@ const ALL_SUITES = [
   require('./suites/calibration'),
   require('./suites/rbac'),
   require('./suites/api'),
+  require('./suites/network'),
   require('./suites/mobile'),
   require('./suites/tablet'),
   require('./suites/performance'),
