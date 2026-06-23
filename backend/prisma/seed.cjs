@@ -119,6 +119,9 @@ async function main() {
       role: Role.EMPLOYEE,
       position: 'OFFICER',
       department: 'Operations',
+      jobGrade: '12',
+      division: 'Operations Division',
+      buGroup: 'Operations Group',
       employeeNo: 'OFF-001',
       dateOfBirth: new Date('1990-01-01'),
       managerId: manager.id,
@@ -132,6 +135,9 @@ async function main() {
       role: Role.EMPLOYEE,
       position: 'OFFICER',
       department: 'Operations',
+      jobGrade: '12',
+      division: 'Operations Division',
+      buGroup: 'Operations Group',
       employeeNo: 'OFF-001',
       dateOfBirth: new Date('1990-01-01'),
       managerId: manager.id,
@@ -290,6 +296,21 @@ async function main() {
       where: { evaluationId_competencyId: { evaluationId: evaluation.id, competencyId } },
       update: { score },
       create: { evaluationId: evaluation.id, competencyId, score },
+    })
+  }
+
+  // Core Competency (CC1–CC4) — dual rating: manager score + employee self-assessment.
+  const demoCompetencyDual = [
+    ['CC1', 4, 4],
+    ['CC2', 4, 5],
+    ['CC3', 4, 3],
+    ['CC4', 4, 4],
+  ]
+  for (const [competencyId, score, selfScore] of demoCompetencyDual) {
+    await prisma.competencyScore.upsert({
+      where: { evaluationId_competencyId: { evaluationId: evaluation.id, competencyId } },
+      update: { score, selfScore },
+      create: { evaluationId: evaluation.id, competencyId, score, selfScore },
     })
   }
 
