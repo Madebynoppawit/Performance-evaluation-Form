@@ -215,9 +215,9 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     doc.setFontSize(6.5)
     doc.setTextColor(...C.muted)
     doc.text(documentId, PW - M, 24, { align: 'right' })
-    // Watermark
-    doc.setFontSize(24)
-    doc.setTextColor(238, 242, 250)
+    // Watermark — very subtle so it doesn't cheapen the page
+    doc.setFontSize(18)
+    doc.setTextColor(247, 249, 251)
     doc.text('CONFIDENTIAL', PW / 2, PH / 2 + 20, { align: 'center', angle: 35 })
     // Footer
     doc.setDrawColor(...C.borderX)
@@ -582,24 +582,30 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   renderPageFrame()
   y = M + 44
 
-  // Title — SAP Fiori style: blue accent bar + large bold text
+  // Premium cover header — full-bleed SAP-shell band, white title, blue accent rule
+  const coverH = 76
+  doc.setFillColor(...C.navy)
+  doc.rect(0, y - 4, PW, coverH, 'F')
   doc.setFillColor(...C.blue)
-  doc.rect(M, y + 2, 4, 30, 'F')
+  doc.rect(0, y - 4 + coverH, PW, 3, 'F')
   pf(true)
-  doc.setFontSize(20)
-  doc.setTextColor(...C.ink)
-  doc.text('Performance Evaluation Form', M + 13, y + 22)
+  doc.setFontSize(21)
+  doc.setTextColor(255, 255, 255)
+  doc.text('Performance Evaluation Form', M, y + 30)
   pf(false)
   doc.setFontSize(8.5)
-  doc.setTextColor(...C.muted)
-  doc.text(`${formDef.code} · ${formDef.titleEn}`, M + 13, y + 38)
+  doc.setTextColor(190, 203, 218)
+  doc.text(`${formDef.code} · ${formDef.titleEn}`, M, y + 48)
+  // Doc ID + date (right, light)
+  pf(true)
+  doc.setFontSize(8)
+  doc.setTextColor(255, 255, 255)
+  doc.text(documentId, PW - M, y + 30, { align: 'right' })
   pf(false)
   doc.setFontSize(7.5)
-  doc.setTextColor(...C.muted)
-  doc.text(documentId, PW - M, y + 22, { align: 'right' })
-  doc.text(fmtDate(new Date().toISOString()), PW - M, y + 36, { align: 'right' })
-  doc.setDrawColor(...C.border)
-  doc.line(M, y + 50, M + CW, y + 50)
+  doc.setTextColor(190, 203, 218)
+  doc.text(fmtDate(new Date().toISOString()), PW - M, y + 45, { align: 'right' })
+  y += coverH + 6
   y += 60
 
   // Period label derived from the cycle end date: Jan–Jun → mid-year, Jul–Dec → year-end.
