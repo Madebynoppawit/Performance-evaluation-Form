@@ -81,9 +81,6 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   const displayEvaluator = ev.evaluatorName?.trim() || ev.evaluator?.name || '—'
   const displayPosition = ev.evaluatee?.jobTitle?.trim() || (ev.evaluatee?.position ?? '—')
   const displayDept = ev.evaluatee?.department || '—'
-  const periodLabel = ev.cycle?.endDate
-    ? `${new Date(ev.cycle.endDate).getMonth() <= 5 ? 'midyear' : 'yearend'}${new Date(ev.cycle.endDate).getFullYear()}`
-    : '—'
   const documentId = `AMW-${ev.id.slice(0, 8).toUpperCase()}`
 
   const goals = ev.goalEntries ?? []
@@ -582,64 +579,39 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   }
 
   // ─── PAGE 1 COVER ─────────────────────────────────────────────────────────
-  // Executive cover page — leads with the result as a hero.
-  {
-    doc.setFillColor(...C.white); doc.rect(0, 0, PW, PH, 'F')
-    const topH = 212
-    doc.setFillColor(...C.navy); doc.rect(0, 0, PW, topH, 'F')
-    doc.setFillColor(...C.blue); doc.rect(0, topH, PW, 4, 'F')
-    // Brand row
-    pf(true); doc.setFontSize(11); doc.setTextColor(255, 255, 255)
-    doc.text('AMW', M, 46)
-    pf(false); doc.setFontSize(8.5); doc.setTextColor(190, 203, 218)
-    doc.text('Performance Evaluation System', M + 30, 46)
-    doc.text(formDef.code, PW - M, 46, { align: 'right' })
-    // Title
-    pf(true); doc.setFontSize(33); doc.setTextColor(255, 255, 255)
-    doc.text('Performance', M, 112)
-    doc.text('Evaluation Form', M, 150)
-    pf(false); doc.setFontSize(10); doc.setTextColor(190, 203, 218)
-    doc.text(formDef.titleEn, M, 176)
-    pf(true); doc.setFontSize(15); doc.setTextColor(255, 255, 255)
-    doc.text(displayEmployee, M, 198)
-
-    // Result hero — big GPAX dial + grade
-    const gpaxVal = oseFinal != null ? toGpax(oseFinal) : null
-    const cx = PW / 2, cy = topH + 124, r = 58
-    doc.setFillColor(...(gpaxVal != null ? gpaxBg(gpaxVal) : C.muted))
-    doc.circle(cx, cy, r, 'F')
-    doc.setDrawColor(255, 255, 255); doc.setLineWidth(1.5); doc.circle(cx, cy, r - 7, 'S'); doc.setLineWidth(0.2)
-    pf(true); doc.setFontSize(36); doc.setTextColor(255, 255, 255)
-    doc.text(gpaxVal != null ? gpaxVal.toFixed(2) : '—', cx, cy + 6, { align: 'center' })
-    pf(false); doc.setFontSize(8); doc.setTextColor(232, 240, 250)
-    doc.text('GPAX  (0 - 4)', cx, cy + 26, { align: 'center' })
-    const coverGrade = ev.performanceGrade
-      ? ({ EXCELLENT: 'Excellent', ABOVE_STANDARD: 'Above Standard', MEETS_STANDARD: 'Meet Standard', ALMOST_STANDARD: 'Almost Standard', BELOW_STANDARD: 'Below Standard' } as Record<string, string>)[ev.performanceGrade] ?? (oseGrade?.en ?? '—')
-      : (oseGrade?.en ?? '—')
-    pf(true); doc.setFontSize(17); doc.setTextColor(...C.ink)
-    doc.text(coverGrade, cx, cy + r + 34, { align: 'center' })
-    if (oseGrade?.definitionEn) {
-      pf(false); doc.setFontSize(9); doc.setTextColor(...C.muted)
-      doc.text(oseGrade.definitionEn, cx, cy + r + 50, { align: 'center', maxWidth: CW - 120 })
-    }
-    pf(false); doc.setFontSize(9.5); doc.setTextColor(...C.muted)
-    doc.text(`${displayPosition}        ·        ${displayDept}        ·        ${periodLabel}`, cx, cy + r + 78, { align: 'center' })
-
-    // Footer
-    doc.setDrawColor(...C.borderX); doc.line(M, PH - 44, PW - M, PH - 44)
-    pf(false); doc.setFontSize(7.5); doc.setTextColor(...C.muted)
-    doc.text(documentId, M, PH - 30)
-    doc.text('CONFIDENTIAL', PW / 2, PH - 30, { align: 'center' })
-    doc.text(fmtDate(new Date().toISOString()), PW - M, PH - 30, { align: 'right' })
-    doc.addPage()
-  }
-
-  // ─── CONTENT PAGES ────────────────────────────────────────────────────────
   renderPageFrame()
-  y = M + 18
+  y = M + 44
+
+  // Premium cover header — full-bleed SAP-shell band, white title, blue accent rule
+  const coverH = 76
+  doc.setFillColor(...C.navy)
+  doc.rect(0, y - 4, PW, coverH, 'F')
+  doc.setFillColor(...C.blue)
+  doc.rect(0, y - 4 + coverH, PW, 3, 'F')
+  pf(true)
+  doc.setFontSize(21)
+  doc.setTextColor(255, 255, 255)
+  doc.text('Performance Evaluation Form', M, y + 30)
+  pf(false)
+  doc.setFontSize(8.5)
+  doc.setTextColor(190, 203, 218)
+  doc.text(`${formDef.code} · ${formDef.titleEn}`, M, y + 48)
+  // Doc ID + date (right, light)
+  pf(true)
+  doc.setFontSize(8)
+  doc.setTextColor(255, 255, 255)
+  doc.text(documentId, PW - M, y + 30, { align: 'right' })
+  pf(false)
+  doc.setFontSize(7.5)
+  doc.setTextColor(190, 203, 218)
+  doc.text(fmtDate(new Date().toISOString()), PW - M, y + 45, { align: 'right' })
+  y += coverH + 6
   y += 60
 
   // Period label derived from the cycle end date: Jan–Jun → mid-year, Jul–Dec → year-end.
+  const periodLabel = ev.cycle?.endDate
+    ? `${new Date(ev.cycle.endDate).getMonth() <= 5 ? 'midyear' : 'yearend'}${new Date(ev.cycle.endDate).getFullYear()}`
+    : '—'
 
   // Employee info grid
   const iW: [number, number, number, number] = [CW * 0.18, CW * 0.32, CW * 0.18, CW * 0.32]
