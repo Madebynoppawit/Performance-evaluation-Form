@@ -21,6 +21,7 @@ async function main() {
       employeeNo: 'DEV-001',
       dateOfBirth: new Date('1990-01-01'),
       mustChangePassword: false,
+      deletedAt: null,
     },
     create: {
       email: 'developer@amw-ems.com',
@@ -44,6 +45,7 @@ async function main() {
       employeeNo: 'ADM-001',
       dateOfBirth: new Date('1990-01-01'),
       mustChangePassword: false,
+      deletedAt: null,
     },
     create: {
       email: 'admin@amw-ems.com',
@@ -68,6 +70,7 @@ async function main() {
       employeeNo: 'MGR-001',
       dateOfBirth: new Date('1990-01-01'),
       mustChangePassword: false,
+      deletedAt: null,
     },
     create: {
       email: 'manager.eng@amw-ems.com',
@@ -93,6 +96,7 @@ async function main() {
       dateOfBirth: new Date('1990-01-01'),
       managerId: manager.id,
       mustChangePassword: false,
+      deletedAt: null,
     },
     create: {
       email: 'supervisor1@amw-ems.com',
@@ -119,6 +123,7 @@ async function main() {
       dateOfBirth: new Date('1990-01-01'),
       managerId: manager.id,
       mustChangePassword: false,
+      deletedAt: null,
     },
     create: {
       email: 'officer1@amw-ems.com',
@@ -207,6 +212,7 @@ async function main() {
       competencyScore: 4.11,
       attendanceScore: null,
       submittedAt: null,
+      deletedAt: null,
     },
     create: {
       cycleId: cycle.id,

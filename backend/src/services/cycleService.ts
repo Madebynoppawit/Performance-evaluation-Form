@@ -38,7 +38,7 @@ export async function updateCycleStatus(id: string, status: CycleStatus) {
 
 export async function deleteCycle(id: string) {
   return prisma.$transaction(async (tx) => {
-    await tx.evaluation.deleteMany({ where: { cycleId: id } })
+    await tx.evaluation.updateMany({ where: { cycleId: id, deletedAt: null }, data: { deletedAt: new Date() } })
     return tx.cycle.delete({ where: { id } })
   })
 }

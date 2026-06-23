@@ -36,7 +36,7 @@ export async function login(identifier: string, password: string) {
   // employee number), so neither group is locked out.
   const id = identifier.trim()
   const user = await prisma.user.findFirst({
-    where: { OR: [{ employeeNo: id }, { email: id.toLowerCase() }] },
+    where: { deletedAt: null, OR: [{ employeeNo: id }, { email: id.toLowerCase() }] },
   })
   if (!user) throw new Error('Invalid credentials')
 
@@ -54,7 +54,7 @@ export async function register(data: {
   name: string
   department?: string
 }) {
-  const exists = await prisma.user.findUnique({ where: { email: data.email } })
+  const exists = await prisma.user.findFirst({ where: { email: data.email, deletedAt: null } })
   if (exists) {
     const err = Object.assign(new Error('Email is already registered'), { status: 409 })
     throw err
@@ -68,9 +68,9 @@ export async function register(data: {
 }
 
 export async function getProfile(userId: string) {
-  const user = await prisma.user.findUniqueOrThrow({
-    where: { id: userId },
-    select: { id: true, email: true, name: true, role: true, department: true, managerId: true, position: true, jobTitle: true, employeeNo: true, mustChangePassword: true, dateOfBirth: true },
+  const user = await prisma.user.findFirstOrThrow({
+    where: { id: userId, deletedAt: null },
+    select: { id: true, email: true, name: true, role: true, department: true, managerId: true, position: true, jobTitle: true, employeeNo: true, mustChangePassword: true, dateOfBirth: true, phone: true, bio: true },
   })
   return user
 }
@@ -83,12 +83,14 @@ export async function updateProfile(
     name?: string
     email?: string
     jobTitle?: string | null
+    phone?: string | null
+    bio?: string | null
     password?: string
   }
 ) {
   if (data.email) {
     const taken = await prisma.user.findFirst({
-      where: { email: data.email, NOT: { id: userId } },
+      where: { email: data.email, deletedAt: null, NOT: { id: userId } },
       select: { id: true },
     })
     if (taken) {
@@ -102,10 +104,14 @@ export async function updateProfile(
   if (data.name !== undefined) payload.name = data.name
   if (data.email !== undefined) payload.email = data.email
   if (data.jobTitle !== undefined) payload.jobTitle = data.jobTitle
-  // Changing the password also clears the forced-change flag.
+  if (data.phone !== undefined) payload.phone = data.phone
+  if (data.bio !== undefined) payload.bio = data.bio
+  // Changing the password also clears the forced-change flag and invalidates
+  // existing sessions (tokens issued before now are rejected).
   if (data.password) {
     payload.password = await hashPassword(data.password)
     payload.mustChangePassword = false
+    payload.passwordChangedAt = new Date()
   }
 
   const user = await prisma.user.update({ where: { id: userId }, data: payload })
@@ -119,7 +125,7 @@ export async function resetPasswordWithIdentity(data: {
   password: string
 }) {
   const employeeNo = data.employeeNo.trim().replace(/[,\s]/g, '')
-  const user = await prisma.user.findUnique({ where: { employeeNo } })
+  const user = await prisma.user.findFirst({ where: { employeeNo, deletedAt: null } })
   const submittedDob = dateKey(data.dateOfBirth)
   const storedDob =
     dateKey(user?.dateOfBirth) ??
@@ -136,6 +142,7 @@ export async function resetPasswordWithIdentity(data: {
     data: {
       password: await hashPassword(data.password),
       mustChangePassword: false,
+      passwordChangedAt: new Date(),
     },
   })
 

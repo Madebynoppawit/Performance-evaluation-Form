@@ -140,21 +140,25 @@ describe('POST /api/evaluations — create', () => {
   })
 
   const matrix: { role: Role; expected: number[] }[] = [
-    { role: 'DEVELOPER', expected: [201, 400] },  // can create (admin role group)
-    { role: 'ADMIN',     expected: [201, 400] },  // can create
-    { role: 'MANAGER',   expected: [201, 400] },  // supervisory role
+    { role: 'DEVELOPER', expected: [201, 400, 409] },  // can create (admin role group)
+    { role: 'ADMIN',     expected: [201, 400, 409] },  // can create
+    { role: 'MANAGER',   expected: [201, 400, 409] },  // supervisory role
     { role: 'EMPLOYEE',  expected: [403] },        // not supervisory
   ]
 
   for (const { role, expected } of matrix) {
     test(`${role} → ${expected.join(' or ')}`, async () => {
-      const managerId = (await prisma.user.findUniqueOrThrow({
-        where: { email: 'manager.eng@amw-ems.com' }, select: { id: true },
-      })).id
+      const actorId = role === 'DEVELOPER'
+        ? (await prisma.user.findUniqueOrThrow({ where: { email: 'developer@amw-ems.com' }, select: { id: true } })).id
+        : role === 'ADMIN'
+          ? (await prisma.user.findUniqueOrThrow({ where: { email: 'admin@amw-ems.com' }, select: { id: true } })).id
+          : role === 'MANAGER'
+            ? (await prisma.user.findUniqueOrThrow({ where: { email: 'manager.eng@amw-ems.com' }, select: { id: true } })).id
+            : officerId
 
       const res = await post('/api/evaluations', role, {
         cycleId,
-        evaluatorId: managerId,
+        evaluatorId: actorId,
         type: 'PEER',
         evaluateeId: officerId,
       })

@@ -2,6 +2,7 @@ import { Position, Role, Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { hashPassword } from '../utils/hash'
 import { generateTempPassword } from '../utils/tempPassword'
+import { createHash } from 'node:crypto'
 
 /** Supervisory positions get the MANAGER access role on import; everyone else
     is a plain EMPLOYEE. (Admin/Developer are never assigned by import.) */
@@ -125,6 +126,33 @@ function parseDate(value: string): Date | null {
   return Number.isNaN(d.getTime()) ? null : d
 }
 
+const SENSITIVE_SOURCE_KEYS = [
+  'date of birth',
+  'dob',
+  'birth date',
+  'birthday',
+  'email',
+  'e-mail',
+  'phone',
+  'mobile',
+  'address',
+  'salary',
+  'bank',
+  'citizen',
+  'national id',
+  'id card',
+]
+
+function sanitizedSourceData(row: Record<string, string>): Prisma.InputJsonValue {
+  const sanitized: Record<string, string> = {}
+  for (const [key, value] of Object.entries(row)) {
+    const normalized = key.toLowerCase().trim()
+    if (SENSITIVE_SOURCE_KEYS.some((sensitive) => normalized.includes(sensitive))) continue
+    sanitized[key] = value
+  }
+  return sanitized
+}
+
 export async function importEmployees(
   text: string,
   filename: string | undefined,
@@ -163,7 +191,7 @@ export async function importEmployees(
       position: mapPositionLevel(pick(raw, 'Position Level', 'Position level')),
       hireDate: parseDate(pick(raw, 'Start date', 'Start Date')),
       dateOfBirth: parseDate(pick(raw, 'Date of Birth', 'DOB', 'Birth Date', 'Birthday')),
-      sourceData: raw as Prisma.InputJsonValue,
+      sourceData: sanitizedSourceData(raw),
     }
     const role = roleForPosition(data.position)
     const updateData = email ? { ...data, email } : data
@@ -225,7 +253,9 @@ export async function importEmployees(
       updated,
       failed: errors.length,
       errors: errors as unknown as Prisma.InputJsonValue,
-      raw: text,
+      raw: '[redacted: raw import file is not stored; verify with rawSha256/rawBytes]',
+      rawSha256: createHash('sha256').update(text).digest('hex'),
+      rawBytes: Buffer.byteLength(text, 'utf8'),
     },
     select: { id: true },
   })

@@ -11,11 +11,11 @@ export async function getDashboardStats(userId: string, role: string) {
   const isPrivileged = role === 'ADMIN' || role === 'DEVELOPER'
   const [evaluations, totalUsers, activeCycles] = await Promise.all([
     isPrivileged
-      ? prisma.evaluation.findMany({ include: { evaluatee: { select: { department: true } } } })
+      ? prisma.evaluation.findMany({ where: { deletedAt: null }, include: { evaluatee: { select: { department: true } } } })
       : prisma.evaluation.findMany({
-          where: { OR: [{ evaluatorId: userId }, { evaluateeId: userId }] },
+          where: { deletedAt: null, OR: [{ evaluatorId: userId }, { evaluateeId: userId }] },
         }),
-    isPrivileged ? prisma.user.count() : undefined,
+    isPrivileged ? prisma.user.count({ where: { deletedAt: null } }) : undefined,
     prisma.cycle.count({ where: { status: CycleStatus.ACTIVE } }),
   ])
 

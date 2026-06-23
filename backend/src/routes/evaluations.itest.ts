@@ -75,9 +75,25 @@ after(async () => {
     })
     await prisma.answer.deleteMany({ where: { evaluationId: { in: createdEvaluationIds } } })
     await prisma.goalEntry.deleteMany({ where: { evaluationId: { in: createdEvaluationIds } } })
+    await prisma.competencyScore.deleteMany({ where: { evaluationId: { in: createdEvaluationIds } } })
+    await prisma.attendanceScore.deleteMany({ where: { evaluationId: { in: createdEvaluationIds } } })
+    await prisma.trainingScore.deleteMany({ where: { evaluationId: { in: createdEvaluationIds } } })
+    await prisma.evaluationComment.deleteMany({ where: { evaluationId: { in: createdEvaluationIds } } })
+    await prisma.salarySummary.deleteMany({ where: { evaluationId: { in: createdEvaluationIds } } })
     await prisma.evaluation.deleteMany({ where: { id: { in: createdEvaluationIds } } })
   }
   if (createdCycleIds.length) {
+    await prisma.evaluationAcknowledgement.deleteMany({
+      where: { evaluation: { cycleId: { in: createdCycleIds } } },
+    })
+    await prisma.answer.deleteMany({ where: { evaluation: { cycleId: { in: createdCycleIds } } } })
+    await prisma.goalEntry.deleteMany({ where: { evaluation: { cycleId: { in: createdCycleIds } } } })
+    await prisma.competencyScore.deleteMany({ where: { evaluation: { cycleId: { in: createdCycleIds } } } })
+    await prisma.attendanceScore.deleteMany({ where: { evaluation: { cycleId: { in: createdCycleIds } } } })
+    await prisma.trainingScore.deleteMany({ where: { evaluation: { cycleId: { in: createdCycleIds } } } })
+    await prisma.evaluationComment.deleteMany({ where: { evaluation: { cycleId: { in: createdCycleIds } } } })
+    await prisma.salarySummary.deleteMany({ where: { evaluation: { cycleId: { in: createdCycleIds } } } })
+    await prisma.evaluation.deleteMany({ where: { cycleId: { in: createdCycleIds } } })
     await prisma.cycle.deleteMany({ where: { id: { in: createdCycleIds } } })
   }
   await prisma.$disconnect()
@@ -85,7 +101,7 @@ after(async () => {
 
 /** Creates a fresh DRAFT evaluation via the API (supervisor → officer) and
  *  registers its id for cleanup. Returns the full response body. */
-async function createFreshEval(token = supervisorToken, reviewerId?: string) {
+async function createFreshEval(token = supervisorToken, reviewerId?: string, evaluatorId = supervisorId) {
   fixtureCounter += 1
   const fixtureCycle = await prisma.cycle.create({
     data: {
@@ -104,7 +120,7 @@ async function createFreshEval(token = supervisorToken, reviewerId?: string) {
     .set('Authorization', `Bearer ${token}`)
     .send({
       cycleId: fixtureCycle.id,
-      evaluatorId: supervisorId,
+      evaluatorId,
       type: 'MANAGER',
       evaluateeId: officerId,
       reviewerId,
@@ -190,6 +206,14 @@ describe('POST /api/evaluations — create', () => {
     // 201 or 400 (duplicate cycle+evaluatee+evaluator+type) — either is expected
     assert.ok([201, 409].includes(res.status))
     if (res.status === 201) createdEvaluationIds.push(res.body.id)
+  })
+
+  test('non-admin cannot create an evaluation on behalf of another evaluator', async () => {
+    const res = await request(app)
+      .post('/api/evaluations')
+      .set('Authorization', `Bearer ${managerToken}`)
+      .send({ cycleId, evaluatorId: supervisorId, type: 'MANAGER', evaluateeId: officerId })
+    assert.equal(res.status, 403)
   })
 
   test('employee (officer) cannot create an evaluation', async () => {

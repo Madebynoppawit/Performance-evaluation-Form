@@ -74,7 +74,6 @@ export default function AccountPage() {
   const [photo, setPhoto] = useState<string | null>(null)
   const [photoLayout, setPhotoLayout] = useState<PhotoLayout>(defaultPhotoLayout)
   const [layoutOpen, setLayoutOpen] = useState(false)
-  const profileKey = useMemo(() => `amw-account-profile:${user?.id ?? 'guest'}`, [user?.id])
   const [form, setForm] = useState({
     name: '', email: '', jobTitle: '',
     phone: '', bio: '', password: '', confirmPassword: '',
@@ -96,18 +95,16 @@ export default function AccountPage() {
   }, [storageKey, layoutStorageKey])
 
   useEffect(() => {
-    const saved = localStorage.getItem(profileKey)
-    const local = saved ? JSON.parse(saved) : {}
     setForm({
       name: user?.name ?? '',
       email: user?.email ?? '',
       jobTitle: user?.jobTitle ?? '',
-      phone: local.phone ?? '',
-      bio: local.bio ?? '',
+      phone: user?.phone ?? '',
+      bio: user?.bio ?? '',
       password: '',
       confirmPassword: '',
     })
-  }, [profileKey, user])
+  }, [user])
 
   async function saveDetails() {
     if (form.password && form.password !== form.confirmPassword) {
@@ -121,13 +118,14 @@ export default function AccountPage() {
         name: form.name.trim(),
         email: form.email.trim(),
         jobTitle: form.jobTitle.trim() || null,
+        phone: form.phone.trim() || null,
+        bio: form.bio.trim() || null,
       }
       if (form.password) payload.password = form.password
       const { data } = await api.patch<UserType>('/auth/me', payload)
       updateUser(data)
       // Keep the admin User Management list in sync with this self-edit.
       qc.invalidateQueries({ queryKey: ['users'] })
-      localStorage.setItem(profileKey, JSON.stringify({ phone: form.phone, bio: form.bio }))
       setForm(f => ({ ...f, password: '', confirmPassword: '' }))
       setSavedFlash(true)
       setTimeout(() => setSavedFlash(false), 2000)

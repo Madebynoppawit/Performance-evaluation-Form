@@ -66,6 +66,13 @@ export async function create(req: AuthRequest, res: Response, next: NextFunction
       })
       return
     }
+    if (!isAdminRole(req.user!.role) && body.evaluatorId !== req.user!.userId) {
+      res.status(403).json({
+        message: 'Only Developer/admin can assign evaluations on behalf of another evaluator.',
+        requestId: req.requestId,
+      })
+      return
+    }
     res.status(201).json(await evaluationService.createEvaluation(body))
   } catch (err) {
     next(err)

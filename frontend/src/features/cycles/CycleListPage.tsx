@@ -35,7 +35,7 @@ type FormData = z.infer<typeof schema>
 
 export default function CycleListPage() {
   const qc = useQueryClient()
-  const { isAdmin } = useAuth()
+  const { isAdmin, canManage } = useAuth()
   const t = useT()
   const { cycleStatusLabel } = useLabels()
   const [showDialog, setShowDialog] = useState(false)
@@ -91,7 +91,7 @@ export default function CycleListPage() {
           <h1>{t('page.cycles.title')}</h1>
           <p>{t('page.cycles.desc')}</p>
         </div>
-        {isAdmin && (
+        {canManage && (
           <button onClick={() => setShowDialog(true)} className="kbt-btn-primary">
             <Plus size={15} /> {t('cyc.create')}
           </button>
@@ -121,7 +121,7 @@ export default function CycleListPage() {
                     icon={Calendar}
                     title={t('cyc.noneTitle')}
                     description={t('cyc.noneDesc')}
-                    action={isAdmin ? { label: t('cyc.createAction'), onClick: () => setShowDialog(true) } : undefined}
+                    action={canManage ? { label: t('cyc.createAction'), onClick: () => setShowDialog(true) } : undefined}
                   />
                 </td>
               </tr>

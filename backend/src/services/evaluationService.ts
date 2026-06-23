@@ -69,25 +69,25 @@ const EVALUATION_INCLUDE = {
 
 export async function getEvaluationsForUser(userId: string, role: string) {
   if (role === 'ADMIN' || role === 'DEVELOPER') {
-    return prisma.evaluation.findMany({ include: EVALUATION_INCLUDE, orderBy: { updatedAt: 'desc' } })
+    return prisma.evaluation.findMany({ where: { deletedAt: null }, include: EVALUATION_INCLUDE, orderBy: { updatedAt: 'desc' } })
   }
   // Managers see evaluations they created OR are assigned as reviewer for 2-stage flow.
   if (role === 'MANAGER') {
     return prisma.evaluation.findMany({
-      where: { OR: [{ evaluatorId: userId }, { evaluateeId: userId }, { reviewerId: userId }] },
+      where: { deletedAt: null, OR: [{ evaluatorId: userId }, { evaluateeId: userId }, { reviewerId: userId }] },
       include: EVALUATION_INCLUDE,
       orderBy: { updatedAt: 'desc' },
     })
   }
   return prisma.evaluation.findMany({
-    where: { OR: [{ evaluatorId: userId }, { evaluateeId: userId }] },
+    where: { deletedAt: null, OR: [{ evaluatorId: userId }, { evaluateeId: userId }] },
     include: EVALUATION_INCLUDE,
     orderBy: { updatedAt: 'desc' },
   })
 }
 
 export async function getEvaluationById(id: string) {
-  return prisma.evaluation.findUniqueOrThrow({ where: { id }, include: EVALUATION_INCLUDE })
+  return prisma.evaluation.findFirstOrThrow({ where: { id, deletedAt: null }, include: EVALUATION_INCLUDE })
 }
 
 /* Create a lightweight employee record for an inline-added evaluatee. The
@@ -99,7 +99,7 @@ async function createEvaluateeUser(input: { name: string; position: Position; de
   let email = ''
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const candidate = `emp.${randomBytes(4).toString('hex')}@${domain}`
-    const exists = await prisma.user.findUnique({ where: { email: candidate }, select: { id: true } })
+    const exists = await prisma.user.findFirst({ where: { email: candidate, deletedAt: null }, select: { id: true } })
     if (!exists) { email = candidate; break }
   }
   if (!email) throw badRequest('Could not allocate an employee email — please try again.')
@@ -120,7 +120,7 @@ export async function createEvaluation(data: {
   newEvaluatee?: { name: string; position: Position; department?: string; jobTitle?: string }
   reviewerId?: string
 }) {
-  const evaluator = await prisma.user.findUniqueOrThrow({ where: { id: data.evaluatorId }, select: { position: true, role: true } })
+  const evaluator = await prisma.user.findFirstOrThrow({ where: { id: data.evaluatorId, deletedAt: null }, select: { position: true, role: true } })
   // Admin/developer (system accounts without a job position) may always create
   // evaluations; everyone else must hold a supervisory position.
   const privileged = evaluator.role === 'ADMIN' || evaluator.role === 'DEVELOPER'
@@ -130,12 +130,12 @@ export async function createEvaluation(data: {
 
   const evaluatee = data.newEvaluatee
     ? await createEvaluateeUser(data.newEvaluatee)
-    : await prisma.user.findUniqueOrThrow({ where: { id: data.evaluateeId! }, select: { id: true, position: true } })
+    : await prisma.user.findFirstOrThrow({ where: { id: data.evaluateeId!, deletedAt: null }, select: { id: true, position: true } })
 
   // Resolve reviewer name for denormalization.
   let reviewerName: string | null = null
   if (data.reviewerId) {
-    const rev = await prisma.user.findUnique({ where: { id: data.reviewerId }, select: { name: true } })
+    const rev = await prisma.user.findFirst({ where: { id: data.reviewerId, deletedAt: null }, select: { name: true } })
     reviewerName = rev?.name ?? null
   }
 
@@ -184,12 +184,20 @@ export async function createEvaluation(data: {
 }
 
 export async function deleteEvaluation(id: string) {
-  return prisma.evaluation.delete({ where: { id } })
+  const result = await prisma.evaluation.updateMany({
+    where: { id, deletedAt: null },
+    data: { deletedAt: new Date() },
+  })
+  if (result.count === 0) {
+    const err = new Error('Resource not found') as Error & { status: number }
+    err.status = 404
+    throw err
+  }
 }
 
 export async function saveAnswers(evaluationId: string, answers: Record<string, string>) {
-  const evaluation = await prisma.evaluation.findUniqueOrThrow({
-    where: { id: evaluationId },
+  const evaluation = await prisma.evaluation.findFirstOrThrow({
+    where: { id: evaluationId, deletedAt: null },
     include: { cycle: { include: { template: { include: { sections: { include: { questions: true } } } } } } },
   })
 
@@ -219,8 +227,8 @@ export async function saveAnswers(evaluationId: string, answers: Record<string, 
 export async function submitEvaluation(evaluationId: string, answers: Record<string, string>) {
   await saveAnswers(evaluationId, answers)
 
-  const evaluation = await prisma.evaluation.findUniqueOrThrow({
-    where: { id: evaluationId },
+  const evaluation = await prisma.evaluation.findFirstOrThrow({
+    where: { id: evaluationId, deletedAt: null },
     include: { answers: { include: { question: true } } },
   })
 
@@ -276,8 +284,8 @@ export async function submitReview(
   actorRole: string,
   reviewerComment: string | undefined,
 ) {
-  const evaluation = await prisma.evaluation.findUniqueOrThrow({
-    where: { id: evaluationId },
+  const evaluation = await prisma.evaluation.findFirstOrThrow({
+    where: { id: evaluationId, deletedAt: null },
     select: { status: true, reviewerId: true },
   })
   if (actorRole !== 'DEVELOPER' && evaluation.reviewerId !== actorId) {

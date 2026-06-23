@@ -108,6 +108,11 @@ if (isProd) {
     console.error('[env] FATAL: CORS wildcard is not allowed in production.')
     process.exit(1)
   }
+
+  if (!raw.METRICS_TOKEN) {
+    console.error('[env] FATAL: METRICS_TOKEN is required in production.')
+    process.exit(1)
+  }
 } else {
   if (raw.JWT_SECRET === 'dev-secret' || raw.JWT_SECRET.includes('change-this')) {
     console.warn('[env] ⚠️  Insecure JWT_SECRET (dev only). Set a strong value before deploying.')

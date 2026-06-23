@@ -7,13 +7,15 @@ import { generateTempPassword } from '../utils/tempPassword'
  *  Accessible by any authenticated role (used for evaluation create dropdowns). */
 export async function getDirectory() {
   return prisma.user.findMany({
-    select: { id: true, name: true, role: true, position: true, department: true, employeeNo: true },
+    where: { deletedAt: null },
+    select: { id: true, name: true, role: true, position: true, department: true },
     orderBy: { name: 'asc' },
   })
 }
 
 export async function getAllUsers() {
   return prisma.user.findMany({
+    where: { deletedAt: null },
     select: {
       id: true, email: true, name: true, role: true,
       position: true, department: true, jobTitle: true, managerId: true,
@@ -33,8 +35,8 @@ export async function getAllUsers() {
 }
 
 export async function getUserById(id: string) {
-  return prisma.user.findUniqueOrThrow({
-    where: { id },
+  return prisma.user.findFirstOrThrow({
+    where: { id, deletedAt: null },
     select: {
       id: true, email: true, name: true, role: true,
       position: true, department: true, managerId: true,
@@ -56,7 +58,7 @@ export async function createUser(data: {
   employeeNo?: string | null
   dateOfBirth?: string | null
 }) {
-  const exists = await prisma.user.findUnique({ where: { email: data.email } })
+  const exists = await prisma.user.findFirst({ where: { email: data.email, deletedAt: null } })
   if (exists) throw new Error('Email นี้มีอยู่ในระบบแล้ว')
   const password = await hashPassword(data.password)
   return prisma.user.create({
@@ -104,7 +106,8 @@ export async function resetPassword(id: string) {
   const tempPassword = generateTempPassword()
   await prisma.user.update({
     where: { id },
-    data: { password: await hashPassword(tempPassword), mustChangePassword: true },
+    // passwordChangedAt invalidates the target's existing sessions on reset.
+    data: { password: await hashPassword(tempPassword), mustChangePassword: true, passwordChangedAt: new Date() },
   })
   return { defaultPassword: tempPassword }
 }
@@ -112,18 +115,19 @@ export async function resetPassword(id: string) {
 export async function deleteUser(id: string) {
   // Guard against locking everyone out: never delete the final privileged
   // (ADMIN/DEVELOPER) account.
-  const target = await prisma.user.findUnique({ where: { id }, select: { role: true } })
+  const target = await prisma.user.findFirst({ where: { id, deletedAt: null }, select: { role: true } })
   if (target && (target.role === 'ADMIN' || target.role === 'DEVELOPER')) {
-    const privileged = await prisma.user.count({ where: { role: { in: ['ADMIN', 'DEVELOPER'] } } })
+    const privileged = await prisma.user.count({ where: { role: { in: ['ADMIN', 'DEVELOPER'] }, deletedAt: null } })
     if (privileged <= 1) throw new LastAdminError()
   }
 
-  // Evaluations reference the user as evaluatee/evaluator with a Restrict FK, so
-  // they must be cleared first. Subordinates (managerId) and audit events detach
-  // automatically via SetNull. Everything runs in one transaction.
+  // Archive HR-linked records instead of destroying appraisal history.
   return prisma.$transaction(async tx => {
     await tx.user.updateMany({ where: { managerId: id }, data: { managerId: null } })
-    await tx.evaluation.deleteMany({ where: { OR: [{ evaluateeId: id }, { evaluatorId: id }] } })
-    return tx.user.delete({ where: { id } })
+    await tx.evaluation.updateMany({
+      where: { OR: [{ evaluateeId: id }, { evaluatorId: id }, { reviewerId: id }], deletedAt: null },
+      data: { deletedAt: new Date() },
+    })
+    return tx.user.update({ where: { id }, data: { deletedAt: new Date(), managerId: null } })
   })
 }

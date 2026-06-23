@@ -31,12 +31,20 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
   }
   try {
     const token = verifyToken(header.slice(7))
-    const actor = await prisma.user.findUnique({
-      where: { id: token.userId },
-      select: { id: true, role: true, position: true, mustChangePassword: true },
+    const actor = await prisma.user.findFirst({
+      where: { id: token.userId, deletedAt: null },
+      select: { id: true, role: true, position: true, mustChangePassword: true, passwordChangedAt: true },
     })
     if (!actor) {
       res.status(401).json({ message: 'Invalid or expired token', requestId: req.requestId })
+      return
+    }
+    // Invalidate sessions issued before the most recent password change
+    // (self-service change or admin reset). JWT `iat` is whole seconds, so
+    // floor passwordChangedAt to seconds too — otherwise a token minted in the
+    // same second as the change (a legitimate fresh login) is wrongly rejected.
+    if (actor.passwordChangedAt && token.iat != null && token.iat < Math.floor(actor.passwordChangedAt.getTime() / 1000)) {
+      res.status(401).json({ message: 'Session expired — please sign in again', requestId: req.requestId })
       return
     }
     req.user = { userId: actor.id, role: actor.role, position: actor.position, mustChangePassword: actor.mustChangePassword }
@@ -99,8 +107,8 @@ export function authorizeEvaluation(permission: EvaluationPermission) {
     }
 
     try {
-      const evaluation = await prisma.evaluation.findUnique({
-        where: { id: req.params.id },
+      const evaluation = await prisma.evaluation.findFirst({
+        where: { id: req.params.id, deletedAt: null },
         select: { evaluateeId: true, evaluatorId: true, reviewerId: true },
       })
 

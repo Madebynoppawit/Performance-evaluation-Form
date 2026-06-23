@@ -116,6 +116,8 @@ const updateMeSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').optional(),
   email: companyEmailSchema.optional(),
   jobTitle: z.string().trim().max(120).nullable().optional(),
+  phone: z.string().trim().max(40).nullable().optional(),
+  bio: z.string().trim().max(500).nullable().optional(),
   password: passwordSchema.optional(),
 }).strict()
 

@@ -50,7 +50,7 @@ export class ErrorBoundary extends Component<Props, State> {
               Something went wrong
             </h2>
             <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.84rem', lineHeight: 1.6, marginBottom: 24 }}>
-              {this.state.error.message || 'An unexpected error occurred.'}
+              An unexpected error occurred. Please refresh the page or contact an administrator with the time this happened.
             </p>
             <button
               className="kbt-btn-primary"

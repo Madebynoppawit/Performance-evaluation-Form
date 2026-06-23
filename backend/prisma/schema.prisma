@@ -89,13 +89,21 @@ model User {
   hireDate   DateTime?
   jobTitle   String?
 
-  // Employee master-file key + the full raw imported row (nothing is dropped).
+  // Employee master-file key + sanitized import context.
   employeeNo String? @unique
   sourceData Json?
 
   // Forces a password change on next login (set for default-password imports).
   mustChangePassword Boolean   @default(false)
   dateOfBirth        DateTime?
+
+  // Tokens issued before this timestamp are rejected — lets a password change
+  // (self or admin reset) invalidate existing sessions.
+  passwordChangedAt  DateTime?
+
+  // Self-service profile fields.
+  phone String?
+  bio   String?
 
   manager   User?  @relation("ManagerEmployee", fields: [managerId], references: [id])
   employees User[] @relation("ManagerEmployee")
@@ -107,6 +115,7 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 }
 
 model AuditEvent {
@@ -242,6 +251,7 @@ model Evaluation {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
   @@unique([cycleId, evaluateeId, evaluatorId, type])
 }
@@ -362,8 +372,8 @@ model EvaluationAcknowledgement {
   directorSignedAt  DateTime?
 }
 
-/// One row per employee-master import run. Stores the full raw file as a log
-/// plus a per-row outcome summary, so nothing imported is ever lost.
+/// One row per employee-master import run. Stores per-row outcome summary plus
+/// raw-file integrity metadata; future raw uploads are not retained in full.
 model EmployeeImport {
   id           String   @id @default(cuid())
   filename     String?
@@ -374,5 +384,7 @@ model EmployeeImport {
   failed       Int      @default(0)
   errors       Json?
   raw          String   @db.Text
+  rawSha256    String?
+  rawBytes     Int?
   createdAt    DateTime @default(now())
 }

@@ -319,7 +319,7 @@ npm run test:integration
 Run `npm run test:integration:setup` again after adding or changing Prisma
 migrations or seed data.
 
-Latest local verification for `v1.4.4`: passed (backend 35/35, QA Robot 136/136, functional write-flow audit 28/28).
+Latest local verification for `v1.4.6`: passed (backend 139/139 integration, backend 41/41 unit, frontend 21/21 unit, frontend/backend lint, production build, npm audit high).
 
 ## API Snapshot
 

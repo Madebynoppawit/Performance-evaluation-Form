@@ -37,7 +37,7 @@ export async function deleteTemplate(id: string) {
     const cycles = await tx.cycle.findMany({ where: { templateId: id }, select: { id: true } })
     const cycleIds = cycles.map((cycle) => cycle.id)
     if (cycleIds.length > 0) {
-      await tx.evaluation.deleteMany({ where: { cycleId: { in: cycleIds } } })
+      await tx.evaluation.updateMany({ where: { cycleId: { in: cycleIds }, deletedAt: null }, data: { deletedAt: new Date() } })
       await tx.cycle.deleteMany({ where: { id: { in: cycleIds } } })
     }
     return tx.template.delete({ where: { id } })

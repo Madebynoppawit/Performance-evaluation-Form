@@ -18,6 +18,8 @@ export interface User {
   position?: Position
   department?: string
   jobTitle?: string | null
+  phone?: string | null
+  bio?: string | null
   managerId?: string
   hireDate?: string | null
   employeeNo?: string | null

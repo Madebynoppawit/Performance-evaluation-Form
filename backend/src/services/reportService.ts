@@ -14,8 +14,9 @@ const COMPLETED: EvaluationStatus[] = [
 
 export async function getSummaryReport(actor: Actor) {
   const evaluationWhere = isPrivilegedRole(actor.role)
-    ? undefined
+    ? { deletedAt: null }
     : {
+        deletedAt: null,
         OR: [
           { evaluatorId: actor.userId },
           { reviewerId: actor.userId },
@@ -117,8 +118,8 @@ export async function exportEvaluationCsv(
   evaluationId: string,
   user: Actor,
 ) {
-  const evaluation = await prisma.evaluation.findUniqueOrThrow({
-    where: { id: evaluationId },
+  const evaluation = await prisma.evaluation.findFirstOrThrow({
+    where: { id: evaluationId, deletedAt: null },
     include: {
       cycle: true,
       evaluatee: { select: { id: true, name: true, email: true, department: true, position: true } },
