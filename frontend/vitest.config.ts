@@ -1,14 +1,17 @@
 import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
+  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
   },
   test: {
-    // Pure logic today → node. Switch to 'jsdom' when adding component tests.
+    // Default 'node' for pure logic; component tests opt into jsdom via a
+    // `// @vitest-environment jsdom` file directive.
     environment: 'node',
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     css: false,
