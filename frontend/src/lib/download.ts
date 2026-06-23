@@ -229,30 +229,37 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   }
 
   function partBanner(num: number, titleTh: string, titleEn: string) {
-    needPage(56)
+    needPage(60)
     y += 18
+    const bandTop = y - 2
+    const bandH = 36
+    // SAP Fiori section header: tinted band + left accent bar.
+    doc.setFillColor(...C.paper)
+    doc.rect(M, bandTop, CW, bandH, 'F')
+    doc.setDrawColor(...C.borderX)
+    doc.line(M, bandTop + bandH, M + CW, bandTop + bandH)
+    doc.setFillColor(...C.blue)
+    doc.rect(M, bandTop, 3.5, bandH, 'F')
+    const tx = M + 13
     // Thai font has no Latin digits — render "ส่วนที่", number, Thai title separately
-    doc.setFontSize(13)
-    doc.setTextColor(...C.ink)
+    doc.setFontSize(12.5)
+    doc.setTextColor(...C.navy)
     pfTh()
-    doc.text('ส่วนที่', M, y + 14)
+    doc.text('ส่วนที่', tx, y + 12)
     const prefixW = doc.getTextWidth('ส่วนที่')
     pf(true)
-    doc.setFontSize(13)
-    doc.text(` ${num}`, M + prefixW, y + 14)
+    doc.setFontSize(12.5)
+    doc.text(` ${num}`, tx + prefixW, y + 12)
     const numW = doc.getTextWidth(` ${num}`)
     pfTh()
-    doc.setFontSize(13)
-    doc.text(`  ${titleTh}`, M + prefixW + numW, y + 14)
+    doc.setFontSize(12.5)
+    doc.text(`  ${titleTh}`, tx + prefixW + numW, y + 12)
     // English subtitle line
     pf(true)
-    doc.setFontSize(10)
+    doc.setFontSize(9)
     doc.setTextColor(...C.muted)
-    doc.text(`Part ${num}:  ${titleEn}`, M, y + 27)
-    // Bottom divider
-    doc.setDrawColor(...C.border)
-    doc.line(M, y + 36, M + CW, y + 36)
-    y += 44
+    doc.text(`Part ${num}:  ${titleEn}`, tx, y + 26)
+    y += 46
   }
 
   function colDivider(x: number, top: number, h: number) {
@@ -575,15 +582,17 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   renderPageFrame()
   y = M + 44
 
-  // Title — HR4U style: large bold text on white
+  // Title — SAP Fiori style: blue accent bar + large bold text
+  doc.setFillColor(...C.blue)
+  doc.rect(M, y + 2, 4, 30, 'F')
   pf(true)
   doc.setFontSize(20)
   doc.setTextColor(...C.ink)
-  doc.text('Performance Evaluation Form', M, y + 22)
+  doc.text('Performance Evaluation Form', M + 13, y + 22)
   pf(false)
   doc.setFontSize(8.5)
   doc.setTextColor(...C.muted)
-  doc.text(`${formDef.code} · ${formDef.titleEn}`, M, y + 38)
+  doc.text(`${formDef.code} · ${formDef.titleEn}`, M + 13, y + 38)
   pf(false)
   doc.setFontSize(7.5)
   doc.setTextColor(...C.muted)
