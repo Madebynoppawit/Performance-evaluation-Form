@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.4.6 - 2026-06-23
+
+Self-hosted fonts, broader automated test coverage, and a leaner settings surface.
+
+### Performance / Privacy
+- Self-host Inter, Noto Sans Thai, and JetBrains Mono (latin/latin-ext/thai woff2 subsets) and drop the Google Fonts CDN `@import`/links — works offline and behind restrictive networks, removes a third-party call on every load, and trims first paint.
+
+### Testing
+- Added a QA Robot `network` suite that asserts every `/api/*` response is 2xx and flags console/page errors and failed external resource requests.
+- Wired up frontend component testing (`@testing-library/react` + jsdom) with a first `<Toggle>` test; added backend unit tests for `generateTempPassword`.
+
+### Cleanup
+- Removed non-functional Settings/Account controls (preferences that were stored but never read) and pruned the now-orphaned `set.*`/`acc.*` translation keys.
+
 ## v1.4.5 - 2026-06-23
 
 Calibration fix, demo-ready password reset, security hardening, and a leaner settings surface.

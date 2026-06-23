@@ -7,7 +7,7 @@
 Enterprise performance review platform for goal setting, competency scoring, attendance, salary review, acknowledgements, reporting, and governed exports.
 
 [![CI](https://github.com/Madebynoppawit/Performance-evaluation-Form/actions/workflows/ci.yml/badge.svg)](https://github.com/Madebynoppawit/Performance-evaluation-Form/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-1.4.4-0a6ed1?style=flat-square)](https://github.com/Madebynoppawit/Performance-evaluation-Form/releases)
+[![Version](https://img.shields.io/badge/version-1.4.6-0a6ed1?style=flat-square)](https://github.com/Madebynoppawit/Performance-evaluation-Form/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Express](https://img.shields.io/badge/Express-4-111827?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
@@ -20,9 +20,9 @@ Enterprise performance review platform for goal setting, competency scoring, att
 
 ## Current Release
 
-`v1.4.4` — configurable scoring weights, GPA-style final grades, an admin/HR calibration
-workspace, identity-based password reset, and per-user temporary passwords. See the
-[Changelog](CHANGELOG.md) for the full history.
+`v1.4.6` — configurable scoring weights, GPA-style final grades, an admin/HR calibration
+workspace, identity-based password reset, self-hosted fonts, and a broadened test suite
+(network QA + frontend component tests). See the [Changelog](CHANGELOG.md) for the full history.
 
 | Flavor | Purpose | Default |
 |---|---|---:|
@@ -347,6 +347,7 @@ Latest local verification for `v1.4.4`: passed (backend 35/35, QA Robot 136/136,
 - [API Notes](docs/api.md)
 - [Data Model](docs/data-model.md)
 - [Production Readiness](docs/production-readiness.md)
+- [System Test Cases](docs/system-test-cases.md)
 - [Threat Model](docs/threat-model.md)
 - [Operations Runbook](docs/operations-runbook.md)
 - [UX/UI Standards](docs/ux-ui-standards.md)
