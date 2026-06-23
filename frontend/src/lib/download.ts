@@ -1134,7 +1134,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     }
 
     // ── 2. Evaluation Criteria ───────────────────────────────────────────────
-    oseRow('2. Evaluation Criteria', oseAvg, cWeight)
+    oseRow('2. Evaluation Criteria', oseAvg, null)
     formDef.categories.forEach(cat => {
       const catScores = cat.criteria
         .map(c => scoreById.get(c.id))
@@ -1146,7 +1146,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     })
 
     // ── 3. Core Competency ───────────────────────────────────────────────────
-    oseRow('3. Core Competency', competencyScore, 0)
+    oseRow('3. Core Competency', competencyScore, cWeight)
     if (positionCompetencies.length) {
       positionCompetencies.forEach(cc => {
         oseSubRow(cc.name, scoreById.get(cc.id) ?? null)
