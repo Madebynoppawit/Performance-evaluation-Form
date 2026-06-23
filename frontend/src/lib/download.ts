@@ -741,6 +741,27 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
         { text: val, align: 'center', bold: ri === 3 },
       ], [attMW, CW - attMW], 20, { alt: ri % 2 !== 0 })
     })
+    if (trn?.behaviorNote?.trim()) {
+      const noteLines = splitReportText(trn.behaviorNote.trim(), CW - 24, 8)
+      const nh = Math.max(30, noteLines.length * 11 + 22)
+      needPage(nh)
+      doc.setFillColor(...C.paper)
+      doc.setDrawColor(...C.border)
+      doc.rect(M, y, CW, nh, 'FD')
+      pfTh()
+      doc.setFontSize(7.5)
+      doc.setTextColor(...C.navy)
+      doc.text('บันทึกพฤติกรรม / การพัฒนา', M + 8, y + 13)
+      pf(false)
+      doc.setFontSize(7)
+      doc.setTextColor(...C.muted)
+      doc.text('Training / Development Note', PW - M - 8, y + 13, { align: 'right' })
+      setTextFont(trn.behaviorNote)
+      doc.setFontSize(8)
+      doc.setTextColor(...C.ink)
+      doc.text(noteLines, M + 12, y + 26)
+      y += nh
+    }
     y += 10
 
     // ── PART 5: PERFORMANCE SUMMARY ──────────────────────────────────────
@@ -1125,6 +1146,8 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
         oseSubRow(`Hours: ${tr.actualHours} / ${tr.minimumHours} required`, null)
       if (tr.percentOfMinimum != null)
         oseSubRow(`Completion: ${tr.percentOfMinimum.toFixed(0)}%`, null)
+      if (tr.behaviorNote?.trim())
+        oseSubRow(`Note: ${tr.behaviorNote.trim()}`, null)
     } else {
       oseSubRow('No training record', null)
     }
