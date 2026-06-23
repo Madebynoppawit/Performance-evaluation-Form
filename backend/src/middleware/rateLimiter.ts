@@ -21,6 +21,10 @@ export const apiLimiter = rateLimit({
 export const authLimiter = rateLimit({
   windowMs: env.RATE_LIMIT_WINDOW_MS,
   max: env.RATE_LIMIT_MAX,
+  // Only failed sign-ins count toward the limit. This still throttles brute
+  // force, but stops a shared office IP (NAT) from locking out legitimate
+  // users who are signing in successfully.
+  skipSuccessfulRequests: true,
   skip: (req) => skipQaRobot(req) || skipPasswordReset(req),
   standardHeaders: true,
   legacyHeaders: false,

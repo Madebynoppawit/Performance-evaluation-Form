@@ -145,19 +145,35 @@ export default function AccountPage() {
     localStorage.setItem(layoutStorageKey, JSON.stringify(updated))
   }
 
+  const MAX_PHOTO_BYTES = 2 * 1024 * 1024 // 2 MB
+
   function handlePhotoChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
+    event.target.value = ''
     if (!file) return
-    if (!file.type.startsWith('image/')) return
+    if (!file.type.startsWith('image/')) {
+      setSaveError(t('acc.photoTypeError'))
+      return
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      setSaveError(t('acc.photoSizeError'))
+      return
+    }
 
     const reader = new FileReader()
     reader.onload = () => {
       const result = typeof reader.result === 'string' ? reader.result : null
-      setPhoto(result)
-      if (result) localStorage.setItem(storageKey, result)
+      if (!result) return
+      try {
+        localStorage.setItem(storageKey, result)
+        setPhoto(result)
+        setSaveError(null)
+      } catch {
+        // QuotaExceededError — image too large for local storage.
+        setSaveError(t('acc.photoSizeError'))
+      }
     }
     reader.readAsDataURL(file)
-    event.target.value = ''
   }
 
   function removePhoto() {
