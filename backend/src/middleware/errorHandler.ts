@@ -46,6 +46,9 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
       : err instanceof Error
         ? err.message
         : 'Unexpected server error'
+  // Never leak internal error details (Prisma internals, unexpected exception
+  // messages) to clients — surface a generic message for any 5xx.
+  const safeMessage = status >= 500 ? 'Unexpected server error' : message
   const details = (err as { details?: unknown }).details
-  res.status(status).json({ message, requestId: req.requestId, ...(details ? { details } : {}) })
+  res.status(status).json({ message: safeMessage, requestId: req.requestId, ...(details ? { details } : {}) })
 }
