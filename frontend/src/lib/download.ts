@@ -1065,15 +1065,19 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
 
     // ── Section breakdown table ───────────────────────────────────────────────
     y += 10
-    const oseBW = [CW * 0.52, CW * 0.24, CW * 0.24] as const
+    const oseBW = [CW * 0.44, CW * 0.16, CW * 0.20, CW * 0.20] as const
 
     tblHeader([
       { text: 'Section', w: oseBW[0] },
-      { text: 'Score', w: oseBW[1] },
-      { text: 'Rating', w: oseBW[2] },
+      { text: 'Weight', w: oseBW[1] },
+      { text: 'Score', w: oseBW[2] },
+      { text: 'Rating', w: oseBW[3] },
     ], 18)
 
-    const oseRow = (label: string, score: number | null) => {
+    const oseScoreX = M + oseBW[0] + oseBW[1]
+    const oseRateX = oseScoreX + oseBW[2]
+
+    const oseRow = (label: string, score: number | null, weight?: number | null) => {
       const rh = 22
       needPage(rh)
       doc.setFillColor(...C.rowAlt)
@@ -1081,13 +1085,15 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       doc.rect(M, y, CW, rh, 'FD')
       cellText(label, M, y, oseBW[0], rh, 'left', true, C.navy, 7.5)
       colDivider(M + oseBW[0], y, rh)
+      cellText(weight != null ? `${weight}%` : '—', M + oseBW[0], y, oseBW[1], rh, 'center', true, weight ? C.navy : C.muted, 7.5)
+      colDivider(oseScoreX, y, rh)
       if (score != null) {
-        cellText(`${score.toFixed(2)} (${(score / 5 * 100).toFixed(0)}%)`, M + oseBW[0], y, oseBW[1], rh, 'center', true, C.navy, 8)
+        cellText(`${score.toFixed(2)} (${(score / 5 * 100).toFixed(0)}%)`, oseScoreX, y, oseBW[2], rh, 'center', true, C.navy, 8)
       } else {
-        cellText('—', M + oseBW[0], y, oseBW[1], rh, 'center', false, C.muted, 8)
+        cellText('—', oseScoreX, y, oseBW[2], rh, 'center', false, C.muted, 8)
       }
-      colDivider(M + oseBW[0] + oseBW[1], y, rh)
-      ratingDots(score, M + oseBW[0] + oseBW[1] + 14, y + rh / 2 - 1, 4.5, 5)
+      colDivider(oseRateX, y, rh)
+      ratingDots(score, oseRateX + 14, y + rh / 2 - 1, 4.5, 5)
       y += rh
     }
 
@@ -1103,18 +1109,21 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       doc.setTextColor(...C.muted)
       doc.text(labelLines, M + 18, y + 10)
       colDivider(M + oseBW[0], y, rh)
+      colDivider(oseScoreX, y, rh)
       if (score != null) {
-        cellText(`${score.toFixed(2)} (${(score / 5 * 100).toFixed(0)}%)`, M + oseBW[0], y, oseBW[1], rh, 'center', false, C.ink, 6.5)
+        cellText(`${score.toFixed(2)} (${(score / 5 * 100).toFixed(0)}%)`, oseScoreX, y, oseBW[2], rh, 'center', false, C.ink, 6.5)
       } else {
-        cellText('—', M + oseBW[0], y, oseBW[1], rh, 'center', false, C.muted, 7)
+        cellText('—', oseScoreX, y, oseBW[2], rh, 'center', false, C.muted, 7)
       }
-      colDivider(M + oseBW[0] + oseBW[1], y, rh)
-      ratingDots(score, M + oseBW[0] + oseBW[1] + 14, y + rh / 2, 3.5, 4)
+      colDivider(oseRateX, y, rh)
+      ratingDots(score, oseRateX + 14, y + rh / 2, 3.5, 4)
       y += rh
     }
 
     // ── 1. Goal Setting ──────────────────────────────────────────────────────
-    oseRow('1. Goal Setting (KPI)', effectiveGoalScore)
+    // Goal weight is the remainder of the weighted model (appraisal forms weight
+    // goals even though formDef.goalSetting is false, so don't use the gated value).
+    oseRow('1. Goal Setting (KPI)', effectiveGoalScore, Math.max(0, 100 - cWeight - aWeight - effectiveTrainingWeight))
     if (goals.length) {
       goals.forEach((g, i) => {
         oseSubRow(`${i + 1}. ${g.goal || '—'}  (${g.weight ?? 0}%)`, g.evaluationScore ?? null)
@@ -1124,7 +1133,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     }
 
     // ── 2. Evaluation Criteria ───────────────────────────────────────────────
-    oseRow('2. Evaluation Criteria', oseAvg)
+    oseRow('2. Evaluation Criteria', oseAvg, cWeight)
     formDef.categories.forEach(cat => {
       const catScores = cat.criteria
         .map(c => scoreById.get(c.id))
@@ -1136,7 +1145,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     })
 
     // ── 3. Core Competency ───────────────────────────────────────────────────
-    oseRow('3. Core Competency', competencyScore)
+    oseRow('3. Core Competency', competencyScore, 0)
     if (positionCompetencies.length) {
       positionCompetencies.forEach(cc => {
         oseSubRow(cc.name, scoreById.get(cc.id) ?? null)
@@ -1146,7 +1155,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     }
 
     // ── 4. Attendance ────────────────────────────────────────────────────────
-    oseRow('4. Attendance', attScore)
+    oseRow('4. Attendance', attScore, aWeight)
     if (attRecord) {
       if (attRecord.leaveActualDays != null)
         oseSubRow(`Leave: ${attRecord.leaveActualDays} day(s)`, attRecord.leaveScore ?? null)
@@ -1159,7 +1168,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     }
 
     // ── 5. Training ──────────────────────────────────────────────────────────
-    oseRow('5. Training', trainingScore)
+    oseRow('5. Training', trainingScore, effectiveTrainingWeight)
     if (ev.trainingRecord) {
       const tr = ev.trainingRecord
       if (tr.actualHours != null && tr.minimumHours != null)
