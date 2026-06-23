@@ -419,3 +419,40 @@ test.describe('executive frontend experience', () => {
     await expectNoCriticalA11yViolations(page)
   })
 })
+
+test.describe('keyboard accessibility', () => {
+  test('command palette opens with Ctrl+K and closes with Escape', async ({ page }) => {
+    await openAuthed(page, '/')
+    await page.keyboard.press('Control+K')
+    await expect(page.getByLabel('Command palette search')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByLabel('Command palette search')).toBeHidden()
+  })
+
+  test('Tab moves focus onto an interactive element', async ({ page }) => {
+    await openAuthed(page, '/')
+    await page.locator('body').click({ position: { x: 2, y: 2 } })
+    await page.keyboard.press('Tab')
+    const tag = await page.evaluate(() => document.activeElement?.tagName ?? '')
+    expect(['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA']).toContain(tag)
+  })
+
+  test('dialog moves focus inside, wraps at the boundary, and closes on Escape', async ({ page }) => {
+    await openAuthed(page, '/evaluations')
+    await page.getByRole('button', { name: 'New Evaluation' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Add evaluation' })
+    await expect(dialog).toBeVisible()
+
+    // Opening the dialog moves focus into it.
+    await expect.poll(() => dialog.evaluate((n) => n.contains(document.activeElement))).toBe(true)
+
+    // Shift+Tab from the first focusable wraps back into the dialog (focus trap),
+    // rather than escaping to the page behind it.
+    await page.keyboard.press('Shift+Tab')
+    expect(await dialog.evaluate((n) => n.contains(document.activeElement))).toBe(true)
+
+    // Escape closes the dialog.
+    await page.keyboard.press('Escape')
+    await expect(dialog).toBeHidden()
+  })
+})
