@@ -367,7 +367,8 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       const headerH = Math.max(34, titleLines.length * 11 + 14)
       const descH = descLines.length ? descLines.length * 10 + 10 : 0
       const metaH = meta.length ? 14 : 0
-      const detailH = Math.max(40, actualLines.length * 9 + 24)
+      // Must clear the score box (drawn at detailTop+34, height 22 -> needs ~60).
+      const detailH = Math.max(62, actualLines.length * 9 + 34)
       // Match exact render logic: label(7) + each row height(max 17, lines*8.8+8) + gap(4)
       const targetsH = targetRows.length ? (
         7 + targetRows.reduce((sum, row) => {
