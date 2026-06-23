@@ -143,21 +143,22 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   const M = 36
   const CW = PW - M * 2
 
+  // SAP Fiori palette — aligns the export with the app's enterprise theme.
   const C = {
-    navy:    [31, 57, 97]     as RGB,
-    blue:    [46, 99, 166]    as RGB,
-    blueLt:  [215, 228, 250]  as RGB,
-    red:     [229, 35, 33]    as RGB,
-    orange:  [234, 122, 0]    as RGB,
-    ink:     [22, 26, 36]     as RGB,
-    muted:   [100, 115, 135]  as RGB,
-    border:  [175, 188, 205]  as RGB,
-    borderX: [210, 220, 232]  as RGB,
-    paper:   [249, 251, 255]  as RGB,
-    rowAlt:  [242, 246, 254]  as RGB,
+    navy:    [53, 74, 95]     as RGB,  // SAP shell  #354a5f
+    blue:    [10, 110, 209]   as RGB,  // SAP blue    #0a6ed1
+    blueLt:  [225, 240, 253]  as RGB,  // light blue  #e1f0fd
+    red:     [187, 0, 0]      as RGB,  // SAP negative #bb0000
+    orange:  [233, 115, 12]   as RGB,  // SAP critical #e9730c
+    ink:     [50, 54, 58]     as RGB,  // SAP text    #32363a
+    muted:   [106, 109, 112]  as RGB,  // SAP label   #6a6d70
+    border:  [217, 217, 217]  as RGB,  // SAP border  #d9d9d9
+    borderX: [229, 229, 229]  as RGB,  //             #e5e5e5
+    paper:   [247, 247, 247]  as RGB,  // SAP bg      #f7f7f7
+    rowAlt:  [250, 250, 250]  as RGB,  //             #fafafa
     white:   [255, 255, 255]  as RGB,
-    green:   [22, 163, 74]    as RGB,
-    amber:   [210, 115, 6]    as RGB,
+    green:   [16, 126, 62]    as RGB,  // SAP positive #107e3e
+    amber:   [233, 115, 12]   as RGB,  // SAP critical #e9730c
   }
 
   const SCORE_BG: Record<number, RGB> = {
@@ -389,8 +390,8 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       doc.roundedRect(M, cardTop, CW, headerH, 6, 6, 'F')
       doc.setFillColor(...C.paper)
       doc.rect(M, cardTop + headerH - 6, CW, 6, 'F')
-      // Red left accent bar on card header
-      doc.setFillColor(...C.red)
+      // SAP-blue left accent bar on card header
+      doc.setFillColor(...C.blue)
       doc.rect(M, cardTop, 4, headerH, 'F')
       setTextFont(title, true)
       doc.setFontSize(9)
