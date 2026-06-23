@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.4.5 - 2026-06-23
+
+Calibration fix, demo-ready password reset, security hardening, and a leaner settings surface.
+
+### Fixed
+- Calibration: admins/HR could never save a final grade — the dropdown posted to an endpoint that requires `edit`, which the access policy denies to admins, so every save returned 403. Added a dedicated `calibrate` permission and `PATCH /evaluations/:id/grade` endpoint so admins can set the calibrated grade while still being blocked from editing evaluation content.
+
+### Product
+- Forgot password now works for demo accounts: seed accounts get an employee number and date of birth so the identity-based reset can verify them.
+- Login: added a Developer demo-account chip and a balanced 2×2 demo grid.
+- Settings: the language control now switches the whole app live (was a dead preference); default-workspace preference now redirects after login; Guidelines follows the app-wide locale.
+- Settings/Account: removed non-functional controls (notification/privacy toggles that were never read, decorative notification + activity panels), keeping only controls with real effect.
+
+### Security
+- Rotated the shared demo password and removed demo credentials from the README and API docs (they now point to the seed script).
+
+### Docs
+- README refreshed with GitHub-rendered Mermaid diagrams (architecture, evaluation lifecycle, RBAC, scoring model).
+
+### Verification
+- Functional write-flow audit: 28/28 endpoints; QA Robot 136/136; backend tests 35/35; frontend/backend `tsc` and production build clean.
+
 ## v1.4.4 - 2026-06-19
 
 Calibration workspace completion, toast notifications, and login polish on top of the v1.4.3 security release.
