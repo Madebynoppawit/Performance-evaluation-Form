@@ -365,7 +365,7 @@ export async function getFullEvaluation(evaluationId: string) {
     where: { id: evaluationId },
     include: {
       cycle: { include: { template: true } },
-      evaluatee: { select: { id: true, name: true, email: true, department: true, position: true, hireDate: true, jobTitle: true } },
+      evaluatee: { select: { id: true, name: true, email: true, department: true, position: true, hireDate: true, jobTitle: true, jobGrade: true, division: true, buGroup: true, employeeNo: true } },
       evaluator: { select: { id: true, name: true, email: true, position: true, jobTitle: true } },
       goalEntries: { orderBy: { order: 'asc' } },
       competencyScores: true,

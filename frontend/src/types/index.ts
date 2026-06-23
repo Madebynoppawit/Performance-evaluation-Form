@@ -18,6 +18,9 @@ export interface User {
   position?: Position
   department?: string
   jobTitle?: string | null
+  jobGrade?: string | null
+  division?: string | null
+  buGroup?: string | null
   phone?: string | null
   bio?: string | null
   managerId?: string
@@ -105,6 +108,8 @@ export interface GoalEntry {
 export interface CompetencyScore {
   competencyId: string
   score?: number | null
+  selfScore?: number | null
+  expectedRating?: number | null
 }
 
 export interface AttendanceScore {

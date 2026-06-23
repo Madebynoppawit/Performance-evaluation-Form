@@ -40,6 +40,7 @@ export async function getUserById(id: string) {
     select: {
       id: true, email: true, name: true, role: true,
       position: true, department: true, managerId: true,
+      jobTitle: true, jobGrade: true, division: true, buGroup: true,
       createdAt: true, updatedAt: true,
       manager: { select: { id: true, name: true } },
       employees: { select: { id: true, name: true, position: true } },
@@ -77,6 +78,9 @@ export async function updateUser(
     managerId?: string | null
     password?: string
     jobTitle?: string | null
+    jobGrade?: string | null
+    division?: string | null
+    buGroup?: string | null
     employeeNo?: string | null
     dateOfBirth?: Date | null
   }

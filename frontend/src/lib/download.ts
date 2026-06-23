@@ -73,6 +73,9 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   const formDef = getFormDefinition(ev.formType)
   const isWeighted = formDef.sections.goalSetting
   const scoreById = new Map((ev.competencyScores ?? []).map(s => [s.competencyId, s.score]))
+  const selfById = new Map((ev.competencyScores ?? []).map(s => [s.competencyId, s.selfScore]))
+  const expectedById = new Map((ev.competencyScores ?? []).map(s => [s.competencyId, s.expectedRating]))
+  const hasSelfRatings = (ev.competencyScores ?? []).some(s => s.selfScore != null)
 
   const displayEmployee = ev.evaluateeName?.trim() || ev.evaluatee?.name || 'Employee'
   const displayEvaluator = ev.evaluatorName?.trim() || ev.evaluator?.name || '—'
@@ -596,8 +599,10 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   // Employee info grid
   const iW: [number, number, number, number] = [CW * 0.18, CW * 0.32, CW * 0.18, CW * 0.32]
   const infoRows: [string, string, string, string][] = [
-    ['Employee Name', displayEmployee, 'Department', displayDept],
-    ['Position', displayPosition, 'Hire Date', fmtDate(ev.evaluatee?.hireDate)],
+    ['Employee Name', displayEmployee, 'Employee No.', ev.evaluatee?.employeeNo ?? '—'],
+    ['Position', displayPosition, 'Job Grade', ev.evaluatee?.jobGrade ?? '—'],
+    ['Department', displayDept, 'Division', ev.evaluatee?.division ?? '—'],
+    ['BU Group', ev.evaluatee?.buGroup ?? '—', 'Hire Date', fmtDate(ev.evaluatee?.hireDate)],
     ['Evaluator', displayEvaluator, 'Evaluator Title', ev.evaluatorTitle ?? '—'],
     ['Period', periodLabel, 'Cycle', ev.cycle?.name ?? '—'],
   ]
@@ -666,10 +671,12 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       const pos = ev.evaluatee?.position as Position | undefined
       const desc = pos ? (cc.descriptions[pos] ?? cc.descriptions['OFFICER'] ?? '') : ''
       const descLines = doc.splitTextToSize(desc, CCW[2] - 10)
-      const rh = Math.max(22, descLines.length * 9 + 10)
+      const rh = Math.max(hasSelfRatings ? 34 : 22, descLines.length * 9 + 10)
       needPage(rh)
 
       const sc = scoreById.get(cc.id) ?? null
+      const self = selfById.get(cc.id) ?? null
+      const exp = expectedById.get(cc.id) ?? null
       doc.setFillColor(...(ci % 2 === 0 ? C.white : C.paper))
       doc.setDrawColor(...C.border)
       doc.rect(M, y, CW, rh, 'FD')
@@ -685,13 +692,25 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       colDivider(ccx + CCW[2], y, rh)
       ccx += CCW[2]
       if (sc != null) {
-        scoreBox(sc, ccx + 6, y + rh / 2 - 11, CCW[3] - 12, 22)
+        scoreBox(sc, ccx + 6, y + (hasSelfRatings ? 5 : rh / 2 - 11), CCW[3] - 12, 22)
       } else {
-        cellText('—', ccx, y, CCW[3], rh, 'center', false, C.muted)
+        cellText('—', ccx, y, CCW[3], hasSelfRatings ? 26 : rh, 'center', false, C.muted)
+      }
+      if (exp != null) {
+        pf(false); doc.setFontSize(6); doc.setTextColor(...C.muted)
+        doc.text(`Expected ${exp.toFixed(1)}`, ccx + CCW[3] / 2, y + rh - 5, { align: 'center' })
       }
       colDivider(ccx + CCW[3], y, rh)
       ccx += CCW[3]
-      ratingDots(sc, ccx + 8, y + rh / 2, 5, 5)
+      if (hasSelfRatings) {
+        pf(false); doc.setFontSize(6); doc.setTextColor(...C.muted)
+        doc.text('Mgr', ccx + 6, y + 12)
+        ratingDots(sc, ccx + 26, y + 10, 3.4, 3.6)
+        doc.text('Self', ccx + 6, y + 26)
+        ratingDots(self, ccx + 26, y + 24, 3.4, 3.6)
+      } else {
+        ratingDots(sc, ccx + 8, y + rh / 2, 5, 5)
+      }
       y += rh
     })
 

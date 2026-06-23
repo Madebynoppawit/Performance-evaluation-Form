@@ -39,6 +39,8 @@ const competencySchema = z.object({
   scores: z.array(z.object({
     competencyId: z.string().min(1),
     score: z.number().int().min(1).max(5).nullable().optional(),
+    selfScore: z.number().int().min(1).max(5).nullable().optional(),
+    expectedRating: z.number().min(0).max(5).nullable().optional(),
   })).default([]),
 })
 

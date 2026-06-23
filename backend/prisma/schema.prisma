@@ -89,6 +89,11 @@ model User {
   hireDate   DateTime?
   jobTitle   String?
 
+  // HR4U appraisal header fields.
+  jobGrade   String?
+  division   String?
+  buGroup    String?
+
   // Employee master-file key + sanitized import context.
   employeeNo String? @unique
   sourceData Json?
@@ -307,7 +312,9 @@ model CompetencyScore {
   evaluation   Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
 
   competencyId String
-  score        Int?
+  score          Int?   // manager / official rating (drives the weighted total)
+  selfScore      Int?   // employee self-assessment (HR4U dual-rating, informational)
+  expectedRating Float? @default(1) // expected rating level for the role (HR4U)
 
   @@unique([evaluationId, competencyId])
 }

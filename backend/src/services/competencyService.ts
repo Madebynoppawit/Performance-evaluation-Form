@@ -2,14 +2,24 @@ import { prisma } from '../lib/prisma'
 
 export async function upsertCompetencyScores(
   evaluationId: string,
-  scores: { competencyId: string; score?: number | null }[]
+  scores: { competencyId: string; score?: number | null; selfScore?: number | null; expectedRating?: number | null }[]
 ) {
   return Promise.all(
     scores.map((s) =>
       prisma.competencyScore.upsert({
         where: { evaluationId_competencyId: { evaluationId, competencyId: s.competencyId } },
-        create: { evaluationId, competencyId: s.competencyId, score: s.score ?? null },
-        update: { score: s.score ?? null },
+        create: {
+          evaluationId,
+          competencyId: s.competencyId,
+          score: s.score ?? null,
+          selfScore: s.selfScore ?? null,
+          ...(s.expectedRating != null ? { expectedRating: s.expectedRating } : {}),
+        },
+        update: {
+          score: s.score ?? null,
+          selfScore: s.selfScore ?? null,
+          ...(s.expectedRating != null ? { expectedRating: s.expectedRating } : {}),
+        },
       })
     )
   )

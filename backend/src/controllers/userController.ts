@@ -28,6 +28,9 @@ const updateSchema = z.object({
   managerId:   z.string().nullable().optional(),
   password:    passwordSchema.optional(),
   jobTitle:    z.string().max(120).nullable().optional(),
+  jobGrade:    z.string().max(40).nullable().optional(),
+  division:    z.string().max(200).nullable().optional(),
+  buGroup:     z.string().max(200).nullable().optional(),
   employeeNo:  z.string().trim().min(1).nullable().optional(),
   dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
 })
