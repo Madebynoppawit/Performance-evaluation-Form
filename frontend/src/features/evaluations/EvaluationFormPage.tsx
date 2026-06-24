@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -96,6 +96,8 @@ export default function EvaluationFormPage() {
   const [saved, setSaved] = useState(false)
   const [submitErrors, setSubmitErrors] = useState<string[]>([])
   const [reviewerComment, setReviewerComment] = useState('')
+  const readinessRef = useRef<HTMLDivElement>(null)
+  const [highlightReadiness, setHighlightReadiness] = useState(false)
 
   // Only reset form state when navigating to a DIFFERENT evaluation (id changes).
   // Do NOT reset on every refetch — that wipes data the user is actively editing.
@@ -264,6 +266,19 @@ export default function EvaluationFormPage() {
   }, [attendance, comment, compScores, goals, pos, t, isOse, formDef, training])
   const isRequirementReady = readinessMissing.length === 0
 
+  // Submit when ready; otherwise guide the user to the unmet requirements
+  // instead of leaving them with a silently dead button.
+  function handleSubmitClick() {
+    if (submitMutation.isPending) return
+    if (isRequirementReady) {
+      submitMutation.mutate()
+      return
+    }
+    readinessRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    setHighlightReadiness(true)
+    window.setTimeout(() => setHighlightReadiness(false), 1800)
+  }
+
   if (isLoading) {
     return (
       <div className="amw-loading-panel">
@@ -337,9 +352,11 @@ export default function EvaluationFormPage() {
             {saveMutation.isPending ? t('ef.saving') : saved ? t('common.saved') : t('ef.saveDraft')}
           </button>
           <button
-            onClick={() => submitMutation.mutate()}
-            disabled={submitMutation.isPending || !isRequirementReady}
+            onClick={handleSubmitClick}
+            disabled={submitMutation.isPending}
+            aria-disabled={!isRequirementReady}
             className="kbt-btn-primary"
+            style={!isRequirementReady && !submitMutation.isPending ? { opacity: 0.55 } : undefined}
             title={isRequirementReady ? t('ef.submitReady') : t('ef.submitBlocked')}
           >
             {submitMutation.isPending ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={13} />}
@@ -411,7 +428,17 @@ export default function EvaluationFormPage() {
       </div>
 
       {!isReadOnly && (
-        <div className={`kbt-card ${isRequirementReady ? 'amw-requirement-ready' : 'amw-requirement-missing'}`} style={{ padding: 16 }}>
+        <div
+          ref={readinessRef}
+          className={`kbt-card ${isRequirementReady ? 'amw-requirement-ready' : 'amw-requirement-missing'}`}
+          style={{
+            padding: 16,
+            transition: 'box-shadow 0.25s, outline-color 0.25s',
+            outline: `2px solid ${highlightReadiness ? 'var(--amw-red)' : 'transparent'}`,
+            outlineOffset: 2,
+            boxShadow: highlightReadiness ? '0 0 0 5px rgba(229,35,33,0.18)' : undefined,
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div style={{
               width: 34,
