@@ -29,10 +29,13 @@ jobs:
   deploy:
     name: Deploy to ${{ github.event.inputs.environment || 'production' }}
     runs-on: ubuntu-latest
-    # Only proceed if the triggering CI run succeeded (or if manually triggered)
+    # Auto-deploy only when a server is configured (set repo variable
+    # DEPLOY_ENABLED=true once DEPLOY_HOST/USER/SSH_KEY secrets exist).
+    # Until then the job is skipped — not failed — on every push. Manual
+    # runs (workflow_dispatch) always proceed.
     if: >
       github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+      (github.event.workflow_run.conclusion == 'success' && vars.DEPLOY_ENABLED == 'true')
     environment:
       name: ${{ github.event.inputs.environment || 'production' }}
       url: ${{ vars.DEPLOY_URL }}
