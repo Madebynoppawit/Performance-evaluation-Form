@@ -31,7 +31,10 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => sessionStorage),
-      partialize: (state) => ({ user: state.user, expiresAt: state.expiresAt }),
+      // Persist the token too, otherwise a page reload drops it and the 12h
+      // session is invalidated (isSessionValid needs the token) — refresh
+      // would silently log the user out.
+      partialize: (state) => ({ user: state.user, token: state.token, expiresAt: state.expiresAt }),
     }
   )
 )

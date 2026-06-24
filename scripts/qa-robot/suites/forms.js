@@ -104,7 +104,9 @@ module.exports = {
       async fn(page) {
         await go(page, '/settings')
         await wait(page, 1500)
-        const toggles = await cnt(page, 'input[type="checkbox"], input[type="radio"], [role="switch"]')
+        // Accept accessible button toggles (aria-pressed) as well as native
+        // checkbox/radio/switch controls — the theme toggle is a button.
+        const toggles = await cnt(page, 'input[type="checkbox"], input[type="radio"], [role="switch"], button[aria-pressed]')
         if (toggles === 0) throw new Error('No preference toggles found on Settings page')
       },
     },
