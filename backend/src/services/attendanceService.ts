@@ -8,11 +8,12 @@ function calcLeaveScore(days: number): number {
   return 1
 }
 
+// Late thresholds per the HR form spec: 6/8/10/12/>12 map to 5/4/3/2/1.
 function calcLateScore(times: number): number {
-  if (times <= 3) return 5
-  if (times <= 5) return 4
-  if (times <= 7) return 3
-  if (times <= 9) return 2
+  if (times <= 6) return 5
+  if (times <= 8) return 4
+  if (times <= 10) return 3
+  if (times <= 12) return 2
   return 1
 }
 

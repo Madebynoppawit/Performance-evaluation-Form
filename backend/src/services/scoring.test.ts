@@ -41,22 +41,22 @@ describe('scoring services', () => {
 
     assert.deepEqual(scores, {
       leaveScore: 3,
-      lateScore: 2,
+      lateScore: 3,
       disciplinaryScore: 5,
-      attendanceAvgScore: 10 / 3,
+      attendanceAvgScore: 11 / 3,
     })
   })
 
-  it('uses manager-provided late attendance thresholds', () => {
+  it('uses the HR-spec late attendance thresholds (6/8/10/12)', () => {
     assert.equal(calculateAttendanceScores({ lateActualTimes: 0 }).lateScore, 5)
-    assert.equal(calculateAttendanceScores({ lateActualTimes: 3 }).lateScore, 5)
-    assert.equal(calculateAttendanceScores({ lateActualTimes: 4 }).lateScore, 4)
-    assert.equal(calculateAttendanceScores({ lateActualTimes: 5 }).lateScore, 4)
-    assert.equal(calculateAttendanceScores({ lateActualTimes: 6 }).lateScore, 3)
-    assert.equal(calculateAttendanceScores({ lateActualTimes: 7 }).lateScore, 3)
-    assert.equal(calculateAttendanceScores({ lateActualTimes: 8 }).lateScore, 2)
-    assert.equal(calculateAttendanceScores({ lateActualTimes: 9 }).lateScore, 2)
-    assert.equal(calculateAttendanceScores({ lateActualTimes: 10 }).lateScore, 1)
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 6 }).lateScore, 5)
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 7 }).lateScore, 4)
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 8 }).lateScore, 4)
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 9 }).lateScore, 3)
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 10 }).lateScore, 3)
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 11 }).lateScore, 2)
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 12 }).lateScore, 2)
+    assert.equal(calculateAttendanceScores({ lateActualTimes: 13 }).lateScore, 1)
   })
 
   it('leaves omitted attendance components undefined', () => {

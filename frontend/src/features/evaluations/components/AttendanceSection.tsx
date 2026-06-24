@@ -17,7 +17,7 @@ const SCORE_BG = (score: number) =>
 
 const CRITERIA: { labelKey: TranslationKey; scores: Record<number, string> }[] = [
   { labelKey: 'att.leave', scores: { 5: '0 days', 4: '1-2 days', 3: '3-4 days', 2: '5-6 days', 1: '>=7 days' } },
-  { labelKey: 'att.late', scores: { 5: '1-3 times', 4: '4-5 times', 3: '6-7 times', 2: '8-9 times', 1: '>=10 times' } },
+  { labelKey: 'att.late', scores: { 5: '0-6 times', 4: '7-8 times', 3: '9-10 times', 2: '11-12 times', 1: '>12 times' } },
   { labelKey: 'att.disciplinary', scores: { 5: 'None', 4: 'None', 3: 'None', 2: 'Warning x1', 1: '>2 or Suspend' } },
 ]
 
