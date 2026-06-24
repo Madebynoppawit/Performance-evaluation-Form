@@ -150,7 +150,7 @@ jobs:
             type=sha,format=short
             type=raw,value=latest
       - name: Build (load locally for scanning)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ${{ matrix.app }}/Dockerfile
@@ -170,7 +170,7 @@ jobs:
           # runtime attack surface (npx is only used for prisma migrate).
           skip-dirs: usr/local/lib/node_modules/npm
       - name: Push to GHCR
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ${{ matrix.app }}/Dockerfile
