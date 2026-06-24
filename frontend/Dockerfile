@@ -26,6 +26,9 @@ RUN npm run build -w frontend
 
 # ---- runtime stage (static via nginx) ----
 FROM nginx:1.27-alpine AS runtime
+# Patch OS packages so the image scan doesn't flag fixable base-image CVEs
+# (musl, zlib, libxml2, nghttp2, …).
+RUN apk --no-cache upgrade
 # Rate-limit zone definitions (http context) + server block config
 COPY frontend/nginx.ratelimit.conf /etc/nginx/conf.d/00-ratelimit.conf
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf

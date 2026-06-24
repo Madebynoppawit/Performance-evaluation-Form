@@ -165,6 +165,10 @@ jobs:
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: '1'
+          # Skip the base image's bundled npm CLI — its vendored deps (undici,
+          # tar, …) float independently of our app and aren't part of the
+          # runtime attack surface (npx is only used for prisma migrate).
+          skip-dirs: usr/local/lib/node_modules/npm
       - name: Push to GHCR
         uses: docker/build-push-action@v6
         with:

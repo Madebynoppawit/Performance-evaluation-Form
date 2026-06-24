@@ -31,9 +31,16 @@ RUN npm run db:generate -w backend \
 FROM node:20-bookworm-slim AS runtime
 ENV NODE_ENV=production
 # Prisma's query engine needs OpenSSL; curl is used by the healthcheck.
+# `upgrade` patches OS packages so the image scan doesn't flag fixable
+# base-image CVEs.
 RUN apt-get update \
+ && apt-get upgrade -y \
  && apt-get install -y --no-install-recommends openssl curl \
  && rm -rf /var/lib/apt/lists/*
+# The base image's bundled npm ships outdated tar/glob/minimatch/cross-spawn
+# (flagged by the image scan). npx is used for prisma migrate at deploy time,
+# so update npm in place rather than removing it.
+RUN npm install -g npm@latest && npm cache clean --force
 WORKDIR /app/backend
 
 # Hoisted deps (incl. generated Prisma client) live at the workspace root.
