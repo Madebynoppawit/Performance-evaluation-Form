@@ -49,7 +49,7 @@ function Gauge100({ pct }: { pct: number }) {
 }
 
 // Final grade is shown GPA-style (0–4 = raw 1–5 score − 1); tiers/colors stay on the raw scale.
-const gpa = (s: number) => s - 1
+const gpa = (s: number) => s
 
 export default function ReportsOverview({ summaries }: Props) {
   const t = useT()
@@ -140,7 +140,7 @@ export default function ReportsOverview({ summaries }: Props) {
                     <span className="kbt-score-value">{gpa(d.avg).toFixed(2)}</span>
                   </div>
                   <div className="amw-leader-track">
-                    <div className="amw-leader-fill" style={{ width: `${((d.avg - 1) / 4) * 100}%`, background: scoreTier(d.avg).color }} />
+                    <div className="amw-leader-fill" style={{ width: `${(d.avg / 5) * 100}%`, background: scoreTier(d.avg).color }} />
                   </div>
                   <span className="amw-leader-count">{d.count} {t('rp.scored')}</span>
                 </div>

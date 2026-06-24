@@ -44,7 +44,7 @@ interface CustomTooltipProps {
 }
 
 // Scores display GPA-style (0–4 = raw 1–5 score − 1); tiers/labels stay on the raw scale.
-const gpa = (s: number) => s - 1
+const gpa = (s: number) => s
 
 const scoreLabel = (score: number) => {
   const t = scoreTier(score)
@@ -296,9 +296,9 @@ export default function ReportsPage() {
                         <BarChart data={report.byDepartment.map(d => ({ ...d, averageScore: gpa(d.averageScore) }))} margin={chartMargin.report}>
                           <CartesianGrid strokeDasharray={chartStroke.gridDash} stroke={chartColor.grid} />
                           <XAxis dataKey="department" tick={chartTick.md} axisLine={false} tickLine={false} />
-                          <YAxis domain={[0, 4]} tick={chartTick.md} axisLine={false} tickLine={false} />
+                          <YAxis domain={[0, 5]} tick={chartTick.md} axisLine={false} tickLine={false} />
                           <Tooltip content={<CustomTooltip />} cursor={{ fill: chartColor.primarySoft }} />
-                          <ReferenceLine y={2} stroke={chartColor.reference} strokeDasharray={chartStroke.dash} />
+                          <ReferenceLine y={3} stroke={chartColor.reference} strokeDasharray={chartStroke.dash} />
                           <defs>
                             <linearGradient id={`barGradient-${report.cycleId}`} x1="0" y1="0" x2="0" y2="1">
                               <stop offset="0%" stopColor={chartColor.gold} stopOpacity={0.95} />

@@ -89,7 +89,7 @@ export default function DashboardAnalytics({ evaluations }: Props) {
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="name" tick={chartTick.sm} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                <YAxis domain={[0, 4]} ticks={[0, 1, 2, 3, 4]} tick={chartTick.sm} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} tick={chartTick.sm} axisLine={false} tickLine={false} />
                 <Tooltip content={<ChartTooltip />} cursor={{ stroke: chartColor.primaryCursor, strokeWidth: 1 }} />
                 <ReferenceLine y={toGpa(avg)} stroke={chartColor.benchmark} strokeDasharray={chartStroke.dash} />
                 <Area type="monotone" dataKey="score" stroke={chartColor.primary} strokeWidth={2.4} fill="url(#trendFill)" dot={{ r: 2.5, fill: chartColor.primary }} activeDot={{ r: 4 }} />

@@ -47,19 +47,20 @@ const GRADE_KEYS: Record<Grade, TranslationKey> = {
   BELOW_STANDARD: 'cal.gradeBelowStandard',
 }
 
+// Thresholds are on the native 1-5 score scale.
 function scoreBand(score: number): Band {
-  if (score >= 3.7) return 'top'
-  if (score >= 3.2) return 'strong'
-  if (score >= 2.6) return 'solid'
-  if (score >= 2.0) return 'watch'
+  if (score >= 4.7) return 'top'
+  if (score >= 4.2) return 'strong'
+  if (score >= 3.6) return 'solid'
+  if (score >= 3.0) return 'watch'
   return 'risk'
 }
 
 function defaultGrade(score: number): Grade {
-  if (score >= 3.7) return 'EXCELLENT'
-  if (score >= 3.2) return 'ABOVE_STANDARD'
-  if (score >= 2.6) return 'MEETS_STANDARD'
-  if (score >= 2.0) return 'ALMOST_STANDARD'
+  if (score >= 4.7) return 'EXCELLENT'
+  if (score >= 4.2) return 'ABOVE_STANDARD'
+  if (score >= 3.6) return 'MEETS_STANDARD'
+  if (score >= 3.0) return 'ALMOST_STANDARD'
   return 'BELOW_STANDARD'
 }
 

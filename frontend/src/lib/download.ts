@@ -698,6 +698,53 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     y += 14
   }
 
+  // ─── INSTRUCTIONS — required by the HR form spec ──────────────────────────
+  {
+    const instructions = isWeighted
+      ? [
+          'Complete all sections with accurate and current performance information.',
+          'Goal Setting supports up to 5 SMART goals. Total goal weight should equal 100%.',
+          'Competency scoring is position-based. Use the 1-5 rating scale consistently.',
+          'Attendance scores are calculated from actual leave, late, and disciplinary records.',
+          'Save Draft while working. Submit only after the evaluation is complete.',
+        ]
+      : [
+          'Complete all sections with accurate and current performance information.',
+          'Score each criterion with the approved 1-5 rating scale.',
+          'Attach evidence through comments and performance outcomes.',
+          'Complete goal, competency, attendance, and training readiness before submission.',
+          'Save Draft while working. Submit only after the evaluation is complete.',
+        ]
+    needPage(46)
+    pf(true)
+    doc.setFontSize(13)
+    doc.setTextColor(...C.ink)
+    doc.text('Instructions', M, y + 14)
+    const insTitleW = doc.getTextWidth('Instructions')
+    pfTh()
+    doc.setFontSize(9)
+    doc.setTextColor(...C.muted)
+    doc.text('คำแนะนำ', M + insTitleW + 14, y + 14)
+    y += 24
+    instructions.forEach((text, i) => {
+      pf(false); doc.setFontSize(8)
+      const lines = doc.splitTextToSize(text, CW - 44) as string[]
+      const rh = Math.max(20, lines.length * 9 + 10)
+      needPage(rh)
+      doc.setFillColor(...(i % 2 === 0 ? C.white : C.paper))
+      doc.setDrawColor(...C.border)
+      doc.rect(M, y, CW, rh, 'FD')
+      doc.setFillColor(...C.blueLt)
+      doc.roundedRect(M + 8, y + (rh - 16) / 2, 20, 16, 3, 3, 'F')
+      pf(true); doc.setFontSize(8); doc.setTextColor(...C.blue)
+      doc.text(String(i + 1).padStart(2, '0'), M + 18, y + rh / 2 + 3, { align: 'center' })
+      pf(false); doc.setFontSize(8); doc.setTextColor(...C.ink)
+      doc.text(lines, M + 36, y + rh / 2 - (lines.length - 1) * 4.5 + 3)
+      y += rh
+    })
+    y += 14
+  }
+
   const attMW = CW * 0.55
 
   // ─── SECTIONS ─────────────────────────────────────────────────────────────

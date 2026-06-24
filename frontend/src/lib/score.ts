@@ -26,8 +26,9 @@ export function scoreTier(score: number): ScoreTier {
   return SCORE_TIERS.find(t => score >= t.min && score < t.max) ?? SCORE_TIERS[SCORE_TIERS.length - 1]
 }
 
-/* Final grades display GPA-style on a 0–4 scale (raw 1–5 score − 1). Per-item
-   and per-section ratings stay 1–5; only the aggregated grade is shown as GPA. */
-export const toGpa = (score: number) => score - 1
+/* Scores display on the native 1–5 scale everywhere (per the HR form spec).
+   toGpa/formatGpa are kept as 1–5 pass-throughs so existing call sites stay
+   on a single, consistent scale (no 0–4 GPA conversion). */
+export const toGpa = (score: number) => score
 export const formatGpa = (score: number | null | undefined) =>
-  score == null ? '—' : (score - 1).toFixed(2)
+  score == null ? '—' : score.toFixed(2)
