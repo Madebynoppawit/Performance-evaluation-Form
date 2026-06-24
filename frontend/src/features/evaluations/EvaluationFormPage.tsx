@@ -573,17 +573,25 @@ export default function EvaluationFormPage() {
                 <div style={{ overflowX: 'auto' }}>
                   <table className="kbt-table">
                     <thead>
-                      <tr><th style={{ width: 60 }}>{t('ef.grade')}</th><th>Definition (EN)</th><th>คำอธิบาย (TH)</th></tr>
+                      <tr>
+                        <th style={{ width: 60 }}>Score</th>
+                        <th>Definition (EN)</th>
+                        <th>คำอธิบาย (TH)</th>
+                        <th>Behavior Indicator (EN)</th>
+                        <th>Behavior Indicator (TH)</th>
+                      </tr>
                     </thead>
                     <tbody>
-                      {formDef.gradeScale.map(g => (
-                        <tr key={g.value}>
+                      {RATING_SCALE.map((rating) => (
+                        <tr key={rating.score}>
                           <td style={{ textAlign: 'center' }}>
-                            <span className="kbt-rating-chip">{g.value}</span>
-                            <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.66rem', marginTop: 6 }}>{g.en}</p>
+                            <span className="kbt-rating-chip">{rating.score}</span>
+                            <p style={{ color: 'var(--kbt-text-3)', fontSize: '0.68rem', marginTop: 6 }}>{rating.labelEn}</p>
                           </td>
-                          <td><strong>{g.en}</strong><p style={{ color: 'var(--kbt-text-2)', fontSize: '0.75rem', marginTop: 4 }}>{g.definitionEn}</p></td>
-                          <td><strong>{g.th}</strong><p style={{ color: 'var(--kbt-text-2)', fontSize: '0.75rem', marginTop: 4 }}>{g.definitionTh}</p></td>
+                          <td><strong>{rating.labelEn}</strong><p style={{ color: 'var(--kbt-text-2)', fontSize: '0.75rem', marginTop: 4 }}>{rating.definitionEn}</p></td>
+                          <td><strong>{rating.labelTh}</strong><p style={{ color: 'var(--kbt-text-2)', fontSize: '0.75rem', marginTop: 4 }}>{rating.definitionTh}</p></td>
+                          <td style={{ color: 'var(--kbt-text-2)', fontSize: '0.8rem' }}>{rating.indicatorEn}</td>
+                          <td style={{ color: 'var(--kbt-text-2)', fontSize: '0.8rem' }}>{rating.indicatorTh}</td>
                         </tr>
                       ))}
                     </tbody>

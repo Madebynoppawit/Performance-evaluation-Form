@@ -165,12 +165,6 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     5: C.navy, 4: C.blue, 3: C.green, 2: C.amber, 1: C.red,
   }
 
-  // Convert raw 1-5 score to GPAX 0-4 display scale (score - 1)
-  function toGpax(score: number) { return score - 1 }
-  // Color for GPAX 0-4 value (round to nearest int: 4→navy, 3→blue, 2→green, 1→amber, 0→red)
-  const GPAX_BG: Record<number, RGB> = { 4: C.navy, 3: C.blue, 2: C.green, 1: C.amber, 0: C.red }
-  function gpaxBg(gpax: number): RGB { return GPAX_BG[Math.round(gpax)] ?? C.muted }
-
   let y = M
 
   // pf  → helvetica (supports all Latin/numeric content)
@@ -529,16 +523,6 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     doc.text(label ?? (score != null ? String(Math.round(score)) : '—'), x + w / 2, bY + h / 2 + 4.5, { align: 'center' })
   }
 
-  // GPAX score box: 0-4 scale, uses GPAX colors
-  function gpaxBox(gpax: number | null, x: number, bY: number, w: number, h: number) {
-    doc.setFillColor(...(gpax != null ? gpaxBg(gpax) : C.muted))
-    doc.roundedRect(x, bY, w, h, 3, 3, 'F')
-    pf(true)
-    doc.setFontSize(11)
-    doc.setTextColor(...C.white)
-    doc.text(gpax != null ? gpax.toFixed(2) : '—', x + w / 2, bY + h / 2 + 4, { align: 'center' })
-  }
-
   function tblHeader(cols: { text: string; w: number }[], h = 18) {
     needPage(h)
     doc.setFillColor(...C.blueLt)
@@ -655,6 +639,64 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
   })
 
   y += 12
+
+  // ─── RATING SCALE (1-5) reference — required by the HR form spec ───────────
+  {
+    needPage(46)
+    pf(true)
+    doc.setFontSize(13)
+    doc.setTextColor(...C.ink)
+    doc.text('Rating Scale (1 - 5)', M, y + 14)
+    const rsTitleW = doc.getTextWidth('Rating Scale (1 - 5)')
+    pfTh()
+    doc.setFontSize(9)
+    doc.setTextColor(...C.muted)
+    doc.text('เกณฑ์การให้คะแนน', M + rsTitleW + 14, y + 14)
+    y += 24
+    const rsW = [46, CW * 0.40, CW - 46 - CW * 0.40] as const
+    tblHeader([
+      { text: 'Score', w: rsW[0] },
+      { text: 'Definition (EN / TH)', w: rsW[1] },
+      { text: 'Behavior Indicator (EN / TH)', w: rsW[2] },
+    ], 18)
+    CC_RATING_SCALE.forEach((r, i) => {
+      pf(false); doc.setFontSize(7)
+      const defEn = doc.splitTextToSize(r.definitionEn, rsW[1] - 14) as string[]
+      const indEn = doc.splitTextToSize(r.indicatorEn, rsW[2] - 14) as string[]
+      pfTh(); doc.setFontSize(6.5)
+      const defTh = doc.splitTextToSize(r.definitionTh, rsW[1] - 14) as string[]
+      const indTh = doc.splitTextToSize(r.indicatorTh, rsW[2] - 14) as string[]
+      const lines = Math.max(defEn.length + defTh.length, indEn.length + indTh.length)
+      const rh = Math.max(34, lines * 8.4 + 14)
+      needPage(rh)
+      doc.setFillColor(...(i % 2 === 0 ? C.white : C.paper))
+      doc.setDrawColor(...C.border)
+      doc.rect(M, y, CW, rh, 'FD')
+      // Score chip + label
+      doc.setFillColor(...(SCORE_BG[r.score] ?? C.muted))
+      doc.roundedRect(M + 11, y + 8, 24, 18, 3, 3, 'F')
+      pf(true); doc.setFontSize(10); doc.setTextColor(...C.white)
+      doc.text(String(r.score), M + 23, y + 21, { align: 'center' })
+      pf(false); doc.setFontSize(5.5); doc.setTextColor(...C.muted)
+      doc.text(r.labelEn, M + 23, y + 32, { align: 'center', maxWidth: rsW[0] - 6 })
+      colDivider(M + rsW[0], y, rh)
+      // Definition: EN (ink) over TH (muted)
+      const dx = M + rsW[0] + 7
+      pf(false); doc.setFontSize(7); doc.setTextColor(...C.ink)
+      doc.text(defEn, dx, y + 11)
+      pfTh(); doc.setFontSize(6.5); doc.setTextColor(...C.muted)
+      doc.text(defTh, dx, y + 12 + defEn.length * 8.4)
+      colDivider(M + rsW[0] + rsW[1], y, rh)
+      // Indicator: EN (ink) over TH (muted)
+      const ix = M + rsW[0] + rsW[1] + 7
+      pf(false); doc.setFontSize(7); doc.setTextColor(...C.ink)
+      doc.text(indEn, ix, y + 11)
+      pfTh(); doc.setFontSize(6.5); doc.setTextColor(...C.muted)
+      doc.text(indTh, ix, y + 12 + indEn.length * 8.4)
+      y += rh
+    })
+    y += 14
+  }
 
   const attMW = CW * 0.55
 
@@ -885,26 +927,32 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     // Calibration panel
     if (weightedTotal != null && calibGrade != null) {
       needPage(72)
-      const gpax = toGpax(weightedTotal)
       const perfGradeLabel = ev.performanceGrade
         ? ({ EXCELLENT: 'Excellent', ABOVE_STANDARD: 'Above Standard', MEETS_STANDARD: 'Meet Standard', ALMOST_STANDARD: 'Almost Standard', BELOW_STANDARD: 'Below Standard' } as Record<string, string>)[ev.performanceGrade] ?? calibGrade.labelEn
         : calibGrade.labelEn
+      const wScoreColor = SCORE_BG[Math.round(weightedTotal)] ?? C.muted
       doc.setFillColor(...C.navy)
       doc.setDrawColor(...C.border)
       doc.rect(M, y, CW, 70, 'FD')
-      // Left — big GPAX score (0-4 scale)
+      // Left — big overall score (1-5 scale)
       pf(false)
       doc.setFontSize(7)
       doc.setTextColor(170, 200, 242)
-      doc.text('GPAX Score  / ', M + 16, y + 16)
+      doc.text('Overall Score  / ', M + 16, y + 16)
       pfTh()
-      doc.text('คะแนนรวม', M + 16 + doc.getTextWidth('GPAX Score  / '), y + 16)
+      doc.text('คะแนนรวม', M + 16 + doc.getTextWidth('Overall Score  / '), y + 16)
       pf(true)
       doc.setFontSize(30)
       doc.setTextColor(...C.white)
-      doc.text(gpax.toFixed(2), M + 16, y + 50)
-      // 4 dots (0-4 scale)
-      ratingDots(gpax, M + 16, y + 62, 5, 5, 4)
+      const wScoreStr = weightedTotal.toFixed(2)
+      doc.text(wScoreStr, M + 16, y + 50)
+      const wScoreW = doc.getTextWidth(wScoreStr)
+      pf(false)
+      doc.setFontSize(9)
+      doc.setTextColor(170, 200, 242)
+      doc.text('/ 5', M + 16 + wScoreW + 5, y + 50)
+      // 5 dots (1-5 scale)
+      ratingDots(weightedTotal, M + 16, y + 62, 5, 5, 5)
       // Divider
       doc.setDrawColor(255, 255, 255, 0.12)
       doc.line(M + 130, y + 12, M + 130, y + 62)
@@ -913,15 +961,14 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       doc.setFontSize(9)
       doc.setTextColor(170, 200, 242)
       doc.text('Performance Grade', M + 142, y + 16)
-      const gradeBadgeBg = gpaxBg(gpax)
-      doc.setFillColor(...gradeBadgeBg)
+      doc.setFillColor(...wScoreColor)
       doc.roundedRect(M + 140, y + 22, CW - 150 - 60, 28, 4, 4, 'F')
       pf(true)
       doc.setFontSize(13)
       doc.setTextColor(...C.white)
       doc.text(perfGradeLabel, M + 140 + (CW - 150 - 60) / 2, y + 42, { align: 'center' })
-      // GPAX box (right edge, 0-4 scale)
-      gpaxBox(gpax, PW - M - 54, y + 14, 44, 44)
+      // Score box (right edge, 1-5 scale)
+      scoreBox(weightedTotal, PW - M - 54, y + 14, 44, 44)
       y += 70
     }
 
@@ -1026,26 +1073,32 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     // ── Calibration banner ────────────────────────────────────────────────────
     needPage(74)
     if (oseGrade != null && oseFinal != null) {
-      const oseGpax = toGpax(oseFinal)
       const osePerfGradeLabel = ev.performanceGrade
         ? ({ EXCELLENT: 'Excellent', ABOVE_STANDARD: 'Above Standard', MEETS_STANDARD: 'Meet Standard', ALMOST_STANDARD: 'Almost Standard', BELOW_STANDARD: 'Below Standard' } as Record<string, string>)[ev.performanceGrade] ?? oseGrade.en
         : oseGrade.en
+      const oseScoreColor = SCORE_BG[Math.round(oseFinal)] ?? C.muted
       doc.setFillColor(...C.navy)
       doc.setDrawColor(...C.border)
       doc.rect(M, y, CW, 72, 'FD')
-      // Left: GPAX score label + big decimal
+      // Left: overall score on the 1-5 scale + big decimal
       pf(false)
       doc.setFontSize(7)
       doc.setTextColor(170, 200, 242)
-      doc.text('GPAX Score  / ', M + 16, y + 16)
+      doc.text('Overall Score  / ', M + 16, y + 16)
       pfTh()
-      doc.text('คะแนนรวม', M + 16 + doc.getTextWidth('GPAX Score  / '), y + 16)
+      doc.text('คะแนนรวม', M + 16 + doc.getTextWidth('Overall Score  / '), y + 16)
       pf(true)
       doc.setFontSize(30)
       doc.setTextColor(...C.white)
-      doc.text(oseGpax.toFixed(2), M + 16, y + 50)
-      // 4 dots (0-4 scale)
-      ratingDots(oseGpax, M + 16, y + 60, 5, 5, 4)
+      const oseScoreStr = oseFinal.toFixed(2)
+      doc.text(oseScoreStr, M + 16, y + 50)
+      const oseScoreW = doc.getTextWidth(oseScoreStr)
+      pf(false)
+      doc.setFontSize(9)
+      doc.setTextColor(170, 200, 242)
+      doc.text('/ 5', M + 16 + oseScoreW + 5, y + 50)
+      // 5 dots (1-5 scale)
+      ratingDots(oseFinal, M + 16, y + 60, 5, 5, 5)
       // Center divider
       doc.setDrawColor(255, 255, 255, 0.12)
       doc.line(M + 110, y + 12, M + 110, y + 60)
@@ -1054,7 +1107,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       doc.setFontSize(9)
       doc.setTextColor(170, 200, 242)
       doc.text('Performance Grade', M + 122, y + 16)
-      doc.setFillColor(...gpaxBg(oseGpax))
+      doc.setFillColor(...oseScoreColor)
       doc.roundedRect(M + 120, y + 22, 60, 26, 4, 4, 'F')
       pf(true)
       doc.setFontSize(10)
@@ -1065,8 +1118,8 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       doc.setFontSize(7)
       doc.setTextColor(170, 200, 242)
       doc.text(oseGrade.definitionEn, M + 190, y + 34, { maxWidth: CW - 204 })
-      // GPAX box (right edge, 0-4 scale)
-      gpaxBox(oseGpax, PW - M - 54, y + 14, 44, 44)
+      // Score box (right edge, 1-5 scale)
+      scoreBox(oseFinal, PW - M - 54, y + 14, 44, 44)
       y += 72
     } else {
       doc.setFillColor(...C.paper)
