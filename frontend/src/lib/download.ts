@@ -1113,9 +1113,10 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       y += rh
     }
 
-    const oseSubRow = (label: string, score: number | null) => {
+    const oseSubRow = (label: string, score: number | null, self: number | null = null) => {
       const labelLines = splitReportText(label, oseBW[0] - 28, 6.5)
-      const rh = Math.max(16, labelLines.length * 8.8 + 8)
+      const dual = self != null
+      const rh = Math.max(dual ? 24 : 16, labelLines.length * 8.8 + 8)
       needPage(rh)
       doc.setFillColor(...C.white)
       doc.setDrawColor(...C.border)
@@ -1123,7 +1124,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       setTextFont(label)
       doc.setFontSize(6.5)
       doc.setTextColor(...C.muted)
-      doc.text(labelLines, M + 18, y + 10)
+      doc.text(labelLines, M + 18, y + (dual ? 11 : 10))
       colDivider(M + oseBW[0], y, rh)
       colDivider(oseScoreX, y, rh)
       if (score != null) {
@@ -1132,7 +1133,18 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
         cellText('—', oseScoreX, y, oseBW[2], rh, 'center', false, C.muted, 7)
       }
       colDivider(oseRateX, y, rh)
-      ratingDots(score, oseRateX + 14, y + rh / 2, 3.5, 4)
+      if (dual) {
+        // Manager rating over employee self-rating (HR4U dual model).
+        pf(false)
+        doc.setFontSize(5.5)
+        doc.setTextColor(...C.muted)
+        doc.text('Mgr', oseRateX + 6, y + rh / 2 - 2)
+        ratingDots(score, oseRateX + 26, y + rh / 2 - 4, 2.6, 3)
+        doc.text('Self', oseRateX + 6, y + rh / 2 + 9)
+        ratingDots(self, oseRateX + 26, y + rh / 2 + 7, 2.6, 3)
+      } else {
+        ratingDots(score, oseRateX + 14, y + rh / 2, 3.5, 4)
+      }
       y += rh
     }
 
@@ -1164,7 +1176,7 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
     oseRow('3. Core Competency', competencyScore, cWeight)
     if (positionCompetencies.length) {
       positionCompetencies.forEach(cc => {
-        oseSubRow(cc.name, scoreById.get(cc.id) ?? null)
+        oseSubRow(cc.name, scoreById.get(cc.id) ?? null, selfById.get(cc.id) ?? null)
       })
     } else {
       oseSubRow('No competency definitions for this position', null)
