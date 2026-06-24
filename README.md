@@ -20,9 +20,11 @@ Enterprise performance review platform for goal setting, competency scoring, att
 
 ## Current Release
 
-`v1.4.6` — configurable scoring weights, GPA-style final grades, an admin/HR calibration
-workspace, identity-based password reset, self-hosted fonts, and a broadened test suite
-(network QA + frontend component tests). See the [Changelog](CHANGELOG.md) for the full history.
+`v1.4.6` — HR-spec-aligned evaluation form, a unified **1–5 scoring scale** across the app
+and PDF export, dual manager/self competency ratings, configurable scoring weights, an
+admin/HR calibration workspace, identity-based password reset, and self-hosted fonts.
+Reload-safe sessions and a fully green CI (build · scan · push). See the
+[Changelog](CHANGELOG.md) for the full history.
 
 | Flavor | Purpose | Default |
 |---|---|---:|
@@ -52,7 +54,7 @@ AMW Performance Evaluation System turns the company's appraisal forms into a gov
 | Templates | Reusable review structure — buildable by Supervisor / Manager / Director and admins |
 | Cycles | Review period setup and lifecycle management |
 | Reports | Summary analytics, department breakdowns, audit-aware exports |
-| Calibration | Admin/HR workspace to review scores and lock final GPA-style grades before cycle closure |
+| Calibration | Admin/HR workspace to review scores and lock final 1–5 performance grades before cycle closure |
 | Users | Developer/Admin user management; every user can self-edit their own profile |
 | Access Control | `DEVELOPER` super-role, `ADMIN`, and position-based create permissions |
 | Localization | Whole-app Thai / English / French switching |
@@ -122,7 +124,10 @@ flowchart LR
     EMP["Employee · Staff"] --> SELF["Self profile + view own"]
 ```
 
-### Scoring Model (GPA-style)
+### Scoring Model (1–5 scale)
+
+Every rating — per goal, per competency, attendance, and the overall result — is on a
+single 1–5 scale, consistent across the form, the PDF export, and the analytics views.
 
 ```mermaid
 flowchart LR
@@ -130,7 +135,7 @@ flowchart LR
     C["Competency / Evaluation<br/>20%"] --> T
     A["Attendance<br/>10%"] --> T
     R["Training<br/>0–10%"] --> T
-    T --> GPA["Final Grade<br/>= score − 1<br/>GPA 0–4"]
+    T --> F["Overall Score 1–5<br/>+ performance grade band"]
 ```
 
 ## Tech Stack
@@ -319,7 +324,10 @@ npm run test:integration
 Run `npm run test:integration:setup` again after adding or changing Prisma
 migrations or seed data.
 
-Latest local verification for `v1.4.6`: passed (backend 139/139 integration, backend 41/41 unit, frontend 21/21 unit, frontend/backend lint, production build, npm audit high).
+Latest verification for `v1.4.6`: **all green** — backend 41/41 unit + 139/139 integration,
+frontend 21/21 unit + 20/20 Playwright E2E, lint, production build, and npm audit (0
+high/critical). The QA Robot UI suite passes 139/139, and CI on `main` is green across
+build, image vulnerability scan (Trivy), and image push.
 
 ## API Snapshot
 
