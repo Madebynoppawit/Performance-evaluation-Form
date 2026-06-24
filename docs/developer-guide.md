@@ -102,8 +102,9 @@ Where common things live:
 ## 5. Security & data rules
 
 - **Never commit real employee data.** `seed.cjs` is synthetic (names = job titles, `OFF-001`,
-  DOB `1990-01-01`, "Demo-only" salaries). Real data enters via the UI or CSV import and lives
-  in PostgreSQL only.
+  DOB `1990-01-01`, "Demo-only" salaries). Real employees come from a **WinDev CSV export**
+  imported via User/Data Management (see [Admin operations](#9-admin-operations)) and live in
+  PostgreSQL only — the exported CSV is real PII and stays **out of the repo**.
 - **No demo credentials in public docs** — README/docs point to `seed.cjs` for passwords.
 - `.env`, `.env.prod` are gitignored. Production fails fast on a weak `JWT_SECRET` (<32 chars),
   wildcard CORS, or a missing `METRICS_TOKEN` (see `backend/src/config/env.ts`).
@@ -162,7 +163,12 @@ Integration tests need a migrated/seeded `amw_test` DB: `npm run test:integratio
 For admins/HR running the live system:
 
 - **Users** — User Management page (Admin/Developer only): add/edit/delete, reset to a one-time
-  temp password. Bulk: **CSV/TSV import** (`employeeImportService`) — keep the source file out of git.
+  temp password.
+- **Bulk employee import (from WinDev)** — employee master data is **pulled from WinDev**: export
+  the employee list from WinDev as a **CSV**, then upload/paste it into the import box on the
+  **User Management / Data Management** page (`employeeImportService` parses it and upserts the
+  records into the database). This is the normal way to load/refresh real employees — keep the
+  exported CSV **outside the repo** (it is real PII; see [Security & data rules](#security--data-rules)).
 - **Cycles** — create review periods (supervisory roles); close/delete is admin/developer only.
 - **Calibration** — review scores and lock the final 1–5 grade before cycle closure.
 - **Reports** — performance BI, department leaderboard, audit trail, CSV export.
