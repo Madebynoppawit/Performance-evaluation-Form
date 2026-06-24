@@ -202,6 +202,7 @@ export default function GoalSettingSection({ goals, readOnly, onChange }: Props)
               <div style={{ gridColumn: '1/-1' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <label className="kbt-label" style={{ margin: 0 }}>{t('gs.dTarget')}</label>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--kbt-text-3)' }}>{t('gs.targetHint')}</span>
                   {band != null ? (
                     <span style={{
                       fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: 99,
