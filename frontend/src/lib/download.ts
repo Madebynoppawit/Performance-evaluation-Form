@@ -1238,11 +1238,14 @@ export async function downloadEvaluationPdf(evaluationId: string, fallbackName?:
       doc.setFontSize(7)
       doc.setTextColor(...C.muted)
       doc.text(en, PW - M - 8, y + 13, { align: 'right' })
-      // Content (may be Thai user text)
-      pfTh()
+      // Content — pick Thai or Latin font per line, otherwise English
+      // comments render blank under the Thai-only font.
       doc.setFontSize(8)
       doc.setTextColor(...C.ink)
-      doc.text(textLines, M + 12, y + 26)
+      ;(textLines as string[]).forEach((line, li) => {
+        setTextFont(line)
+        doc.text(line, M + 12, y + 26 + li * 10)
+      })
       y += bh
     })
     y += 12
