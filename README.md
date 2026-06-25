@@ -14,6 +14,10 @@ Enterprise performance review platform for goal setting, competency scoring, att
 [![Prisma](https://img.shields.io/badge/Prisma-5-2d3748?style=flat-square&logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 
+<br />
+
+<img src="docs/screenshots/system-overview.png" alt="AMW Performance Evaluation System — workflow, architecture, evaluation form, scoring, data management, and DevOps/quality overview" width="100%" />
+
 </div>
 
 ---
