@@ -8,9 +8,6 @@
 | **Handover date** | 2026-06-29 |
 | **Status** | ✅ Demo-ready (spec-complete, all tests green). Production-ready pending customer infra (secrets + server). |
 
-This document is the single delivery summary. Technical depth lives in the linked docs;
-**new engineers/admins should start with the [Developer & Admin Guide](developer-guide.md).**
-
 ---
 
 ## 1. What is delivered
