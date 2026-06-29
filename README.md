@@ -356,6 +356,7 @@ build, image vulnerability scan (Trivy), and image push.
 ## Documentation
 
 - **[Developer & Admin Guide](docs/developer-guide.md) — start here** if you're picking up the project
+- [Project Handover](docs/handover.md) — delivery summary, acceptance status & sign-off
 - [Changelog](CHANGELOG.md)
 - [API Notes](docs/api.md)
 - [Data Model](docs/data-model.md)
