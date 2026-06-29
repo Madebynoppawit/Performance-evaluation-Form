@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-16  
 **Release:** v1.2.1  
-**Assessor:** Engineering Team
+**Assessor:** Noppavit (HR07) - Trainee
 
 ---
 
