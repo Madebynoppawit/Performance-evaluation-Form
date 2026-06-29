@@ -110,7 +110,7 @@ Your team can continue the project anytime — start with the **Developer & Admi
 
 <br />
 
-**Delivered by:** Noppavit (HR07) - Trainee  **Date:** ______________
+**Delivered by:** _________________________  **Date:** ______________
 
 **Accepted by (AMW):** ____________________  **Date:** ______________
 
